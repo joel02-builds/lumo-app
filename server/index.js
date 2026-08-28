@@ -20,11 +20,13 @@ const __dirname = path.dirname(__filename);
 
 const MODEL = 'claude-sonnet-4-6';
 
-// "Sind wir wirklich in Production?" NICHT nur an NODE_ENV festmachen – das hängt
-// davon ab, dass unser eigener "cross-env NODE_ENV=production"-Aufruf in jeder
-// möglichen Ausführungskette korrekt durchgereicht wird. Railway setzt zusätzlich
-// eigene RAILWAY_*-Variablen (z. B. RAILWAY_ENVIRONMENT) für JEDE Deployment –
-// das ist ein zweites, von unserem eigenen Start-Skript unabhängiges Signal.
+// Kein separates Start-Skript-Tool (z. B. cross-env) mehr nötig, um NODE_ENV zu
+// setzen: ohne gesetzten Wert gilt lokal "development" als sicherer Default.
+if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
+
+// "Sind wir wirklich in Production?" NICHT nur an NODE_ENV festmachen – Railway
+// setzt zusätzlich eigene RAILWAY_*-Variablen (z. B. RAILWAY_ENVIRONMENT) für
+// JEDE Deployment – das ist ein zweites, von NODE_ENV unabhängiges Signal.
 const isProd = process.env.NODE_ENV === 'production' || Boolean(process.env.RAILWAY_ENVIRONMENT);
 
 // dotenv nur lokal laden: in Production (z. B. Railway) liefert die Plattform
@@ -43,6 +45,9 @@ console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('RAILWAY_ENVIRONMENT:', process.env.RAILWAY_ENVIRONMENT);
 console.log('API KEY vorhanden:', Boolean(process.env.ANTHROPIC_API_KEY));
 console.log('API KEY Länge:', process.env.ANTHROPIC_API_KEY?.length || 0);
+// Nur die Namen, keine Werte – zeigt, ob ANTHROPIC_API_KEY überhaupt in der
+// Umgebung ankommt, unabhängig von jeder eigenen Lese-Logik hier im Code.
+console.log('Verfügbare ENV Keys:', Object.keys(process.env).join(', '));
 
 // In Produktion (z. B. Railway) gibt es keinen separaten Frontend-Dev-Server mehr –
 // Express ist der einzige Prozess, und die Plattform verlangt, dass er auf dem von
