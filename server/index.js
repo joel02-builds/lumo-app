@@ -232,7 +232,7 @@ const server = app.listen(PORT, HOST, () => {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) {
     const hint = isProd
-      ? 'Prüfe im Railway-Dashboard unter "Variables", ob ANTHROPIC_API_KEY dort wirklich gesetzt ist (Name exakt, kein Leerzeichen, Wert nicht leer) und ob seitdem neu deployed wurde.'
+      ? 'Prüfe im Dashboard deiner Hosting-Plattform (z. B. Render → "Environment", Railway → "Variables"), ob ANTHROPIC_API_KEY dort wirklich gesetzt ist (Name exakt, kein Leerzeichen, Wert nicht leer) und ob seitdem neu deployed wurde.'
       : 'Bitte .env Datei anlegen (siehe .env.example).';
     console.warn(`WARNUNG: ANTHROPIC_API_KEY ist nicht gesetzt. ${hint}`);
   } else {
