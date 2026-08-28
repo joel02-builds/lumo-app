@@ -19,7 +19,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const MODEL = 'claude-sonnet-4-6';
-const isProd = process.env.NODE_ENV === 'production';
+
+// "Sind wir wirklich in Production?" NICHT nur an NODE_ENV festmachen – das hängt
+// davon ab, dass unser eigener "cross-env NODE_ENV=production"-Aufruf in jeder
+// möglichen Ausführungskette korrekt durchgereicht wird. Railway setzt zusätzlich
+// eigene RAILWAY_*-Variablen (z. B. RAILWAY_ENVIRONMENT) für JEDE Deployment –
+// das ist ein zweites, von unserem eigenen Start-Skript unabhängiges Signal.
+const isProd = process.env.NODE_ENV === 'production' || Boolean(process.env.RAILWAY_ENVIRONMENT);
 
 // dotenv nur lokal laden: in Production (z. B. Railway) liefert die Plattform
 // Umgebungsvariablen bereits direkt in process.env, bevor der Prozess überhaupt
@@ -29,6 +35,14 @@ const isProd = process.env.NODE_ENV === 'production';
 if (!isProd) {
   await import('dotenv/config');
 }
+
+// Diagnose-Logging NACH dem dotenv-Schritt, damit es überall (lokal wie in
+// Production) den tatsächlichen Endzustand von process.env zeigt.
+console.log('PORT:', process.env.PORT);
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('RAILWAY_ENVIRONMENT:', process.env.RAILWAY_ENVIRONMENT);
+console.log('API KEY vorhanden:', Boolean(process.env.ANTHROPIC_API_KEY));
+console.log('API KEY Länge:', process.env.ANTHROPIC_API_KEY?.length || 0);
 
 // In Produktion (z. B. Railway) gibt es keinen separaten Frontend-Dev-Server mehr –
 // Express ist der einzige Prozess, und die Plattform verlangt, dass er auf dem von
