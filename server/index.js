@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import express from 'express';
@@ -21,6 +20,15 @@ const __dirname = path.dirname(__filename);
 
 const MODEL = 'claude-sonnet-4-6';
 const isProd = process.env.NODE_ENV === 'production';
+
+// dotenv nur lokal laden: in Production (z. B. Railway) liefert die Plattform
+// Umgebungsvariablen bereits direkt in process.env, bevor der Prozess überhaupt
+// startet. dotenv würde einen dort schon gesetzten Wert ohnehin nie überschreiben
+// (es füllt nur fehlende Werte auf) – das Laden hier ganz wegzulassen macht aber
+// klarer, dass process.env in Production die einzige Quelle der Wahrheit ist.
+if (!isProd) {
+  await import('dotenv/config');
+}
 
 // In Produktion (z. B. Railway) gibt es keinen separaten Frontend-Dev-Server mehr –
 // Express ist der einzige Prozess, und die Plattform verlangt, dass er auf dem von
@@ -199,7 +207,10 @@ const server = app.listen(PORT, () => {
   console.log(`Lumo backend läuft auf http://localhost:${PORT}`);
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) {
-    console.warn('WARNUNG: ANTHROPIC_API_KEY ist nicht gesetzt. Bitte .env Datei anlegen (siehe .env.example).');
+    const hint = isProd
+      ? 'Prüfe im Railway-Dashboard unter "Variables", ob ANTHROPIC_API_KEY dort wirklich gesetzt ist (Name exakt, kein Leerzeichen, Wert nicht leer) und ob seitdem neu deployed wurde.'
+      : 'Bitte .env Datei anlegen (siehe .env.example).';
+    console.warn(`WARNUNG: ANTHROPIC_API_KEY ist nicht gesetzt. ${hint}`);
   } else {
     // Nur die ersten 10 Zeichen (reines Präfix wie "sk-ant-api", kein Geheimnisanteil).
     console.log(`ANTHROPIC_API_KEY geladen, Präfix: ${key.slice(0, 10)}... (Länge: ${key.length})`);
