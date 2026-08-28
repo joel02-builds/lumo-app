@@ -222,8 +222,13 @@ if (isProd) {
   });
 }
 
-const server = app.listen(PORT, () => {
-  console.log(`Lumo backend läuft auf http://localhost:${PORT}`);
+// Explizit auf '0.0.0.0' statt nur dem Default (127.0.0.1) binden: Railways
+// externer Traffic-Router leitet Requests an alle Interfaces weiter, nicht nur
+// an localhost – ohne dieses Argument bleibt die App von außen unerreichbar,
+// auch wenn sie lokal auf dem richtigen PORT lauscht.
+const HOST = '0.0.0.0';
+const server = app.listen(PORT, HOST, () => {
+  console.log(`Lumo backend läuft auf http://${HOST}:${PORT}`);
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) {
     const hint = isProd
