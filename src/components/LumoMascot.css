@@ -1,0 +1,68 @@
+.lumo-mascot {
+  display: block;
+}
+
+.lumo-mascot--idle {
+  animation: lumo-pulse-idle 3s ease-in-out infinite;
+}
+
+@keyframes lumo-pulse-idle {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.lumo-mascot--learning {
+  animation: lumo-float-learning 2s ease-in-out infinite;
+}
+
+@keyframes lumo-float-learning {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.lumo-mascot--complete {
+  animation: lumo-complete-flash 1.2s ease-out;
+}
+
+@keyframes lumo-complete-flash {
+  0% {
+    filter: brightness(1);
+  }
+  30% {
+    filter: brightness(1.5);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
+/* Zusätzlicher einmaliger Flash, per inline style mit der Loop-Animation kombiniert. */
+@keyframes lumo-flash-once {
+  0% {
+    filter: brightness(1);
+  }
+  40% {
+    filter: brightness(1.6);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lumo-mascot--idle,
+  .lumo-mascot--learning,
+  .lumo-mascot--complete {
+    animation: none !important;
+  }
+}
