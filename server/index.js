@@ -67,13 +67,18 @@ app.use(express.json({ limit: '35mb' }));
 const client = new Anthropic({ timeout: CLAUDE_TIMEOUT_MS }); // liest ANTHROPIC_API_KEY aus der Umgebung
 
 async function askLumo({ system, userContent, schema, maxTokens = 2048 }) {
-  const response = await client.messages.create({
+  // Streaming statt einem einzelnen create()-Call: Claude sendet laufend Chunks,
+  // wodurch der SDK-eigene Timeout an fortlaufender Aktivität hängt statt an
+  // einer einzigen starren Gesamt-Deadline – bei längeren Antworten (z. B. viele
+  // Lernblöcke) ist das deutlich robuster gegen vorzeitige Timeouts.
+  const stream = client.messages.stream({
     model: MODEL,
     max_tokens: maxTokens,
     system,
     messages: [{ role: 'user', content: userContent }],
     output_config: { format: { type: 'json_schema', schema } },
   });
+  const response = await stream.finalMessage();
   const textBlock = response.content.find((b) => b.type === 'text');
   if (!textBlock || !textBlock.text) throw new Error('empty_response');
   return JSON.parse(textBlock.text);
@@ -125,9 +130,19 @@ app.post('/api/analyze', async (req, res) => {
       });
     }
 
+    // Begrenzt auf 8000 Zeichen: Render's kostenloser Plan killt Requests nach
+    // 30s, und Claude braucht bei sehr großem Rohmaterial spürbar länger als
+    // bei einer kompakten Zusammenfassung – die Kürzung hält die Antwortzeit
+    // zuverlässig im Rahmen, statt nur das Timeout-Limit zu verschieben.
+    const MAX_MATERIAL_CHARS = 8000;
+    const trimmedMaterialText =
+      materialText && materialText.length > MAX_MATERIAL_CHARS
+        ? `${materialText.slice(0, MAX_MATERIAL_CHARS)}\n[...gekürzt...]`
+        : materialText;
+
     let textPrompt = `Thema/Titel: ${topic || '(kein Titel angegeben)'}\n${goalContext}`;
-    if (materialText && materialText.trim()) {
-      textPrompt += `\n\nLernmaterial:\n${materialText}`;
+    if (trimmedMaterialText && trimmedMaterialText.trim()) {
+      textPrompt += `\n\nLernmaterial:\n${trimmedMaterialText}`;
     } else if (!fileBase64) {
       textPrompt += `\n\nEs wurde kein Material hochgeladen. Erstelle die Lernblöcke direkt zum genannten Thema, so wie es üblicherweise in diesem Fachgebiet unterrichtet wird.`;
     }

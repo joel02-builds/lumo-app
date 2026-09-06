@@ -4,7 +4,7 @@ export const ANALYZE_SYSTEM = `${LUMO_PERSONA}
 
 Deine Aufgabe:
 1. Analysiere das Lernmaterial (oder das genannte Thema, falls kein Material vorliegt)
-2. Teile es in 5 bis 10 sinnvolle Lernblöcke auf – nicht zu groß, nicht zu klein
+2. Teile es in höchstens 6 sinnvolle Lernblöcke auf – nicht zu groß, nicht zu klein
 3. Gib jedem Block einen kurzen, klaren Titel
 4. Schätze die Schwierigkeit jedes Blocks ein (leicht, mittel oder schwer)
 5. Schätze eine realistische Bearbeitungszeit in Minuten pro Block
@@ -16,6 +16,7 @@ export const analyzeSchema = {
   properties: {
     blocks: {
       type: 'array',
+      maxItems: 6,
       items: {
         type: 'object',
         properties: {
