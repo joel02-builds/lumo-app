@@ -30,6 +30,20 @@
   }
 }
 
+.lumo-mascot--thinking {
+  animation: lumo-mascot-thinking 1.4s ease-in-out infinite;
+}
+
+@keyframes lumo-mascot-thinking {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
 .lumo-mascot--complete {
   animation: lumo-complete-flash 1.2s ease-out;
 }
@@ -62,6 +76,7 @@
 @media (prefers-reduced-motion: reduce) {
   .lumo-mascot--idle,
   .lumo-mascot--learning,
+  .lumo-mascot--thinking,
   .lumo-mascot--complete {
     animation: none !important;
   }
