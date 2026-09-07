@@ -1,21 +1,22 @@
 :root {
-  --bg: #0d1117;
-  --bg-elevated: #161b22;
-  --bg-card: #1c2330;
-  --bg-card-bright: #262f42;
-  --gold: #f5a623;
-  --gold-soft: rgba(245, 166, 35, 0.12);
-  --text-primary: #e9edf1;
-  --text-secondary: #8b95a1;
-  --green: #3fb950;
-  --green-soft: rgba(63, 185, 80, 0.12);
-  --yellow: #d29922;
-  --yellow-soft: rgba(210, 153, 34, 0.12);
-  --red: #f85149;
-  --red-soft: rgba(248, 81, 73, 0.12);
-  --border: rgba(255, 255, 255, 0.08);
-  --input-bg: #1a2030;
-  --input-border: rgba(245, 166, 35, 0.22);
+  --bg: #0F1920;
+  --bg-elevated: #162028;
+  --bg-card: #1E2D38;
+  --bg-card-bright: #243444;
+  --gold: #D4A843;
+  --gold-soft: rgba(212, 168, 67, 0.12);
+  --gold-light: #FFE8A0;
+  --text-primary: #F0EDE8;
+  --text-secondary: #8A9BAE;
+  --green: #4CAF82;
+  --green-soft: rgba(76, 175, 130, 0.12);
+  --yellow: #D4A843;
+  --yellow-soft: rgba(212, 168, 67, 0.12);
+  --red: #E05C5C;
+  --red-soft: rgba(224, 92, 92, 0.12);
+  --border: rgba(255, 255, 255, 0.07);
+  --input-bg: #162028;
+  --input-border: rgba(212, 168, 67, 0.2);
 }
 
 * {
