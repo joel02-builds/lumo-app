@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import FocusRitualPhase from './FocusRitualPhase.jsx';
+import CardLearningPhase from './CardLearningPhase.jsx';
 import DepthChoicePhase from './DepthChoicePhase.jsx';
 import ExplainChatPhase from './ExplainChatPhase.jsx';
 import CheckUnderstandingPhase from './CheckUnderstandingPhase.jsx';
@@ -12,6 +13,7 @@ import { countCompletedToday } from '../../utils/blockProgress.js';
 
 const PHASES = {
   FOCUS_RITUAL: 'focus-ritual',
+  CARDS: 'cards',
   DEPTH_CHOICE: 'depth-choice',
   EXPLAIN: 'explain',
   CHECK: 'check',
@@ -36,7 +38,8 @@ export default function SessionScreen({ block, blocks, onFinished, onRecordCompl
   // Gemeinsamer Timer für Chat- und Abrufphase – zählt nur hoch, solange eine
   // dieser beiden Phasen aktiv ist, der Tab sichtbar ist UND keine Pause läuft.
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const timerActive = (phase === PHASES.EXPLAIN || phase === PHASES.CHECK) && !showMidBreak;
+  const timerActive =
+    (phase === PHASES.CARDS || phase === PHASES.EXPLAIN || phase === PHASES.CHECK) && !showMidBreak;
 
   useEffect(() => {
     if (!timerActive) return undefined;
@@ -57,13 +60,14 @@ export default function SessionScreen({ block, blocks, onFinished, onRecordCompl
   // würden dadurch jede Sekunde abgebrochen und neu gestartet, bevor sie je
   // ablaufen können. Stabile Referenzen sind hier kein Stil, sondern nötig.
   const handleExplainDone = useCallback(() => setPhase(PHASES.CHECK), []);
+  const handleCardsDone = useCallback(() => setPhase(PHASES.CHECK), []);
   const handleCheckDone = useCallback((r) => {
     setResult(r);
     setPhase(PHASES.COMPLETE);
   }, []);
 
   if (phase === PHASES.FOCUS_RITUAL) {
-    return <FocusRitualPhase onDone={() => setPhase(PHASES.DEPTH_CHOICE)} block={block} />;
+    return <FocusRitualPhase onDone={() => setPhase(PHASES.CARDS)} block={block} />;
   }
 
   if (phase === PHASES.DEPTH_CHOICE) {
@@ -98,6 +102,15 @@ export default function SessionScreen({ block, blocks, onFinished, onRecordCompl
   return (
     <>
       {timerActive && <SessionTimer seconds={elapsedSeconds} />}
+
+      {phase === PHASES.CARDS && (
+        <CardLearningPhase
+          block={block}
+          onDone={handleCardsDone}
+          onExit={onPause}
+          onAskFreely={() => setPhase(PHASES.DEPTH_CHOICE)}
+        />
+      )}
 
       {phase === PHASES.EXPLAIN && (
         <ExplainChatPhase block={block} depth={depth} onDone={handleExplainDone} onExit={onPause} />

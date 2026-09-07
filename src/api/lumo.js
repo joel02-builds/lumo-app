@@ -55,4 +55,5 @@ export const lumoApi = {
   explainChat: (payload) => post('/api/explain-chat', payload),
   getUnderstandingHint: (payload) => post('/api/understanding-hint', payload),
   evaluateUnderstanding: (payload) => post('/api/evaluate-understanding', payload),
+  generateCards: (payload) => post('/api/generate-cards', payload),
 };

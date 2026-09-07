@@ -44,6 +44,20 @@
   }
 }
 
+.lumo-mascot--cheer {
+  animation: lumo-mascot-cheer 1s ease-in-out infinite;
+}
+
+@keyframes lumo-mascot-cheer {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.08) rotate(-3deg);
+  }
+}
+
 .lumo-mascot--complete {
   animation: lumo-complete-flash 1.2s ease-out;
 }
@@ -77,6 +91,7 @@
   .lumo-mascot--idle,
   .lumo-mascot--learning,
   .lumo-mascot--thinking,
+  .lumo-mascot--cheer,
   .lumo-mascot--complete {
     animation: none !important;
   }

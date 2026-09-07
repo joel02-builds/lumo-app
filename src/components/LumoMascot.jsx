@@ -6,6 +6,9 @@ const SOURCES = {
   // Kein eigenes "Nachdenken"-Artwork vorhanden – nutzt das ruhigere Idle-Bild,
   // unterscheidet sich aber über eine eigene, dezente Animation (siehe unten).
   thinking: '/mascot/lumo-idle.png',
+  // Kein eigenes "Freu dich"-Artwork – das Complete-Bild passt vom Ausdruck
+  // her am besten zu kurzem, positivem Karten-Feedback.
+  cheer: '/mascot/lumo-complete.png',
   complete: '/mascot/lumo-complete.png',
 };
 
@@ -13,6 +16,7 @@ const SIZES = {
   idle: 100,
   learning: 130,
   thinking: 100,
+  cheer: 100,
   complete: 160,
 };
 
@@ -25,10 +29,11 @@ const BASE_ANIMATIONS = {
   idle: 'lumo-pulse-idle 3s ease-in-out infinite',
   learning: 'lumo-float-learning 2s ease-in-out infinite',
   thinking: 'lumo-mascot-thinking 1.4s ease-in-out infinite',
+  cheer: 'lumo-mascot-cheer 1s ease-in-out infinite',
   complete: 'lumo-complete-flash 1.2s ease-out',
 };
 
-// state: 'idle' | 'learning' | 'thinking' | 'complete' — echtes PNG-Artwork
+// state: 'idle' | 'learning' | 'thinking' | 'cheer' | 'complete' — echtes PNG-Artwork
 // (Ring/Partikel sind bereits Teil der Bilder, keine CSS-Overlays mehr nötig).
 // size: optionaler fixer Override (z. B. 'small' für einen Chat-Header) statt
 // der state-abhängigen Standardgröße.
