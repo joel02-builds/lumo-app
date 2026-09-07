@@ -16,7 +16,6 @@ export const analyzeSchema = {
   properties: {
     blocks: {
       type: 'array',
-      maxItems: 6,
       items: {
         type: 'object',
         properties: {
