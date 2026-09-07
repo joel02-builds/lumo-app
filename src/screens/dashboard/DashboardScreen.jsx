@@ -139,7 +139,12 @@ export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock
                   }}>
                     {b.title}
                   </div>
-                  <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                  <div style={{
+                    fontSize: '13px',
+                    color: b.status === 'completed' && b.confidence === 'grosse_luecken'
+                      ? 'var(--red)'
+                      : 'var(--text-secondary)',
+                  }}>
                     {statusLabel(b)}
                   </div>
                 </div>

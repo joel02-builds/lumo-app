@@ -1,19 +1,19 @@
 :root {
   --bg: #0F1920;
   --bg-elevated: #162028;
-  --bg-card: #1E2D38;
-  --bg-card-bright: #243444;
+  --bg-card: #1C2B38;
+  --bg-card-bright: #243648;
   --gold: #D4A843;
   --gold-soft: rgba(212, 168, 67, 0.12);
   --gold-light: #FFE8A0;
   --text-primary: #F0EDE8;
   --text-secondary: #8A9BAE;
-  --green: #4CAF82;
-  --green-soft: rgba(76, 175, 130, 0.12);
+  --green: #3D9E6E;
+  --green-soft: rgba(61, 158, 110, 0.12);
   --yellow: #D4A843;
   --yellow-soft: rgba(212, 168, 67, 0.12);
-  --red: #E05C5C;
-  --red-soft: rgba(224, 92, 92, 0.12);
+  --red: #E07B54;
+  --red-soft: rgba(224, 123, 84, 0.15);
   --border: rgba(255, 255, 255, 0.07);
   --input-bg: #162028;
   --input-border: rgba(212, 168, 67, 0.2);
