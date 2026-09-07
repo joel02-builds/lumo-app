@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import LumoMascot from '../../components/LumoMascot.jsx';
 import Button from '../../components/Button.jsx';
-import DateSelect, { isDateComplete, toIsoDate } from '../../components/DateSelect.jsx';
 
 const GOALS = [
   { id: 'exam', label: 'Prüfung', needsDate: true, dateLabel: 'Wann ist die Prüfung?' },
@@ -9,11 +8,9 @@ const GOALS = [
   { id: 'understand', label: 'Einfach verstehen', needsDate: false },
 ];
 
-const EMPTY_DATE = { day: '', month: '', year: '' };
-
 export default function OnboardingScreen3({ onConfirm, onBack }) {
   const [selectedId, setSelectedId] = useState(null);
-  const [date, setDate] = useState(EMPTY_DATE);
+  const [goalDate, setGoalDate] = useState('');
 
   const selectedGoal = GOALS.find((g) => g.id === selectedId);
 
@@ -26,8 +23,8 @@ export default function OnboardingScreen3({ onConfirm, onBack }) {
   }
 
   function confirmDate() {
-    if (!isDateComplete(date)) return;
-    onConfirm({ goalType: selectedId, goalDate: toIsoDate(date) });
+    if (!goalDate) return;
+    onConfirm({ goalType: selectedId, goalDate });
   }
 
   if (selectedGoal?.needsDate) {
@@ -36,8 +33,26 @@ export default function OnboardingScreen3({ onConfirm, onBack }) {
         <div className="screen-content">
           <LumoMascot state="idle" label="Lumo" />
           <h1>{selectedGoal.dateLabel}</h1>
-          <DateSelect value={date} onChange={setDate} />
-          <Button onClick={confirmDate} disabled={!isDateComplete(date)}>
+          <input
+            type="date"
+            style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--gold)',
+              borderRadius: '12px',
+              color: 'var(--text-primary)',
+              fontSize: '18px',
+              padding: '14px 20px',
+              fontFamily: 'inherit',
+              outline: 'none',
+              cursor: 'pointer',
+              width: '100%',
+              maxWidth: '280px',
+            }}
+            min={new Date().toISOString().split('T')[0]}
+            value={goalDate}
+            onChange={(e) => setGoalDate(e.target.value)}
+          />
+          <Button onClick={confirmDate} disabled={!goalDate}>
             Weiter
           </Button>
           <button className="text-link" onClick={() => setSelectedId(null)}>
