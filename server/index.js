@@ -13,6 +13,8 @@ import {
   understandingHintSchema,
   EVALUATE_UNDERSTANDING_SYSTEM,
   evaluateUnderstandingSchema,
+  CARD_SYSTEM,
+  cardSchema,
 } from './prompts.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -206,6 +208,21 @@ app.post('/api/evaluate-understanding', async (req, res) => {
       userContent,
       schema: evaluateUnderstandingSchema,
       maxTokens: 1024,
+    });
+    res.json({ data });
+  } catch (err) {
+    sendFriendlyError(res, err);
+  }
+});
+
+app.post('/api/generate-cards', async (req, res) => {
+  try {
+    const { blockTitle, blockContent, difficulty } = req.body || {};
+    const data = await askLumo({
+      system: CARD_SYSTEM,
+      userContent: `Block: ${blockTitle}\nSchwierigkeit: ${difficulty}\nInhalt: ${blockContent}`,
+      schema: cardSchema,
+      maxTokens: 1500,
     });
     res.json({ data });
   } catch (err) {

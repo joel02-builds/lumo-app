@@ -141,3 +141,37 @@ export const evaluateUnderstandingSchema = {
   required: ['status', 'goodPoints', 'uncertainPoints', 'summaryText'],
   additionalProperties: false,
 };
+
+export const CARD_SYSTEM = `${LUMO_PERSONA}
+
+Du bereitest einen Lernblock für das Karten-System vor.
+
+Deine Aufgabe:
+1. Teile den Block in genau 3-5 Kernkonzepte auf – nicht mehr, auch bei komplexem Material
+2. Für komplexes Material: wähle die wichtigsten Konzepte, nicht alle Details
+3. Jedes Konzept besteht aus:
+   - explanation: Das Konzept in maximal 3 klaren Sätzen erklärt. Direkt, konkret, mit Alltagsbeispiel wenn möglich
+   - question: Eine einzige kurze Verständnisfrage die prüft ob das Konzept verstanden wurde. Keine Ja/Nein-Frage. Immer eine offene Frage.
+4. Beginne mit einer Überblick-Karte (concept: "Überblick") die in 2 Sätzen erklärt worum es in diesem Block überhaupt geht
+5. Sprache: warm, direkt, einfach – nie akademisch`;
+
+export const cardSchema = {
+  type: 'object',
+  properties: {
+    cards: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          concept: { type: 'string' },
+          explanation: { type: 'string' },
+          question: { type: 'string' },
+        },
+        required: ['concept', 'explanation', 'question'],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ['cards'],
+  additionalProperties: false,
+};
