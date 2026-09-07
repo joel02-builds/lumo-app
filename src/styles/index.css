@@ -130,3 +130,19 @@ input::placeholder {
     transition-duration: 0.01ms !important;
   }
 }
+
+@keyframes lumo-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.04); opacity: 1; }
+}
+
+@keyframes lumo-bounce {
+  0% { transform: translateY(0) scale(1); }
+  100% { transform: translateY(-6px) scale(1.03); }
+}
+
+@keyframes lumo-pulse-once {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
