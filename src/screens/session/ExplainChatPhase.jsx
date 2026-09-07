@@ -123,10 +123,11 @@ export default function ExplainChatPhase({ block, depth, onDone, onExit }) {
 
   return (
     <div style={{
-      minHeight: '100vh',
+      height: '100vh',
       display: 'flex',
       flexDirection: 'column',
       background: 'var(--bg)',
+      overflow: 'hidden',
     }}>
 
       {/* Header */}
@@ -180,6 +181,7 @@ export default function ExplainChatPhase({ block, depth, onDone, onExit }) {
         ref={logRef}
         style={{
           flex: 1,
+          minHeight: 0,
           overflowY: 'auto',
           padding: '24px',
           display: 'flex',
