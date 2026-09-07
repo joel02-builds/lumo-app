@@ -99,6 +99,9 @@ export default function CheckUnderstandingPhase({ block, onDone, onExit }) {
     <div className="screen" key="check-asking">
       <div className="screen-content">
         <LumoMascot state="learning" label="Lumo hört zu" />
+        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 4px' }}>
+          Lumo hört zu. Kein Zurückschauen.
+        </p>
         <h1>Erklär mir in deinen eigenen Worten, was du gerade gelernt hast.</h1>
         {hint && <p className="hint-text">{hint}</p>}
         <textarea
