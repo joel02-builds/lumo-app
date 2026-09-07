@@ -2,51 +2,57 @@ import LumoMascot from '../../components/LumoMascot.jsx';
 import Button from '../../components/Button.jsx';
 import { getRecommendedBlock } from '../../utils/blockProgress.js';
 
-function blockItemClass(block) {
-  if (block.status === 'completed') {
-    if (block.confidence === 'sicher') return 'block-item--sicher';
-    if (block.confidence === 'unsicher') return 'block-item--unsicher';
-    return 'block-item--gaps';
-  }
-  if (block.status === 'in-progress') return 'block-item--progress';
-  return '';
-}
-
 function statusLabel(block) {
   if (block.status === 'not-started') return 'Nicht gestartet';
   if (block.status === 'in-progress') return 'In Bearbeitung';
-  if (block.confidence === 'sicher') return 'Sicher verstanden';
-  if (block.confidence === 'unsicher') return 'Noch unsicher';
-  return 'Wiederholen empfohlen';
+  if (block.confidence === 'sicher') return 'Verstanden';
+  if (block.confidence === 'unsicher') return 'Nochmal anschauen';
+  return 'Wiederholen';
 }
 
-function BlockIndicator({ block }) {
+function BlockDot({ block }) {
   if (block.status === 'completed' && block.confidence === 'sicher') {
     return (
-      <span className="block-dot dot-check" aria-hidden="true">
-        <svg viewBox="0 0 16 16" width="10" height="10">
-          <path
-            d="M3 8.5L6.2 11.5L13 4.5"
-            stroke="#0d1117"
-            strokeWidth="2.2"
-            fill="none"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </span>
+      <div style={{
+        width: '10px', height: '10px', borderRadius: '50%',
+        background: 'var(--green)', flexShrink: 0,
+        boxShadow: '0 0 6px var(--green)',
+      }} />
     );
   }
-  if (block.status === 'completed' && block.confidence === 'grosse_luecken') {
-    return <span className="block-dot dot-red" aria-hidden="true" />;
-  }
   if (block.status === 'completed' && block.confidence === 'unsicher') {
-    return <span className="block-dot dot-yellow" aria-hidden="true" />;
+    return (
+      <div style={{
+        width: '10px', height: '10px', borderRadius: '50%',
+        background: 'var(--yellow)', flexShrink: 0,
+      }} />
+    );
+  }
+  if (block.status === 'completed') {
+    return (
+      <div style={{
+        width: '10px', height: '10px', borderRadius: '50%',
+        background: 'var(--red)', flexShrink: 0,
+      }} />
+    );
   }
   if (block.status === 'in-progress') {
-    return <span className="block-dot dot-progress" aria-hidden="true" />;
+    return (
+      <div style={{
+        width: '10px', height: '10px', borderRadius: '50%',
+        background: 'var(--gold)', flexShrink: 0,
+        boxShadow: '0 0 8px var(--gold)',
+        animation: 'lumo-pulse 2s ease-in-out infinite',
+      }} />
+    );
   }
-  return <span className="block-dot dot-neutral" aria-hidden="true" />;
+  return (
+    <div style={{
+      width: '10px', height: '10px', borderRadius: '50%',
+      background: 'var(--border)', flexShrink: 0,
+      border: '1px solid var(--text-secondary)',
+    }} />
+  );
 }
 
 export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock }) {
@@ -54,54 +60,123 @@ export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock
   const completed = blocks.filter((b) => b.status === 'completed').length;
   const percent = total ? Math.round((completed / total) * 100) : 0;
   const allDone = total > 0 && completed === total;
-
   const next = getRecommendedBlock(blocks, recommendedOrder);
 
   return (
-    <div className="screen">
-      <div className="screen-content dashboard-content">
-        <LumoMascot state={allDone ? 'complete' : 'idle'} label="Lumo" />
-        <h1>Dein Fortschritt</h1>
+    <div className="screen" style={{ justifyContent: 'flex-start', paddingTop: '80px' }}>
+      <div className="screen-content" style={{ maxWidth: '560px', gap: '20px' }}>
 
-        <div className="progress-section">
-          <span className="progress-percent">{percent}%</span>
-          <div className="progress-track">
-            <div className="progress-fill" style={{ width: `${percent}%` }} />
+        <LumoMascot state={allDone ? 'complete' : 'idle'} label="Lumo" />
+
+        {/* Fortschritt */}
+        <div style={{ width: '100%', textAlign: 'center' }}>
+          <div style={{
+            fontSize: '48px',
+            fontWeight: '800',
+            color: percent === 100 ? 'var(--green)' : 'var(--gold)',
+            lineHeight: '1',
+            marginBottom: '8px',
+          }}>
+            {percent}%
           </div>
-          <p className="progress-label">
+          <div style={{
+            height: '6px',
+            background: 'var(--bg-card)',
+            borderRadius: '6px',
+            overflow: 'hidden',
+            margin: '0 0 8px',
+          }}>
+            <div style={{
+              height: '100%',
+              width: `${percent}%`,
+              background: percent === 100
+                ? 'var(--green)'
+                : 'linear-gradient(90deg, var(--gold), var(--gold-light))',
+              borderRadius: '6px',
+              transition: 'width 0.6s ease',
+            }} />
+          </div>
+          <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
             {completed} von {total} Blöcken geschafft
           </p>
         </div>
 
-        <ul className="block-list">
-          {blocks.map((b) => (
-            <li key={b.id}>
+        {/* Block Liste */}
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {blocks.map((b) => {
+            const isNext = next && b.id === next.id;
+            const isDone = b.status === 'completed';
+            return (
               <button
-                className={`block-item ${blockItemClass(b)}`.trim()}
+                key={b.id}
                 onClick={() => onStartBlock(b.id)}
+                style={{
+                  width: '100%',
+                  background: isNext ? 'var(--bg-card)' : 'var(--bg-elevated)',
+                  border: isNext
+                    ? '1px solid var(--gold)'
+                    : isDone
+                    ? '1px solid var(--border)'
+                    : '1px solid var(--border)',
+                  borderRadius: '14px',
+                  padding: '16px 18px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '14px',
+                  textAlign: 'left',
+                  transition: 'all 0.15s ease',
+                  opacity: isDone && b.confidence === 'sicher' ? 0.7 : 1,
+                }}
               >
-                <BlockIndicator block={b} />
-                <div className="block-info">
-                  <span className="block-title-row">
-                    <span className="block-title">{b.title}</span>
-                    {next && b.id === next.id && <span className="recommended-badge">Empfohlen</span>}
-                  </span>
-                  <span className="block-status">{statusLabel(b)}</span>
-                </div>
-                {b.content && (
-                  <div className="block-tooltip" aria-hidden="true">
-                    {b.content}
+                <BlockDot block={b} />
+                <div style={{ flex: 1 }}>
+                  <div style={{
+                    fontSize: '16px',
+                    fontWeight: isNext ? '600' : '500',
+                    color: 'var(--text-primary)',
+                    marginBottom: '2px',
+                  }}>
+                    {b.title}
                   </div>
+                  <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                    {statusLabel(b)}
+                  </div>
+                </div>
+                {isNext && (
+                  <span style={{
+                    fontSize: '11px',
+                    fontWeight: '700',
+                    color: 'var(--gold)',
+                    background: 'var(--gold-soft)',
+                    padding: '4px 10px',
+                    borderRadius: '20px',
+                    letterSpacing: '0.5px',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    Jetzt
+                  </span>
                 )}
               </button>
-            </li>
-          ))}
-        </ul>
+            );
+          })}
+        </div>
 
-        {next ? (
-          <Button onClick={() => onStartBlock(next.id)}>Weiter mit „{next.title}“</Button>
-        ) : (
-          allDone && <p className="all-done-text">Du hast alle Blöcke geschafft. Starkes Lernen!</p>
+        {next && !allDone && (
+          <Button onClick={() => onStartBlock(next.id)} style={{ width: '100%' }}>
+            Weiter mit „{next.title}"
+          </Button>
+        )}
+
+        {allDone && (
+          <p style={{
+            color: 'var(--green)',
+            fontWeight: '600',
+            fontSize: '17px',
+            textAlign: 'center',
+          }}>
+            Alle Blöcke geschafft. Starkes Lernen.
+          </p>
         )}
       </div>
     </div>
