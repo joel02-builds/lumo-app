@@ -67,7 +67,13 @@ export default function SessionScreen({ block, blocks, onFinished, onRecordCompl
   }, []);
 
   if (phase === PHASES.FOCUS_RITUAL) {
-    return <FocusRitualPhase onDone={() => setPhase(PHASES.CARDS)} block={block} />;
+    return (
+      <FocusRitualPhase
+        onDone={() => setPhase(PHASES.CARDS)}
+        block={block}
+        allBlocks={blocks}
+      />
+    );
   }
 
   if (phase === PHASES.DEPTH_CHOICE) {

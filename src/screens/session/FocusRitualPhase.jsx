@@ -1,106 +1,136 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import LumoMascot from '../../components/LumoMascot.jsx';
 
-const READY_DELAY_MS = 2000;
+export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStats }) {
+  const [ready, setReady] = useState(false);
 
-export default function FocusRitualPhase({ onDone, block }) {
-  const [canContinue, setCanContinue] = useState(false);
-  const [breathePhase, setBreathePhase] = useState('in'); // 'in' | 'out'
-
-  // Button erscheint erst nach 2 Sekunden – kurzer Pflichtmoment
-  useEffect(() => {
-    const timer = setTimeout(() => setCanContinue(true), READY_DELAY_MS);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Einfache Atem-Animation: 4 Sekunden ein, 4 Sekunden aus
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setBreathePhase((p) => (p === 'in' ? 'out' : 'in'));
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
+  const completedCount = allBlocks?.filter(b => b.status === 'completed').length || 0;
+  const totalCount = allBlocks?.length || 0;
+  const hasGaps = allBlocks?.some(b => b.confidence === 'unsicher' || b.confidence === 'grosse_luecken');
+  const gapBlocks = allBlocks?.filter(b => b.confidence === 'unsicher' || b.confidence === 'grosse_luecken') || [];
+  const isFirstBlock = completedCount === 0;
+  const isReturning = completedCount > 0;
 
   return (
     <div className="screen">
-      <div className="screen-content" style={{ gap: '20px', maxWidth: '360px' }}>
+      <div className="screen-content" style={{ gap: '20px', maxWidth: '400px' }}>
+
         <LumoMascot state="idle" label="Lumo" />
 
+        {/* Begrüßung */}
         <div style={{ textAlign: 'center' }}>
-          <p style={{
-            fontSize: '13px',
-            fontWeight: '600',
-            letterSpacing: '1.5px',
-            textTransform: 'uppercase',
-            color: 'var(--text-secondary)',
-            marginBottom: '8px'
-          }}>
-            Nächster Block
-          </p>
-          <h1 style={{ fontSize: '24px', lineHeight: '1.3', marginBottom: '0' }}>
-            {block?.title || 'Neuer Block'}
+          <h1 style={{ fontSize: '28px', marginBottom: '8px' }}>
+            {isFirstBlock ? 'Bereit loszulegen?' : 'Willkommen zurück.'}
           </h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '16px', lineHeight: '1.5' }}>
+            {isFirstBlock
+              ? 'Lumo hat alles vorbereitet. Du musst nur anfangen.'
+              : `Du hast ${completedCount} von ${totalCount} Blöcken geschafft.`}
+          </p>
         </div>
 
-        {/* Atem-Kreis */}
+        {/* Was jetzt dran ist */}
         <div style={{
+          width: '100%',
+          background: 'var(--bg-card)',
+          border: '1px solid rgba(212, 168, 67, 0.3)',
+          borderRadius: '16px',
+          padding: '20px',
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center',
-          gap: '10px',
-          margin: '8px 0'
+          gap: '8px',
         }}>
-          <div style={{
-            width: '64px',
-            height: '64px',
-            borderRadius: '50%',
-            background: 'rgba(245, 166, 35, 0.15)',
-            border: '2px solid rgba(245, 166, 35, 0.4)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transform: breathePhase === 'in' ? 'scale(1.3)' : 'scale(0.85)',
-            transition: 'transform 4s ease-in-out',
-          }}>
-            <div style={{
-              width: '28px',
-              height: '28px',
-              borderRadius: '50%',
-              background: 'rgba(245, 166, 35, 0.6)',
-              transform: breathePhase === 'in' ? 'scale(1.2)' : 'scale(0.7)',
-              transition: 'transform 4s ease-in-out',
-            }} />
-          </div>
           <p style={{
-            fontSize: '14px',
-            color: 'var(--text-secondary)',
+            fontSize: '11px',
+            fontWeight: '700',
+            letterSpacing: '1.5px',
+            textTransform: 'uppercase',
+            color: 'var(--gold)',
             margin: '0',
-            transition: 'opacity 0.8s ease',
-            opacity: 0.8,
           }}>
-            {breathePhase === 'in' ? 'Einatmen …' : 'Ausatmen …'}
+            Jetzt dran
           </p>
+          <p style={{
+            fontSize: '18px',
+            fontWeight: '600',
+            color: 'var(--text-primary)',
+            margin: '0',
+            lineHeight: '1.3',
+          }}>
+            {block?.title || 'Nächster Block'}
+          </p>
+          {block?.estimatedMinutes && (
+            <p style={{
+              fontSize: '14px',
+              color: 'var(--text-secondary)',
+              margin: '0',
+            }}>
+              ca. {block.estimatedMinutes} Minuten
+            </p>
+          )}
         </div>
 
-        <p style={{
-          fontSize: '15px',
-          color: 'var(--text-secondary)',
-          textAlign: 'center',
-          lineHeight: '1.5',
-          margin: '0',
-        }}>
-          Leg das Handy weg. Mach das Fenster zu.<br />
-          Dieser Block gehört dir.
-        </p>
+        {/* Lücken aus letzter Session */}
+        {isReturning && hasGaps && (
+          <div style={{
+            width: '100%',
+            background: 'rgba(212, 168, 67, 0.06)',
+            border: '1px solid rgba(212, 168, 67, 0.2)',
+            borderRadius: '16px',
+            padding: '20px',
+          }}>
+            <p style={{
+              fontSize: '11px',
+              fontWeight: '700',
+              letterSpacing: '1.5px',
+              textTransform: 'uppercase',
+              color: 'var(--gold)',
+              margin: '0 0 10px',
+            }}>
+              Noch unsicher
+            </p>
+            {gapBlocks.slice(0, 2).map(b => (
+              <p key={b.id} style={{
+                fontSize: '14px',
+                color: 'var(--text-secondary)',
+                margin: '0 0 4px',
+                paddingLeft: '12px',
+                borderLeft: '2px solid var(--gold)',
+              }}>
+                {b.title}
+              </p>
+            ))}
+            {gapBlocks.length > 2 && (
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '8px 0 0' }}>
+                + {gapBlocks.length - 2} weitere
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Start Button */}
+        <button
+          className="lumo-btn lumo-btn--primary"
+          onClick={onDone}
+          style={{ width: '100%', marginTop: '4px' }}
+        >
+          Los geht's
+        </button>
 
         <button
-          className={canContinue ? 'lumo-btn lumo-btn--primary lumo-btn--ready' : 'lumo-btn lumo-btn--waiting'}
-          onClick={() => canContinue && onDone()}
-          disabled={!canContinue}
-          style={{ marginTop: '8px', width: '100%' }}
+          onClick={onDone}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--text-secondary)',
+            fontSize: '14px',
+            cursor: 'pointer',
+            padding: '4px',
+          }}
         >
-          {canContinue ? 'Ich bin bereit' : 'Einen Moment …'}
+          Direkt starten
         </button>
+
       </div>
     </div>
   );
