@@ -73,6 +73,7 @@ export function appReducer(state, action) {
     case 'ANALYSIS_SUCCESS': {
       const blocks = action.data.blocks.map((b) => ({
         ...b,
+        subject: action.data.subject,
         status: 'not-started',
         confidence: null,
         goodPoints: [],

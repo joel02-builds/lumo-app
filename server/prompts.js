@@ -33,7 +33,8 @@ Deine Aufgabe:
 4. Schätze die Schwierigkeit jedes Blocks ein (leicht, mittel oder schwer)
 5. Schätze eine realistische Bearbeitungszeit in Minuten pro Block
 6. Empfehle eine sinnvolle Reihenfolge (Block-IDs)
-7. Fülle "content" mit einer kompakten Zusammenfassung des Stoffs dieses Blocks (2-6 Sätze), die als Grundlage für spätere Erklärungen dient`;
+7. Fülle "content" mit einer kompakten Zusammenfassung des Stoffs dieses Blocks (2-6 Sätze), die als Grundlage für spätere Erklärungen dient
+8. Bestimme das Fach (subject) – ein einziges Wort auf Deutsch, kleingeschrieben: biologie, chemie, physik, mathematik, geschichte, psychologie, wirtschaft, informatik, sprachen, medizin, jura – oder ein anderes passendes Fach.`;
 
 export const analyzeSchema = {
   type: 'object',
@@ -55,8 +56,9 @@ export const analyzeSchema = {
     },
     totalBlocks: { type: 'integer' },
     recommendedOrder: { type: 'array', items: { type: 'integer' } },
+    subject: { type: 'string' },
   },
-  required: ['blocks', 'totalBlocks', 'recommendedOrder'],
+  required: ['blocks', 'totalBlocks', 'recommendedOrder', 'subject'],
   additionalProperties: false,
 };
 

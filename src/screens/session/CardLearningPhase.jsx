@@ -2,8 +2,10 @@ import { useEffect, useState, useCallback } from 'react';
 import LumoMascot from '../../components/LumoMascot.jsx';
 import ErrorBanner from '../../components/ErrorBanner.jsx';
 import { lumoApi } from '../../api/lumo.js';
+import { getSubjectColor } from '../../utils/subjectColors.js';
 
 export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }) {
+  const subjectColor = getSubjectColor(block.subject);
   const [cards, setCards] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [phase, setPhase] = useState('loading'); // loading | reading | answering | feedback | done
@@ -130,10 +132,10 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
                 background: i < currentIndex
                   ? 'var(--green)'
                   : i === currentIndex
-                  ? 'var(--gold)'
+                  ? subjectColor
                   : 'var(--border)',
                 transition: 'all 0.3s ease',
-                boxShadow: i === currentIndex ? '0 0 8px var(--gold)' : 'none',
+                boxShadow: i === currentIndex ? `0 0 8px ${subjectColor}` : 'none',
               }} />
             ))}
           </div>
@@ -167,6 +169,7 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
           maxWidth: '560px',
           background: 'var(--bg-card)',
           border: `1px solid ${phase === 'answering' || phase === 'feedback' ? 'transparent' : 'rgba(212, 168, 67, 0.25)'}`,
+          borderTop: `4px solid ${subjectColor}`,
           borderRadius: '20px',
           padding: '32px',
           boxShadow: phase === 'reading'
@@ -183,7 +186,7 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
             fontWeight: '700',
             letterSpacing: '1.5px',
             textTransform: 'uppercase',
-            color: 'var(--gold)',
+            color: subjectColor,
             marginBottom: '16px',
           }}>
             {currentCard?.concept || ''}
