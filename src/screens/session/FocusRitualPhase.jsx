@@ -51,29 +51,32 @@ export default function FocusRitualPhase({ onDone, block }) {
           margin: '8px 0'
         }}>
           <div style={{
-            width: breathePhase === 'in' ? '72px' : '48px',
-            height: breathePhase === 'in' ? '72px' : '48px',
+            width: '64px',
+            height: '64px',
             borderRadius: '50%',
             background: 'rgba(245, 166, 35, 0.15)',
             border: '2px solid rgba(245, 166, 35, 0.4)',
-            transition: 'all 4s ease-in-out',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            transform: breathePhase === 'in' ? 'scale(1.3)' : 'scale(0.85)',
+            transition: 'transform 4s ease-in-out',
           }}>
             <div style={{
-              width: breathePhase === 'in' ? '32px' : '20px',
-              height: breathePhase === 'in' ? '32px' : '20px',
+              width: '28px',
+              height: '28px',
               borderRadius: '50%',
-              background: 'rgba(245, 166, 35, 0.5)',
-              transition: 'all 4s ease-in-out',
+              background: 'rgba(245, 166, 35, 0.6)',
+              transform: breathePhase === 'in' ? 'scale(1.2)' : 'scale(0.7)',
+              transition: 'transform 4s ease-in-out',
             }} />
           </div>
           <p style={{
             fontSize: '14px',
             color: 'var(--text-secondary)',
             margin: '0',
-            transition: 'opacity 0.5s',
+            transition: 'opacity 0.8s ease',
+            opacity: 0.8,
           }}>
             {breathePhase === 'in' ? 'Einatmen …' : 'Ausatmen …'}
           </p>
