@@ -48,6 +48,10 @@ h3 {
   margin: 0;
 }
 
+h1, h2 {
+  font-family: 'Nunito', 'Inter', sans-serif;
+}
+
 p {
   margin: 0;
 }

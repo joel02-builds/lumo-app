@@ -54,7 +54,7 @@ export default function SessionScreen({ block, blocks, onRecordCompletion, onPau
   }, [timerActive]);
 
   const currentThreshold = Math.floor(elapsedSeconds / BREAK_INTERVAL_SECONDS);
-  const showBreakSuggestion = timerActive && currentThreshold > lastPromptThreshold;
+  const showBreakSuggestion = timerActive && currentThreshold > lastPromptThreshold && phase !== PHASES.CARDS;
 
   // SessionScreen re-rendert jede Sekunde (Timer). Ohne useCallback bekämen
   // ExplainChatPhase/CheckUnderstandingPhase bei jedem Tick eine NEUE onDone-
