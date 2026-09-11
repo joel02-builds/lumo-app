@@ -13,7 +13,7 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
 
   return (
     <div className="screen">
-      <div className="screen-content" style={{ gap: '20px', maxWidth: '400px' }}>
+      <div className="screen-content" style={{ gap: '20px', maxWidth: '400px', width: '100%' }}>
 
         <LumoMascot state="idle" label="Lumo" />
 

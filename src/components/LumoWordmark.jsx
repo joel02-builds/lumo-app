@@ -4,6 +4,7 @@ export default function LumoWordmark({ onClick }) {
   return (
     <button
       type="button"
+      className="lumo-wordmark-wrapper"
       onClick={onClick}
       style={{
         position: 'fixed',

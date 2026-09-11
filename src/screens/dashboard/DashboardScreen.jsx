@@ -63,7 +63,7 @@ export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock
   const next = getRecommendedBlock(blocks, recommendedOrder);
 
   return (
-    <div className="screen" style={{ justifyContent: 'flex-start', paddingTop: '80px' }}>
+    <div className="screen" style={{ justifyContent: 'flex-start', paddingTop: 'clamp(20px, 8vw, 80px)' }}>
       <div className="screen-content" style={{ maxWidth: '560px', gap: '20px' }}>
 
         <LumoMascot state={allDone ? 'complete' : 'idle'} label="Lumo" />

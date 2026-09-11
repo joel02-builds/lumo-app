@@ -192,6 +192,7 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
               rows={6}
               style={{
                 width: '100%',
+                boxSizing: 'border-box',
                 resize: 'none',
                 fontSize: '16px',
                 borderRadius: '12px',
@@ -275,7 +276,7 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
         flexShrink: 0,
       }}>
         <LumoMascot state="learning" label="" size="small" />
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
             fontSize: '11px',
             fontWeight: '600',
@@ -283,6 +284,9 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
             textTransform: 'uppercase',
             color: 'var(--gold)',
             marginBottom: '2px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
           }}>
             {block.title}
           </div>
@@ -331,14 +335,14 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
         {/* Die Karte */}
         <div style={{
           width: '100%',
-          maxWidth: '640px',
+          maxWidth: 'min(640px, 100%)',
           background: 'var(--bg-card)',
           borderLeft: `1px solid ${phase === 'answering' || phase === 'feedback' ? 'transparent' : 'rgba(212, 168, 67, 0.25)'}`,
           borderRight: `1px solid ${phase === 'answering' || phase === 'feedback' ? 'transparent' : 'rgba(212, 168, 67, 0.25)'}`,
           borderBottom: `1px solid ${phase === 'answering' || phase === 'feedback' ? 'transparent' : 'rgba(212, 168, 67, 0.25)'}`,
           borderTop: `4px solid ${subjectColor}`,
           borderRadius: '20px',
-          padding: '36px 40px',
+          padding: 'clamp(20px, 5vw, 36px) clamp(16px, 4vw, 40px)',
           boxShadow: phase === 'reading'
             ? '0 0 40px rgba(212, 168, 67, 0.08), 0 8px 32px rgba(0,0,0,0.3)'
             : '0 8px 32px rgba(0,0,0,0.3)',
@@ -436,6 +440,7 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
                 rows={4}
                 style={{
                   width: '100%',
+                  boxSizing: 'border-box',
                   resize: 'none',
                   fontSize: '16px',
                   borderRadius: '12px',

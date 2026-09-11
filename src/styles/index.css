@@ -150,3 +150,35 @@ input::placeholder {
   50% { transform: scale(1.12); }
   100% { transform: scale(1); }
 }
+
+/* ── Mobile Optimierung ── */
+@media (max-width: 600px) {
+
+  /* Wordmark kleiner auf Mobile – !important nötig, da LumoWordmark seine
+     Position per Inline-Style setzt (immer stärker als eine normale Regel). */
+  .lumo-wordmark-wrapper {
+    top: 16px !important;
+    left: 16px !important;
+  }
+
+  /* Screen Padding reduzieren */
+  .screen {
+    padding: 16px;
+  }
+
+  /* !important nötig, da mehrere Screens ihr eigenes gap per Inline-Style
+     setzen (z. B. FocusRitualPhase, SessionSummaryScreen, WelcomeBackScreen). */
+  .screen-content {
+    padding: 16px;
+    gap: 16px !important;
+  }
+
+  /* Überschriften kleiner */
+  h1 {
+    font-size: 24px !important;
+  }
+
+  h2 {
+    font-size: 20px !important;
+  }
+}

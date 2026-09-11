@@ -16,7 +16,7 @@ export default function SessionSummaryScreen({ block, evaluation, onContinue, on
 
   return (
     <div className="screen">
-      <div className="screen-content" style={{ gap: '20px', maxWidth: '440px' }}>
+      <div className="screen-content" style={{ gap: '20px', maxWidth: 'min(440px, 100%)' }}>
 
         <LumoMascot state={isGood ? 'cheer' : 'learning'} />
 
