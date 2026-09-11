@@ -177,3 +177,28 @@ export const cardSchema = {
   required: ['cards'],
   additionalProperties: false,
 };
+
+export const EVALUATE_CARD_ANSWER_SYSTEM = `${LUMO_PERSONA}
+
+Der Nutzer hat gerade auf eine Verständnisfrage zu einem Lernkonzept geantwortet.
+
+Deine Aufgabe:
+Bewerte die Antwort kurz und direkt. Sei warm aber ehrlich.
+
+Bestimme:
+- isGood: true wenn die Antwort zeigt dass das Konzept verstanden wurde, false wenn nicht
+- feedback: Ein einziger Satz (maximal 15 Wörter) als direkte Reaktion auf die Antwort
+  - Bei guter Antwort: kurze Bestätigung was richtig war, dann direkt weiter
+  - Bei schlechter Antwort: konkret was fehlte, kein "Versuch es nochmal" ohne Inhalt
+  - Niemals wertend über die Person, nur über den Inhalt
+  - Kein "Gut gemacht" oder leere Lobhudelei`;
+
+export const evaluateCardAnswerSchema = {
+  type: 'object',
+  properties: {
+    isGood: { type: 'boolean' },
+    feedback: { type: 'string' },
+  },
+  required: ['isGood', 'feedback'],
+  additionalProperties: false,
+};

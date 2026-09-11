@@ -15,6 +15,8 @@ import {
   evaluateUnderstandingSchema,
   CARD_SYSTEM,
   cardSchema,
+  EVALUATE_CARD_ANSWER_SYSTEM,
+  evaluateCardAnswerSchema,
 } from './prompts.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -223,6 +225,21 @@ app.post('/api/generate-cards', async (req, res) => {
       userContent: `Block: ${blockTitle}\nSchwierigkeit: ${difficulty}\nInhalt: ${blockContent}`,
       schema: cardSchema,
       maxTokens: 1500,
+    });
+    res.json({ data });
+  } catch (err) {
+    sendFriendlyError(res, err);
+  }
+});
+
+app.post('/api/evaluate-card-answer', async (req, res) => {
+  try {
+    const { concept, explanation, question, userAnswer } = req.body || {};
+    const data = await askLumo({
+      system: EVALUATE_CARD_ANSWER_SYSTEM,
+      userContent: `Konzept: ${concept}\nErklärung: ${concept} bedeutet: ${explanation}\nFrage: ${question}\nAntwort des Nutzers: ${userAnswer}`,
+      schema: evaluateCardAnswerSchema,
+      maxTokens: 200,
     });
     res.json({ data });
   } catch (err) {

@@ -13,6 +13,8 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
   const [feedback, setFeedback] = useState(null);
   const [error, setError] = useState(null);
   const [animating, setAnimating] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [isGoodAnswer, setIsGoodAnswer] = useState(false);
 
   // Karten laden
   useEffect(() => {
@@ -41,16 +43,31 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
     setAnswer('');
   }
 
-  function handleAnswerSubmit() {
-    if (!answer.trim()) return;
-    // Einfaches lokales Feedback – kein extra API-Call
-    const words = answer.trim().split(/\s+/).length;
-    const isGood = words >= 8;
-    setFeedback(isGood
-      ? 'Gut. Du hast es in eigenen Worten.'
-      : 'Versuch es etwas ausführlicher – beschreib es als würdest du es jemandem erklären.'
-    );
-    setPhase('feedback');
+  async function handleAnswerSubmit() {
+    if (!answer.trim() || sending) return;
+    setSending(true);
+    try {
+      const result = await lumoApi.evaluateCardAnswer({
+        concept: currentCard.concept,
+        explanation: currentCard.explanation,
+        question: currentCard.question,
+        userAnswer: answer,
+      });
+      setFeedback(result.feedback);
+      setIsGoodAnswer(result.isGood);
+      setPhase('feedback');
+    } catch (err) {
+      // Fallback auf lokale Bewertung wenn API fehlt
+      const words = answer.trim().split(/\s+/).length;
+      setFeedback(words >= 8
+        ? 'Das klingt richtig.'
+        : 'Beschreib es etwas ausführlicher.'
+      );
+      setIsGoodAnswer(words >= 8);
+      setPhase('feedback');
+    } finally {
+      setSending(false);
+    }
   }
 
   function handleNext() {
@@ -168,7 +185,9 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
           width: '100%',
           maxWidth: '560px',
           background: 'var(--bg-card)',
-          border: `1px solid ${phase === 'answering' || phase === 'feedback' ? 'transparent' : 'rgba(212, 168, 67, 0.25)'}`,
+          borderLeft: `1px solid ${phase === 'answering' || phase === 'feedback' ? 'transparent' : 'rgba(212, 168, 67, 0.25)'}`,
+          borderRight: `1px solid ${phase === 'answering' || phase === 'feedback' ? 'transparent' : 'rgba(212, 168, 67, 0.25)'}`,
+          borderBottom: `1px solid ${phase === 'answering' || phase === 'feedback' ? 'transparent' : 'rgba(212, 168, 67, 0.25)'}`,
           borderTop: `4px solid ${subjectColor}`,
           borderRadius: '20px',
           padding: '32px',
@@ -281,7 +300,7 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
               />
               <button
                 onClick={handleAnswerSubmit}
-                disabled={!answer.trim()}
+                disabled={!answer.trim() || sending}
                 style={{
                   width: '100%',
                   background: answer.trim() ? 'var(--gold)' : 'var(--bg-card-bright)',
@@ -291,11 +310,11 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
                   padding: '14px',
                   fontSize: '16px',
                   fontWeight: '700',
-                  cursor: answer.trim() ? 'pointer' : 'not-allowed',
+                  cursor: answer.trim() && !sending ? 'pointer' : 'not-allowed',
                   transition: 'all 0.15s ease',
                 }}
               >
-                Abschicken
+                {sending ? 'Lumo denkt …' : 'Abschicken'}
               </button>
             </>
           )}
@@ -340,7 +359,7 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
                 <LumoMascot state="cheer" label="" size="small" />
                 <p style={{
                   fontSize: '16px',
-                  color: 'var(--text-primary)',
+                  color: isGoodAnswer ? 'var(--green)' : 'var(--red)',
                   margin: '0',
                   lineHeight: '1.5',
                   fontWeight: '500',
