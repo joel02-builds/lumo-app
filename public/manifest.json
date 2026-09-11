@@ -1,0 +1,17 @@
+{
+  "name": "Lumo",
+  "short_name": "Lumo",
+  "description": "Strukturiert lernen. Wirklich verstehen.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F1920",
+  "theme_color": "#D4A843",
+  "icons": [
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
