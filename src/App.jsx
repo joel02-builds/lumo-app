@@ -75,6 +75,12 @@ export default function App() {
     [runAnalysis]
   );
 
+  const handleNewProject = useCallback(() => {
+    clearProject();
+    clearAllNotes();
+    dispatch({ type: 'START_NEW_PROJECT' });
+  }, []);
+
   const currentBlock = state.blocks.find((b) => b.id === state.currentBlockId);
   const isWelcomeScreen = state.screen === SCREENS.ONBOARDING && state.onboardingStep === 1;
 
@@ -92,11 +98,7 @@ export default function App() {
           recommendedOrder={state.recommendedOrder}
           onStartBlock={(blockId) => dispatch({ type: 'START_BLOCK', blockId })}
           onGoToDashboard={() => dispatch({ type: 'RETURN_TO_DASHBOARD' })}
-          onNewProject={() => {
-            clearProject();
-            clearAllNotes();
-            dispatch({ type: 'START_NEW_PROJECT' });
-          }}
+          onNewProject={handleNewProject}
         />
       )}
 
@@ -141,6 +143,7 @@ export default function App() {
           blocks={state.blocks}
           recommendedOrder={state.recommendedOrder}
           onStartBlock={(blockId) => dispatch({ type: 'START_BLOCK', blockId })}
+          onNewProject={handleNewProject}
         />
       )}
 

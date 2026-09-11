@@ -55,7 +55,7 @@ function BlockDot({ block }) {
   );
 }
 
-export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock }) {
+export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock, onNewProject }) {
   const total = blocks.length;
   const completed = blocks.filter((b) => b.status === 'completed').length;
   const percent = total ? Math.round((completed / total) * 100) : 0;
@@ -182,6 +182,24 @@ export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock
           }}>
             Alle Blöcke geschafft. Starkes Lernen.
           </p>
+        )}
+
+        {onNewProject && (
+          <button
+            onClick={onNewProject}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-secondary)',
+              fontSize: '13px',
+              cursor: 'pointer',
+              padding: '8px',
+              marginTop: '8px',
+              textDecoration: 'underline',
+            }}
+          >
+            Neues Projekt starten
+          </button>
         )}
       </div>
     </div>
