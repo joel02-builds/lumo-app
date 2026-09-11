@@ -17,6 +17,7 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
   const [isGoodAnswer, setIsGoodAnswer] = useState(false);
   const [finalFeedback, setFinalFeedback] = useState(null);
   const [finalSending, setFinalSending] = useState(false);
+  const [showBreakSuggestion, setShowBreakSuggestion] = useState(false);
 
   // Karten laden
   useEffect(() => {
@@ -35,6 +36,21 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
     });
     return () => { cancelled = true; };
   }, [block.id]);
+
+  // Startet den 20-Minuten-Timer genau einmal, sobald die Karten geladen sind –
+  // nicht bei jedem Phasenwechsel neu (sonst würde jede Antwort den Countdown
+  // zurücksetzen). Ein leeres Dependency-Array würde den Timer nie starten, da
+  // "phase" beim Mount immer noch 'loading' ist und der Effect danach nie
+  // erneut läuft; stattdessen hängt er an cards.length > 0, das genau einmal
+  // von false auf true kippt.
+  const cardsLoaded = cards.length > 0;
+  useEffect(() => {
+    if (!cardsLoaded) return;
+    const timer = setTimeout(() => {
+      setShowBreakSuggestion(true);
+    }, 20 * 60 * 1000);
+    return () => clearTimeout(timer);
+  }, [cardsLoaded]);
 
   const currentCard = cards[currentIndex];
   const isLast = currentIndex === cards.length - 1;
@@ -530,6 +546,76 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
           </button>
         )}
       </div>
+
+      {showBreakSuggestion && (
+        <div style={{
+          position: 'fixed',
+          bottom: '24px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'var(--bg-card)',
+          border: '1px solid var(--gold)',
+          borderRadius: '16px',
+          padding: '16px 24px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '16px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+          zIndex: 100,
+          maxWidth: '480px',
+          width: 'calc(100% - 48px)',
+        }}>
+          <LumoMascot state="cheer" size="small" />
+          <div style={{ flex: 1 }}>
+            <p style={{
+              fontSize: '15px',
+              fontWeight: '600',
+              color: 'var(--text-primary)',
+              margin: '0 0 2px',
+            }}>
+              Du lernst schon 20 Minuten.
+            </p>
+            <p style={{
+              fontSize: '13px',
+              color: 'var(--text-secondary)',
+              margin: '0',
+            }}>
+              Kurze Pause hilft dem Gedächtnis.
+            </p>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <button
+              onClick={onExit}
+              style={{
+                background: 'var(--gold)',
+                color: '#1a1206',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '8px 14px',
+                fontSize: '13px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Pause machen
+            </button>
+            <button
+              onClick={() => setShowBreakSuggestion(false)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--text-secondary)',
+                fontSize: '12px',
+                cursor: 'pointer',
+                padding: '4px',
+              }}
+            >
+              Weitermachen
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
