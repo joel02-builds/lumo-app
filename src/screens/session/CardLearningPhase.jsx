@@ -8,13 +8,15 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
   const subjectColor = getSubjectColor(block.subject);
   const [cards, setCards] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [phase, setPhase] = useState('loading'); // loading | reading | answering | feedback | done
+  const [phase, setPhase] = useState('loading'); // loading | reading | answering | feedback | final-recall | done
   const [answer, setAnswer] = useState('');
   const [feedback, setFeedback] = useState(null);
   const [error, setError] = useState(null);
   const [animating, setAnimating] = useState(false);
   const [sending, setSending] = useState(false);
   const [isGoodAnswer, setIsGoodAnswer] = useState(false);
+  const [finalFeedback, setFinalFeedback] = useState(null);
+  const [finalSending, setFinalSending] = useState(false);
 
   // Karten laden
   useEffect(() => {
@@ -74,7 +76,10 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
     setAnimating(true);
     setTimeout(() => {
       if (isLast) {
-        onDone();
+        setPhase('final-recall');
+        setAnswer('');
+        setFeedback(null);
+        setAnimating(false);
       } else {
         setCurrentIndex((i) => i + 1);
         setPhase('reading');
@@ -83,6 +88,24 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
         setAnimating(false);
       }
     }, 300);
+  }
+
+  async function handleFinalSubmit() {
+    if (!answer.trim() || finalSending) return;
+    setFinalSending(true);
+    try {
+      const result = await lumoApi.evaluateCardAnswer({
+        concept: 'Gesamtblock',
+        explanation: cards.map(c => c.explanation).join(' '),
+        question: 'Erkläre den gesamten Block in eigenen Worten.',
+        userAnswer: answer,
+      });
+      setFinalFeedback(result);
+    } catch {
+      setFinalFeedback({ isGood: true, feedback: 'Gut gemacht – du hast den Block abgeschlossen.' });
+    } finally {
+      setFinalSending(false);
+    }
   }
 
   if (error) {
@@ -105,6 +128,114 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
             Lumo bereitet deinen Block vor …
           </p>
         </div>
+      </div>
+    );
+  }
+
+  if (phase === 'final-recall') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        paddingTop: '10vh',
+        padding: '10vh 24px 40px',
+        background: 'var(--bg)',
+        gap: '24px',
+      }}>
+        <LumoMascot state={finalFeedback ? (finalFeedback.isGood ? 'cheer' : 'learning') : 'idle'} />
+
+        <div style={{ textAlign: 'center', maxWidth: '560px' }}>
+          <div style={{
+            fontSize: '11px',
+            fontWeight: '700',
+            letterSpacing: '1.5px',
+            textTransform: 'uppercase',
+            color: 'var(--gold)',
+            marginBottom: '12px',
+          }}>
+            Gesamtblock
+          </div>
+          <h2 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px' }}>
+            Erkläre den ganzen Block.
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '15px', lineHeight: '1.5' }}>
+            Stell dir vor du erklärst es jemandem der nichts davon weiß. Kein Zurückschauen.
+          </p>
+        </div>
+
+        {!finalFeedback ? (
+          <div style={{ width: '100%', maxWidth: '560px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <textarea
+              autoFocus
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              placeholder="Fass den gesamten Block in eigenen Worten zusammen …"
+              rows={6}
+              style={{
+                width: '100%',
+                resize: 'none',
+                fontSize: '16px',
+                borderRadius: '12px',
+                lineHeight: '1.6',
+              }}
+            />
+            <button
+              onClick={handleFinalSubmit}
+              disabled={!answer.trim() || finalSending}
+              style={{
+                width: '100%',
+                background: answer.trim() ? 'var(--gold)' : 'var(--bg-card)',
+                color: answer.trim() ? '#1a1206' : 'var(--text-secondary)',
+                border: 'none',
+                borderRadius: '12px',
+                padding: '16px',
+                fontSize: '17px',
+                fontWeight: '700',
+                cursor: answer.trim() ? 'pointer' : 'not-allowed',
+              }}
+            >
+              {finalSending ? 'Lumo bewertet …' : 'Abschicken'}
+            </button>
+          </div>
+        ) : (
+          <div style={{ width: '100%', maxWidth: '560px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{
+              background: finalFeedback.isGood ? 'var(--green-soft)' : 'var(--red-soft)',
+              border: `1px solid ${finalFeedback.isGood ? 'var(--green)' : 'var(--red)'}`,
+              borderRadius: '16px',
+              padding: '20px 24px',
+            }}>
+              <p style={{
+                fontSize: '17px',
+                color: 'var(--text-primary)',
+                margin: '0',
+                lineHeight: '1.6',
+                fontWeight: '500',
+              }}>
+                {finalFeedback.feedback}
+              </p>
+            </div>
+            <button
+              onClick={onDone}
+              style={{
+                width: '100%',
+                background: 'var(--gold)',
+                color: '#1a1206',
+                border: 'none',
+                borderRadius: '12px',
+                padding: '16px',
+                fontSize: '17px',
+                fontWeight: '700',
+                cursor: 'pointer',
+              }}
+            >
+              Block abschließen ✓
+            </button>
+          </div>
+        )}
       </div>
     );
   }
