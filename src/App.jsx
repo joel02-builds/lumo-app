@@ -133,7 +133,10 @@ export default function App() {
       {state.screen === SCREENS.MATERIAL_CONFIRMATION && (
         <MaterialConfirmationScreen
           blocks={state.blocks}
-          onConfirm={() => dispatch({ type: 'CONFIRM_MATERIAL' })}
+          totalBlocks={state.blocks.length}
+          recommendedOrder={state.recommendedOrder}
+          subject={state.blocks[0]?.subject}
+          onStart={() => dispatch({ type: 'CONFIRM_MATERIAL' })}
           onReanalyze={() => runAnalysis(state.goalType, state.goalDate)}
         />
       )}
