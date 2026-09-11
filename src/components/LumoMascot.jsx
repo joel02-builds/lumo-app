@@ -48,15 +48,6 @@ export default function LumoMascot({ state = 'idle', label, size = 'normal', pul
           e.target.style.display = 'none';
         }}
       />
-      {label && (
-        <span style={{
-          fontSize: '12px',
-          color: 'var(--text-secondary)',
-          fontWeight: '500',
-        }}>
-          {label}
-        </span>
-      )}
     </div>
   );
 }

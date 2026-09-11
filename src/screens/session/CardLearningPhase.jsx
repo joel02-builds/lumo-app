@@ -175,22 +175,23 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
         padding: '32px 24px',
+        paddingTop: '10vh',
         gap: '24px',
       }}>
 
         {/* Die Karte */}
         <div style={{
           width: '100%',
-          maxWidth: '560px',
+          maxWidth: '640px',
           background: 'var(--bg-card)',
           borderLeft: `1px solid ${phase === 'answering' || phase === 'feedback' ? 'transparent' : 'rgba(212, 168, 67, 0.25)'}`,
           borderRight: `1px solid ${phase === 'answering' || phase === 'feedback' ? 'transparent' : 'rgba(212, 168, 67, 0.25)'}`,
           borderBottom: `1px solid ${phase === 'answering' || phase === 'feedback' ? 'transparent' : 'rgba(212, 168, 67, 0.25)'}`,
           borderTop: `4px solid ${subjectColor}`,
           borderRadius: '20px',
-          padding: '32px',
+          padding: '36px 40px',
           boxShadow: phase === 'reading'
             ? '0 0 40px rgba(212, 168, 67, 0.08), 0 8px 32px rgba(0,0,0,0.3)'
             : '0 8px 32px rgba(0,0,0,0.3)',
@@ -239,7 +240,7 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
                 margin: '0 0 20px',
                 lineHeight: '1.5',
               }}>
-                {currentCard?.question || ''}
+                {currentCard?.question || 'Was hast du daraus mitgenommen?'}
               </p>
               <button
                 onClick={handleReadingDone}
@@ -271,7 +272,7 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
                 margin: '0 0 16px',
                 lineHeight: '1.5',
               }}>
-                {currentCard?.question || ''}
+                {currentCard?.question || 'Was hast du daraus mitgenommen?'}
               </p>
               <p style={{
                 fontSize: '13px',
