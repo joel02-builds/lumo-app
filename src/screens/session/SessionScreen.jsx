@@ -5,6 +5,7 @@ import DepthChoicePhase from './DepthChoicePhase.jsx';
 import ExplainChatPhase from './ExplainChatPhase.jsx';
 import CheckUnderstandingPhase from './CheckUnderstandingPhase.jsx';
 import BlockCompletePhase from './BlockCompletePhase.jsx';
+import SessionSummaryScreen from './SessionSummaryScreen.jsx';
 import MidSessionBreakScreen from './MidSessionBreakScreen.jsx';
 import BlockCompleteBreakScreen from './BlockCompleteBreakScreen.jsx';
 import SessionTimer from '../../components/SessionTimer.jsx';
@@ -18,6 +19,7 @@ const PHASES = {
   EXPLAIN: 'explain',
   CHECK: 'check',
   COMPLETE: 'complete',
+  SESSION_SUMMARY: 'session-summary',
   POST_BREAK: 'post-break',
 };
 
@@ -25,7 +27,7 @@ const BREAK_INTERVAL_SECONDS = 20 * 60;
 
 // Owns the full flow for exactly one block. Mount with key={block.id} from
 // the parent so a new block always starts with a clean phase state.
-export default function SessionScreen({ block, blocks, onFinished, onRecordCompletion, onPause }) {
+export default function SessionScreen({ block, blocks, onRecordCompletion, onPause }) {
   const [phase, setPhase] = useState(PHASES.FOCUS_RITUAL);
   const [depth, setDepth] = useState('simple');
   const [result, setResult] = useState(null);
@@ -92,11 +94,26 @@ export default function SessionScreen({ block, blocks, onFinished, onRecordCompl
       <BlockCompletePhase
         block={block}
         result={result}
-        onFinish={onFinished}
+        onFinish={(payload) => {
+          onRecordCompletion(payload);
+          setPhase(PHASES.SESSION_SUMMARY);
+        }}
         onTakeBreak={(payload) => {
           onRecordCompletion(payload);
           setPhase(PHASES.POST_BREAK);
         }}
+      />
+    );
+  }
+
+  if (phase === PHASES.SESSION_SUMMARY) {
+    return (
+      <SessionSummaryScreen
+        block={block}
+        evaluation={result}
+        allBlocks={blocks}
+        onContinue={onPause}
+        onPause={onPause}
       />
     );
   }

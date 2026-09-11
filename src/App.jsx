@@ -155,10 +155,6 @@ export default function App() {
           key={currentBlock.id}
           block={currentBlock}
           blocks={state.blocks}
-          onFinished={(result) => {
-            dispatch({ type: 'BLOCK_FINISHED', blockId: currentBlock.id, ...result });
-            dispatch({ type: 'RETURN_TO_DASHBOARD' });
-          }}
           onRecordCompletion={(result) => dispatch({ type: 'BLOCK_FINISHED', blockId: currentBlock.id, ...result })}
           onPause={() => dispatch({ type: 'RETURN_TO_DASHBOARD' })}
         />
