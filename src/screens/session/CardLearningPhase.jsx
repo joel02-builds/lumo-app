@@ -18,6 +18,8 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
   const [finalFeedback, setFinalFeedback] = useState(null);
   const [finalSending, setFinalSending] = useState(false);
   const [showBreakSuggestion, setShowBreakSuggestion] = useState(false);
+  const [hint, setHint] = useState('');
+  const [hintLoading, setHintLoading] = useState(false);
 
   // Karten laden
   useEffect(() => {
@@ -88,6 +90,22 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
     }
   }
 
+  async function handleNoIdea() {
+    if (hintLoading) return;
+    setHintLoading(true);
+    try {
+      const result = await lumoApi.getUnderstandingHint({
+        blockTitle: block.title,
+        blockContent: currentCard.explanation,
+      });
+      setHint(result.hint);
+    } catch {
+      setHint('Lies die Erklärung nochmal durch – was ist der Kern davon?');
+    } finally {
+      setHintLoading(false);
+    }
+  }
+
   function handleNext() {
     setAnimating(true);
     setTimeout(() => {
@@ -95,12 +113,16 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
         setPhase('final-recall');
         setAnswer('');
         setFeedback(null);
+        setHint('');
+        setHintLoading(false);
         setAnimating(false);
       } else {
         setCurrentIndex((i) => i + 1);
         setPhase('reading');
         setAnswer('');
         setFeedback(null);
+        setHint('');
+        setHintLoading(false);
         setAnimating(false);
       }
     }, 300);
@@ -451,6 +473,42 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
                   if (e.key === 'Enter' && e.metaKey) handleAnswerSubmit();
                 }}
               />
+
+              {hint && (
+                <div style={{
+                  background: 'rgba(212, 168, 67, 0.08)',
+                  border: '1px solid rgba(212, 168, 67, 0.3)',
+                  borderRadius: '10px',
+                  padding: '12px 16px',
+                  fontSize: '14px',
+                  color: 'var(--text-secondary)',
+                  lineHeight: '1.5',
+                  marginBottom: '12px',
+                }}>
+                  💡 {hint}
+                </div>
+              )}
+
+              {!hint && (
+                <button
+                  onClick={handleNoIdea}
+                  disabled={hintLoading}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--text-secondary)',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    padding: '4px',
+                    marginBottom: '12px',
+                    textDecoration: 'underline',
+                    alignSelf: 'flex-start',
+                  }}
+                >
+                  {hintLoading ? 'Lumo denkt …' : 'Keine Ahnung – zeig mir einen Hinweis'}
+                </button>
+              )}
+
               <button
                 onClick={handleAnswerSubmit}
                 disabled={!answer.trim() || sending}
