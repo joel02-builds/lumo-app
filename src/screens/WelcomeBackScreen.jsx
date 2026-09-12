@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import LumoMascot from '../components/LumoMascot.jsx';
 import Button from '../components/Button.jsx';
 import { getRecommendedBlock } from '../utils/blockProgress.js';
@@ -8,6 +9,31 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, onStartBlo
   const remaining = total - completed;
   const next = getRecommendedBlock(blocks, recommendedOrder);
   const allDone = total > 0 && completed === total;
+
+  const [streakDays, setStreakDays] = useState(0);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('lumo_streak');
+      const streak = raw ? JSON.parse(raw) : { days: 0, lastDate: null };
+      const today = new Date().toDateString();
+      const yesterday = new Date(Date.now() - 86400000).toDateString();
+
+      if (streak.lastDate === today) {
+        setStreakDays(streak.days);
+      } else if (streak.lastDate === yesterday) {
+        const newStreak = { days: streak.days + 1, lastDate: today };
+        localStorage.setItem('lumo_streak', JSON.stringify(newStreak));
+        setStreakDays(newStreak.days);
+      } else {
+        const newStreak = { days: 1, lastDate: today };
+        localStorage.setItem('lumo_streak', JSON.stringify(newStreak));
+        setStreakDays(1);
+      }
+    } catch {
+      setStreakDays(1);
+    }
+  }, []);
 
   function getGreeting() {
     const hour = new Date().getHours();
@@ -32,6 +58,23 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, onStartBlo
               {completed > 0
                 ? `Du hast ${completed} von ${total} Blöcken geschafft. Noch ${remaining} ${remaining === 1 ? 'Block' : 'Blöcke'}.`
                 : `${total} Blöcke warten auf dich.`}
+            </p>
+          )}
+          {streakDays > 1 && (
+            <p style={{
+              fontSize: '13px',
+              color: 'var(--text-secondary)',
+              margin: '-8px 0 0',
+              fontStyle: 'italic',
+            }}>
+              {streakDays === 2
+                ? 'Ich bin seit gestern dabei.'
+                : streakDays < 7
+                ? `Ich bin seit ${streakDays} Tagen dabei.`
+                : streakDays < 30
+                ? `Wir lernen seit ${streakDays} Tagen zusammen.`
+                : `${streakDays} Tage. Du machst das wirklich.`
+              }
             </p>
           )}
         </div>
