@@ -7,10 +7,8 @@ import CheckUnderstandingPhase from './CheckUnderstandingPhase.jsx';
 import BlockCompletePhase from './BlockCompletePhase.jsx';
 import SessionSummaryScreen from './SessionSummaryScreen.jsx';
 import MidSessionBreakScreen from './MidSessionBreakScreen.jsx';
-import BlockCompleteBreakScreen from './BlockCompleteBreakScreen.jsx';
 import SessionTimer from '../../components/SessionTimer.jsx';
 import BreakSuggestionToast from '../../components/BreakSuggestionToast.jsx';
-import { countCompletedToday } from '../../utils/blockProgress.js';
 
 const PHASES = {
   FOCUS_RITUAL: 'focus-ritual',
@@ -20,7 +18,6 @@ const PHASES = {
   CHECK: 'check',
   COMPLETE: 'complete',
   SESSION_SUMMARY: 'session-summary',
-  POST_BREAK: 'post-break',
 };
 
 const BREAK_INTERVAL_SECONDS = 20 * 60;
@@ -125,10 +122,6 @@ export default function SessionScreen({ block, blocks, onRecordCompletion, onPau
         onPause={onPause}
       />
     );
-  }
-
-  if (phase === PHASES.POST_BREAK) {
-    return <BlockCompleteBreakScreen completedToday={countCompletedToday(blocks)} onContinue={onPause} />;
   }
 
   return (

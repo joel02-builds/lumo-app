@@ -94,13 +94,13 @@ export default function AnalysisResultScreen({ blocks, totalBlocks, recommendedO
               background: 'var(--bg-card)',
               borderRadius: '12px',
               border: '1px solid var(--border)',
-              borderLeft: i === 0 ? `3px solid ${subjectColor}` : '1px solid var(--border)',
+              borderLeft: i === 0 ? `3px solid ${activeColor}` : '1px solid var(--border)',
             }}>
               <div style={{
                 width: '24px',
                 height: '24px',
                 borderRadius: '50%',
-                background: i === 0 ? subjectColor : 'var(--bg-card-bright)',
+                background: i === 0 ? activeColor : 'var(--bg-card-bright)',
                 color: i === 0 ? '#1a1206' : 'var(--text-secondary)',
                 display: 'flex',
                 alignItems: 'center',
