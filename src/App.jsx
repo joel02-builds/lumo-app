@@ -55,6 +55,13 @@ export default function App() {
     dispatch({ type: 'SET_MATERIAL', ...payload });
   }, []);
 
+  const handleStart = useCallback(({ subject, color } = {}) => {
+    if (color) {
+      dispatch({ type: 'SET_SUBJECT_COLOR', payload: color });
+    }
+    dispatch({ type: 'CONFIRM_MATERIAL' });
+  }, []);
+
   const runAnalysis = useCallback(
     async (goalType, goalDate) => {
       dispatch({ type: 'START_ANALYSIS', goalType, goalDate });
@@ -144,7 +151,7 @@ export default function App() {
           totalBlocks={state.blocks.length}
           recommendedOrder={state.recommendedOrder}
           subject={state.blocks[0]?.subject}
-          onStart={() => dispatch({ type: 'CONFIRM_MATERIAL' })}
+          onStart={handleStart}
           onReanalyze={() => runAnalysis(state.goalType, state.goalDate)}
         />
       )}

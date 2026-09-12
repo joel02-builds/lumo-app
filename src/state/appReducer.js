@@ -21,6 +21,7 @@ export const initialState = {
   recommendedOrder: [],
   currentBlockId: null,
   error: null,
+  subjectColor: null,
 };
 
 // Lazy-Init für useReducer: baut den Startzustand aus einem evtl. in
@@ -94,6 +95,13 @@ export function appReducer(state, action) {
 
     case 'CONFIRM_MATERIAL':
       return { ...state, screen: SCREENS.DASHBOARD };
+
+    case 'SET_SUBJECT_COLOR':
+      return {
+        ...state,
+        subjectColor: action.payload,
+        blocks: state.blocks.map((b) => ({ ...b, subject_color: action.payload })),
+      };
 
     case 'ANALYSIS_ERROR':
       return { ...state, screen: SCREENS.ONBOARDING, onboardingStep: 3, error: action.message };
