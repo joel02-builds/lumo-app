@@ -5,6 +5,7 @@ export const SCREENS = {
   DASHBOARD: 'dashboard',
   SESSION: 'session',
   WELCOME_BACK: 'welcome-back',
+  WEAK_SPOTS: 'weak-spots',
 };
 
 export const initialState = {
@@ -138,6 +139,9 @@ export function appReducer(state, action) {
 
     case 'RETURN_TO_DASHBOARD':
       return { ...state, screen: SCREENS.DASHBOARD, currentBlockId: null };
+
+    case 'VIEW_WEAK_SPOTS':
+      return { ...state, screen: SCREENS.WEAK_SPOTS };
 
     case 'START_NEW_PROJECT':
       return { ...initialState };

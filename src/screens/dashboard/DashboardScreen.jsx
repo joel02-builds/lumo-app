@@ -55,12 +55,15 @@ function BlockDot({ block }) {
   );
 }
 
-export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock, onNewProject }) {
+export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock, onNewProject, onViewWeakSpots }) {
   const total = blocks.length;
   const completed = blocks.filter((b) => b.status === 'completed').length;
   const percent = total ? Math.round((completed / total) * 100) : 0;
   const allDone = total > 0 && completed === total;
   const next = getRecommendedBlock(blocks, recommendedOrder);
+  const weakCount = blocks.filter(b =>
+    b.status === 'completed' && (b.confidence === 'unsicher' || b.confidence === 'grosse_luecken')
+  ).length;
 
   return (
     <div className="screen" style={{ justifyContent: 'flex-start', paddingTop: 'clamp(20px, 8vw, 80px)' }}>
@@ -182,6 +185,23 @@ export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock
           }}>
             Alle Blöcke geschafft. Starkes Lernen.
           </p>
+        )}
+
+        {onViewWeakSpots && (
+          <button
+            onClick={onViewWeakSpots}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: weakCount > 0 ? 'var(--red)' : 'var(--text-secondary)',
+              fontSize: '13px',
+              cursor: 'pointer',
+              padding: '8px',
+              textDecoration: 'underline',
+            }}
+          >
+            {weakCount > 0 ? `${weakCount} zum Wiederholen` : 'Mein Lernstand'}
+          </button>
         )}
 
         {onNewProject && (

@@ -10,6 +10,7 @@ import AnalyzingScreen from './screens/AnalyzingScreen.jsx';
 import DashboardScreen from './screens/dashboard/DashboardScreen.jsx';
 import SessionScreen from './screens/session/SessionScreen.jsx';
 import WelcomeBackScreen from './screens/WelcomeBackScreen.jsx';
+import WeakSpotsScreen from './screens/WeakSpotsScreen.jsx';
 import MaterialConfirmationScreen from './screens/MaterialConfirmationScreen.jsx';
 import ErrorBanner from './components/ErrorBanner.jsx';
 import LumoWordmark from './components/LumoWordmark.jsx';
@@ -162,6 +163,15 @@ export default function App() {
           recommendedOrder={state.recommendedOrder}
           onStartBlock={(blockId) => dispatch({ type: 'START_BLOCK', blockId })}
           onNewProject={handleNewProject}
+          onViewWeakSpots={() => dispatch({ type: 'VIEW_WEAK_SPOTS' })}
+        />
+      )}
+
+      {state.screen === SCREENS.WEAK_SPOTS && (
+        <WeakSpotsScreen
+          blocks={state.blocks}
+          onBack={() => dispatch({ type: 'RETURN_TO_DASHBOARD' })}
+          onStartBlock={(blockId) => dispatch({ type: 'START_BLOCK', blockId })}
         />
       )}
 
