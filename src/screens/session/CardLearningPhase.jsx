@@ -579,9 +579,8 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
                 </p>
               </div>
 
-              <button
-                onClick={handleNext}
-                style={{
+              {isGoodAnswer ? (
+                <button onClick={handleNext} style={{
                   width: '100%',
                   background: 'var(--gold)',
                   color: '#1a1206',
@@ -591,10 +590,48 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
                   fontSize: '16px',
                   fontWeight: '700',
                   cursor: 'pointer',
-                }}
-              >
-                {isLast ? 'Block abschließen' : 'Weiter →'}
-              </button>
+                }}>
+                  {isLast ? 'Block abschließen' : 'Weiter →'}
+                </button>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <button
+                    onClick={() => {
+                      setAnswer('');
+                      setFeedback(null);
+                      setIsGoodAnswer(false);
+                      setPhase('answering');
+                    }}
+                    style={{
+                      width: '100%',
+                      background: 'var(--gold)',
+                      color: '#1a1206',
+                      border: 'none',
+                      borderRadius: '12px',
+                      padding: '14px',
+                      fontSize: '16px',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Nochmal versuchen
+                  </button>
+                  <button
+                    onClick={handleNext}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--text-secondary)',
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      padding: '8px',
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    Trotzdem weiter
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>
