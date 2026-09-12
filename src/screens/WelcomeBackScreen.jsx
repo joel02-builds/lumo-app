@@ -53,7 +53,7 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, onStartBlo
               color: 'var(--gold)',
               marginBottom: '6px',
             }}>
-              Lumo empfiehlt
+              Ich empfehle
             </p>
             <p style={{
               fontSize: '18px',

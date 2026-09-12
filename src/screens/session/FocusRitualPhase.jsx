@@ -24,7 +24,7 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '16px', lineHeight: '1.5' }}>
             {isFirstBlock
-              ? 'Lumo hat alles vorbereitet. Du musst nur anfangen.'
+              ? 'Ich hab alles vorbereitet. Du musst nur anfangen.'
               : `Du hast ${completedCount} von ${totalCount} Blöcken geschafft.`}
           </p>
         </div>

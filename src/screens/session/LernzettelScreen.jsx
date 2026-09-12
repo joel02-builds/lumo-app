@@ -37,7 +37,7 @@ export default function LernzettelScreen({ block, cards, onDone, subjectColor })
         <div className="screen-content">
           <LumoMascot state="thinking" />
           <p style={{ color: 'var(--text-secondary)', fontSize: '16px' }}>
-            Lumo erstellt deinen Lernzettel …
+            Ich fasse das gerade für dich zusammen …
           </p>
         </div>
       </div>

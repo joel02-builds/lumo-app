@@ -5,19 +5,21 @@ import Button from '../../components/Button.jsx';
 const MESSAGES = {
   sicher: [
     'Du hast es. Wirklich.',
-    'Das sitzt. Lumo ist stolz.',
-    'Verstanden. Abgehakt. Weiter.',
-    'Das war echter Fortschritt.',
+    'Das sitzt. Ich bin stolz auf dich.',
+    'Verstanden. Abgehakt. Weiter geht\'s.',
+    'Das war echter Fortschritt heute.',
+    'Ich hab\'s gesehen – du hast das verstanden.',
   ],
   unsicher: [
-    'Gut versucht. Kommt nochmal.',
+    'Gut versucht. Ich merk mir was noch fehlt.',
     'Fast da. Beim nächsten Mal sitzt es.',
-    'Du hast es angepackt. Das zählt.',
+    'Du hast es angepackt – das zählt für mich.',
+    'Ich bring das nochmal wenn du bereit bist.',
   ],
   grosse_luecken: [
     'Anfangen ist das Schwerste. Du hast angefangen.',
-    'Noch nicht da – aber du warst dabei.',
-    'Lumo merkt sich was noch fehlt.',
+    'Noch nicht da – aber ich bin dabei.',
+    'Ich merk mir was noch fehlt. Wir holen das nach.',
   ],
 };
 

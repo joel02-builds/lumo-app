@@ -13,8 +13,8 @@ export default function OnboardingScreen1({ onNext }) {
             Du lernst.<br />Lumo übernimmt den Rest.
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '16px', lineHeight: '1.6' }}>
-            Kein Planen. Kein Strukturieren. Kein Rätseln was als nächstes kommt.
-            Lumo führt dich – Schritt für Schritt – durch dein Lernmaterial.
+            Ich plane. Ich strukturiere. Ich sage dir was als nächstes kommt.
+            Du lernst – ich kümmere mich um den Rest.
           </p>
         </div>
 

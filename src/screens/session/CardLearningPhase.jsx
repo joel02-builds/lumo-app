@@ -103,7 +103,7 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely, 
       });
       setHint(result.hint);
     } catch {
-      setHint('Lies die Erklärung nochmal durch – was ist der Kern davon?');
+      setHint('Ich geb dir einen Tipp: Was ist die eine Sache die du dir merken musst?');
     } finally {
       setHintLoading(false);
     }
@@ -168,7 +168,7 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely, 
         <div className="screen-content">
           <LumoMascot state="thinking" label="Lumo" />
           <p style={{ color: 'var(--text-secondary)', fontSize: '16px' }}>
-            Lumo bereitet deinen Block vor …
+            Ich bereite deinen Block vor …
           </p>
         </div>
       </div>
