@@ -20,6 +20,7 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
   const [showBreakSuggestion, setShowBreakSuggestion] = useState(false);
   const [hint, setHint] = useState('');
   const [hintLoading, setHintLoading] = useState(false);
+  const [clickedCheck, setClickedCheck] = useState(false);
 
   // Karten laden
   useEffect(() => {
@@ -115,6 +116,7 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
         setFeedback(null);
         setHint('');
         setHintLoading(false);
+        setClickedCheck(false);
         setAnimating(false);
       } else {
         setCurrentIndex((i) => i + 1);
@@ -123,6 +125,7 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
         setFeedback(null);
         setHint('');
         setHintLoading(false);
+        setClickedCheck(false);
         setAnimating(false);
       }
     }, 300);
@@ -404,7 +407,7 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
             </p>
           )}
 
-          {/* Lumos Frage */}
+          {/* Klick-Check statt direktem Antworten-Button */}
           {phase === 'reading' && (
             <>
               <div style={{
@@ -412,32 +415,70 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
                 background: 'var(--border)',
                 margin: '0 0 20px',
               }} />
-              <p style={{
-                fontSize: '16px',
-                color: 'var(--gold)',
-                fontWeight: '500',
-                margin: '0 0 20px',
-                lineHeight: '1.5',
-              }}>
-                {currentCard?.question || 'Was hast du daraus mitgenommen?'}
-              </p>
-              <button
-                onClick={handleReadingDone}
-                style={{
-                  width: '100%',
-                  background: 'var(--gold)',
-                  color: '#1a1206',
-                  border: 'none',
-                  borderRadius: '12px',
-                  padding: '14px',
-                  fontSize: '16px',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                Antworten
-              </button>
+              {!clickedCheck ? (
+                <button
+                  onClick={() => setClickedCheck(true)}
+                  style={{
+                    width: '100%',
+                    background: 'var(--gold)',
+                    color: '#1a1206',
+                    border: 'none',
+                    borderRadius: '12px',
+                    padding: '14px',
+                    fontSize: '16px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    marginTop: '8px',
+                  }}
+                >
+                  Hat es klick gemacht? ✓
+                </button>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '8px' }}>
+                  <p style={{
+                    fontSize: '14px',
+                    color: 'var(--text-secondary)',
+                    textAlign: 'center',
+                    margin: '0 0 4px',
+                  }}>
+                    {currentCard?.question || 'Was hast du gerade verstanden?'}
+                  </p>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                      onClick={handleReadingDone}
+                      style={{
+                        flex: 1,
+                        background: 'var(--gold)',
+                        color: '#1a1206',
+                        border: 'none',
+                        borderRadius: '12px',
+                        padding: '13px',
+                        fontSize: '15px',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Ja, verstanden
+                    </button>
+                    <button
+                      onClick={() => setClickedCheck(false)}
+                      style={{
+                        flex: 1,
+                        background: 'var(--bg-card-bright)',
+                        color: 'var(--text-secondary)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '12px',
+                        padding: '13px',
+                        fontSize: '15px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Nein, nochmal
+                    </button>
+                  </div>
+                </div>
+              )}
             </>
           )}
 
@@ -445,11 +486,11 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
           {phase === 'answering' && (
             <>
               <p style={{
-                fontSize: '16px',
+                fontSize: '22px',
                 color: 'var(--gold)',
-                fontWeight: '500',
+                fontWeight: '700',
                 margin: '0 0 16px',
-                lineHeight: '1.5',
+                lineHeight: '1.4',
               }}>
                 {currentCard?.question || 'Was hast du daraus mitgenommen?'}
               </p>
