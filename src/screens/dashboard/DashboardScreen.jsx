@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import LumoMascot from '../../components/LumoMascot.jsx';
 import Button from '../../components/Button.jsx';
 import { getRecommendedBlock } from '../../utils/blockProgress.js';
+import { getSubjectColor } from '../../utils/subjectColors.js';
 
 function statusLabel(block) {
   if (block.status === 'not-started') return 'Nicht gestartet';
@@ -10,7 +12,8 @@ function statusLabel(block) {
   return 'Wiederholen';
 }
 
-function BlockDot({ block }) {
+function BlockDot({ block, subjectColor }) {
+  const activeColor = subjectColor || 'var(--gold)';
   if (block.status === 'completed' && block.confidence === 'sicher') {
     return (
       <div style={{
@@ -40,8 +43,8 @@ function BlockDot({ block }) {
     return (
       <div style={{
         width: '10px', height: '10px', borderRadius: '50%',
-        background: 'var(--gold)', flexShrink: 0,
-        boxShadow: '0 0 8px var(--gold)',
+        background: activeColor, flexShrink: 0,
+        boxShadow: `0 0 8px ${activeColor}`,
         animation: 'lumo-pulse 2s ease-in-out infinite',
       }} />
     );
@@ -56,6 +59,7 @@ function BlockDot({ block }) {
 }
 
 export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock, onNewProject, onViewWeakSpots }) {
+  const [expandedBlock, setExpandedBlock] = useState(null);
   const total = blocks.length;
   const completed = blocks.filter((b) => b.status === 'completed').length;
   const percent = total ? Math.round((completed / total) * 100) : 0;
@@ -109,63 +113,178 @@ export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock
           {blocks.map((b) => {
             const isNext = next && b.id === next.id;
             const isDone = b.status === 'completed';
+            const isExpanded = expandedBlock === b.id;
+            const color = getSubjectColor(b.subject);
+
             return (
-              <button
-                key={b.id}
-                onClick={() => onStartBlock(b.id)}
-                style={{
-                  width: '100%',
-                  background: isNext ? 'var(--bg-card)' : 'var(--bg-elevated)',
-                  border: isNext
-                    ? '1px solid var(--gold)'
-                    : isDone
-                    ? '1px solid var(--border)'
-                    : '1px solid var(--border)',
-                  borderRadius: '14px',
-                  padding: '16px 18px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '14px',
-                  textAlign: 'left',
-                  transition: 'all 0.15s ease',
-                  opacity: isDone && b.confidence === 'sicher' ? 0.7 : 1,
-                }}
-              >
-                <BlockDot block={b} />
-                <div style={{ flex: 1 }}>
-                  <div style={{
-                    fontSize: '16px',
-                    fontWeight: isNext ? '600' : '500',
-                    color: 'var(--text-primary)',
-                    marginBottom: '2px',
-                  }}>
-                    {b.title}
+              <div key={b.id} style={{ width: '100%' }}>
+                <button
+                  onClick={() => setExpandedBlock(isExpanded ? null : b.id)}
+                  style={{
+                    width: '100%',
+                    background: isNext ? 'var(--bg-card)' : 'var(--bg-elevated)',
+                    border: isNext
+                      ? `1px solid ${color}`
+                      : isExpanded
+                      ? '1px solid var(--border)'
+                      : '1px solid var(--border)',
+                    borderRadius: isExpanded ? '12px 12px 0 0' : '14px',
+                    padding: '16px 18px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '14px',
+                    textAlign: 'left',
+                    transition: 'all 0.15s ease',
+                    opacity: isDone && b.confidence === 'sicher' ? 0.7 : 1,
+                  }}
+                >
+                  <BlockDot block={b} subjectColor={color} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{
+                      fontSize: '16px',
+                      fontWeight: isNext ? '600' : '500',
+                      color: 'var(--text-primary)',
+                      marginBottom: '2px',
+                    }}>
+                      {b.title}
+                    </div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                      {statusLabel(b)} · {b.estimatedMinutes || '?'} Min.
+                    </div>
                   </div>
-                  <div style={{
-                    fontSize: '13px',
-                    color: b.status === 'completed' && b.confidence === 'grosse_luecken'
-                      ? 'var(--red)'
-                      : 'var(--text-secondary)',
-                  }}>
-                    {statusLabel(b)}
-                  </div>
-                </div>
-                {isNext && (
+                  {isNext && (
+                    <span style={{
+                      fontSize: '11px',
+                      fontWeight: '700',
+                      color: color,
+                      background: `${color}22`,
+                      padding: '4px 10px',
+                      borderRadius: '20px',
+                      letterSpacing: '0.5px',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      Jetzt
+                    </span>
+                  )}
                   <span style={{
-                    fontSize: '11px',
-                    fontWeight: '700',
-                    color: 'var(--gold)',
-                    background: 'var(--gold-soft)',
-                    padding: '4px 10px',
-                    borderRadius: '20px',
-                    letterSpacing: '0.5px',
-                    whiteSpace: 'nowrap',
+                    color: 'var(--text-secondary)',
+                    fontSize: '12px',
+                    transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s ease',
+                    flexShrink: 0,
                   }}>
-                    Jetzt
+                    ▾
                   </span>
+                </button>
+
+                {/* Ausgeklappter Inhalt */}
+                {isExpanded && (
+                  <div style={{
+                    background: 'var(--bg-card)',
+                    border: '1px solid var(--border)',
+                    borderTop: 'none',
+                    borderRadius: '0 0 12px 12px',
+                    padding: '16px 18px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                  }}>
+                    {/* Konzepte falls vorhanden */}
+                    {b.cards?.length > 0 ? (
+                      <div>
+                        <p style={{
+                          fontSize: '11px',
+                          fontWeight: '700',
+                          letterSpacing: '1px',
+                          textTransform: 'uppercase',
+                          color: 'var(--text-secondary)',
+                          margin: '0 0 8px',
+                        }}>
+                          Themen in diesem Block
+                        </p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          {b.cards.map((card, i) => (
+                            <div key={i} style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              fontSize: '14px',
+                              color: 'var(--text-secondary)',
+                            }}>
+                              <div style={{
+                                width: '6px',
+                                height: '6px',
+                                borderRadius: '50%',
+                                background: color,
+                                flexShrink: 0,
+                              }} />
+                              {card.concept || card}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <p style={{
+                        fontSize: '14px',
+                        color: 'var(--text-secondary)',
+                        margin: '0',
+                        fontStyle: 'italic',
+                      }}>
+                        Starte den Block um die Themen zu sehen.
+                      </p>
+                    )}
+
+                    {/* Unsichere Punkte falls vorhanden */}
+                    {b.uncertainPoints?.length > 0 && (
+                      <div>
+                        <p style={{
+                          fontSize: '11px',
+                          fontWeight: '700',
+                          letterSpacing: '1px',
+                          textTransform: 'uppercase',
+                          color: 'var(--red)',
+                          margin: '0 0 8px',
+                        }}>
+                          Noch wiederholen
+                        </p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          {b.uncertainPoints.map((point, i) => (
+                            <div key={i} style={{
+                              fontSize: '13px',
+                              color: 'var(--text-secondary)',
+                              paddingLeft: '12px',
+                              borderLeft: '2px solid var(--red)',
+                              lineHeight: '1.4',
+                            }}>
+                              {point}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Start Button */}
+                    <button
+                      onClick={() => onStartBlock(b.id)}
+                      style={{
+                        width: '100%',
+                        background: isNext ? color : 'var(--bg-card-bright)',
+                        color: isNext ? '#1a1206' : 'var(--text-primary)',
+                        border: isNext ? 'none' : '1px solid var(--border)',
+                        borderRadius: '10px',
+                        padding: '12px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        marginTop: '4px',
+                      }}
+                    >
+                      {isDone ? 'Nochmal lernen' : isNext ? 'Jetzt starten →' : 'Block starten'}
+                    </button>
+                  </div>
                 )}
-              </button>
+              </div>
             );
           })}
         </div>
