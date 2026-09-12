@@ -1,6 +1,8 @@
 // Persistenter Schriftzug oben links, auf allen Screens außer dem Welcome-Screen.
 // Klick führt immer zurück zum Dashboard.
-export default function LumoWordmark({ onClick }) {
+// hidden: blendet die Wordmark komplett aus – für Screens mit eigenem Header
+// (z. B. CardLearningPhase, ExplainChatPhase), die sonst mit ihr kollidieren.
+export default function LumoWordmark({ onClick, hidden = false }) {
   return (
     <button
       type="button"
@@ -14,7 +16,7 @@ export default function LumoWordmark({ onClick }) {
         background: 'none',
         border: 'none',
         cursor: 'pointer',
-        display: 'flex',
+        display: hidden ? 'none' : 'flex',
         alignItems: 'center',
         gap: '8px',
         padding: '4px 8px',

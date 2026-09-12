@@ -288,7 +288,7 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
     }}>
 
       {/* Header */}
-      <div style={{
+      <div className="card-header" style={{
         padding: '14px 24px',
         borderBottom: '1px solid var(--border)',
         background: 'var(--bg-elevated)',
@@ -297,9 +297,15 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
         gap: '12px',
         flexShrink: 0,
       }}>
-        <LumoMascot state="learning" label="" size="small" />
+        <div style={{
+          width: '8px',
+          height: '8px',
+          borderRadius: '50%',
+          background: 'var(--gold)',
+          flexShrink: 0,
+        }} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{
+          <div className="card-header-title" style={{
             fontSize: '11px',
             fontWeight: '600',
             letterSpacing: '1.5px',

@@ -18,6 +18,11 @@ import OfflineBanner from './components/OfflineBanner.jsx';
 export default function App() {
   const [state, dispatch] = useReducer(appReducer, null, () => createInitialState(loadProject()));
 
+  // Wird von SessionScreen gemeldet: true während einer Phase mit eigenem
+  // Header (CardLearningPhase, ExplainChatPhase, CheckUnderstandingPhase), die
+  // sonst mit der fixed positionierten LumoWordmark kollidieren würde.
+  const [sessionHasOwnHeader, setSessionHasOwnHeader] = useState(false);
+
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
   useEffect(() => {
     function handleOnline() {
@@ -89,7 +94,10 @@ export default function App() {
       {!isOnline && <OfflineBanner />}
 
       {!isWelcomeScreen && (
-        <LumoWordmark onClick={() => dispatch({ type: 'RETURN_TO_DASHBOARD' })} />
+        <LumoWordmark
+          onClick={() => dispatch({ type: 'RETURN_TO_DASHBOARD' })}
+          hidden={state.screen === SCREENS.SESSION && sessionHasOwnHeader}
+        />
       )}
 
       {state.screen === SCREENS.WELCOME_BACK && (
@@ -157,6 +165,7 @@ export default function App() {
           blocks={state.blocks}
           onRecordCompletion={(result) => dispatch({ type: 'BLOCK_FINISHED', blockId: currentBlock.id, ...result })}
           onPause={() => dispatch({ type: 'RETURN_TO_DASHBOARD' })}
+          onHeaderVisibilityChange={setSessionHasOwnHeader}
         />
       )}
     </>

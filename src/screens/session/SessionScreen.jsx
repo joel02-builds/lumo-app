@@ -27,7 +27,7 @@ const BREAK_INTERVAL_SECONDS = 20 * 60;
 
 // Owns the full flow for exactly one block. Mount with key={block.id} from
 // the parent so a new block always starts with a clean phase state.
-export default function SessionScreen({ block, blocks, onRecordCompletion, onPause }) {
+export default function SessionScreen({ block, blocks, onRecordCompletion, onPause, onHeaderVisibilityChange }) {
   const [phase, setPhase] = useState(PHASES.FOCUS_RITUAL);
   const [depth, setDepth] = useState('simple');
   const [result, setResult] = useState(null);
@@ -52,6 +52,15 @@ export default function SessionScreen({ block, blocks, onRecordCompletion, onPau
     }, 1000);
     return () => clearInterval(interval);
   }, [timerActive]);
+
+  // Phasen mit eigenem, kompaktem Header (CardLearningPhase, ExplainChatPhase)
+  // sowie CheckUnderstandingPhase kollidieren mit der global fixed positionierten
+  // LumoWordmark aus App.jsx – da SessionScreen sie selbst nicht rendert, muss
+  // die Sichtbarkeits-Entscheidung an den Elternteil zurückgemeldet werden.
+  const hasOwnHeader = phase === PHASES.CARDS || phase === PHASES.EXPLAIN || phase === PHASES.CHECK;
+  useEffect(() => {
+    onHeaderVisibilityChange?.(hasOwnHeader);
+  }, [hasOwnHeader, onHeaderVisibilityChange]);
 
   const currentThreshold = Math.floor(elapsedSeconds / BREAK_INTERVAL_SECONDS);
   const showBreakSuggestion = timerActive && currentThreshold > lastPromptThreshold && phase !== PHASES.CARDS;

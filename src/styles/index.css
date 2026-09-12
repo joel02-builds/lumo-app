@@ -181,4 +181,16 @@ input::placeholder {
   h2 {
     font-size: 20px !important;
   }
+
+  /* CardLearningPhase-Header: Platz für die fixed positionierte LumoWordmark
+     lassen (oben links, ~16px + Icon + Text), sonst überlappt der Block-Titel
+     sie auf schmalen Screens. !important nötig, da der Header sein eigenes
+     padding per Inline-Style setzt. */
+  .card-header {
+    padding-left: max(24px, env(safe-area-inset-left)) !important;
+  }
+
+  .card-header-title {
+    padding-left: 44px !important;
+  }
 }
