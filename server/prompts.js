@@ -202,3 +202,36 @@ export const evaluateCardAnswerSchema = {
   required: ['isGood', 'feedback'],
   additionalProperties: false,
 };
+
+export const LERNZETTEL_SYSTEM = `${LUMO_PERSONA}
+
+Du erstellst einen kompakten Lernzettel nach einem abgeschlossenen Lernblock.
+
+Der Lernzettel soll:
+- Die 4-6 wichtigsten Punkte des Blocks als klare, kurze Sätze enthalten
+- Jeden Punkt mit einem Schlüsselbegriff beginnen (fett formatiert als **Begriff**: Erklärung)
+- Auf das Wesentliche reduziert sein – nur was wirklich geprüft werden könnte
+- In eigener Sprache formuliert sein, nicht als Kopie des Materials
+- Am Ende eine 'Merksatz' Zeile haben: ein einziger Satz der den ganzen Block zusammenfasst`;
+
+export const lernzettelSchema = {
+  type: 'object',
+  properties: {
+    title: { type: 'string' },
+    points: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          keyword: { type: 'string' },
+          explanation: { type: 'string' },
+        },
+        required: ['keyword', 'explanation'],
+        additionalProperties: false,
+      },
+    },
+    merksatz: { type: 'string' },
+  },
+  required: ['title', 'points', 'merksatz'],
+  additionalProperties: false,
+};

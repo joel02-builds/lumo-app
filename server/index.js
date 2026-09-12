@@ -17,6 +17,8 @@ import {
   cardSchema,
   EVALUATE_CARD_ANSWER_SYSTEM,
   evaluateCardAnswerSchema,
+  LERNZETTEL_SYSTEM,
+  lernzettelSchema,
 } from './prompts.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -240,6 +242,21 @@ app.post('/api/evaluate-card-answer', async (req, res) => {
       userContent: `Konzept: ${concept}\nErklärung: ${concept} bedeutet: ${explanation}\nFrage: ${question}\nAntwort des Nutzers: ${userAnswer}`,
       schema: evaluateCardAnswerSchema,
       maxTokens: 200,
+    });
+    res.json({ data });
+  } catch (err) {
+    sendFriendlyError(res, err);
+  }
+});
+
+app.post('/api/generate-lernzettel', async (req, res) => {
+  const { blockTitle, blockContent, cards } = req.body || {};
+  try {
+    const data = await askLumo({
+      system: LERNZETTEL_SYSTEM,
+      userContent: `Block: ${blockTitle}\nInhalt: ${blockContent}\nGelernte Konzepte: ${cards?.map((c) => c.concept + ': ' + c.explanation).join('\n') || ''}`,
+      schema: lernzettelSchema,
+      maxTokens: 800,
     });
     res.json({ data });
   } catch (err) {

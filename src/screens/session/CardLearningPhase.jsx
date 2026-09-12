@@ -4,7 +4,7 @@ import ErrorBanner from '../../components/ErrorBanner.jsx';
 import { lumoApi } from '../../api/lumo.js';
 import { getSubjectColor } from '../../utils/subjectColors.js';
 
-export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }) {
+export default function CardLearningPhase({ block, onDone, onExit, onAskFreely, onCardsReady }) {
   const subjectColor = getSubjectColor(block.subject);
   const [cards, setCards] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -33,6 +33,7 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely }
       if (!cancelled) {
         setCards(data.cards);
         setPhase('reading');
+        onCardsReady?.(data.cards);
       }
     }).catch((err) => {
       if (!cancelled) setError(err.message);

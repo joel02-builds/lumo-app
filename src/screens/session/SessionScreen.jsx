@@ -5,10 +5,12 @@ import DepthChoicePhase from './DepthChoicePhase.jsx';
 import ExplainChatPhase from './ExplainChatPhase.jsx';
 import CheckUnderstandingPhase from './CheckUnderstandingPhase.jsx';
 import BlockCompletePhase from './BlockCompletePhase.jsx';
+import LernzettelScreen from './LernzettelScreen.jsx';
 import SessionSummaryScreen from './SessionSummaryScreen.jsx';
 import MidSessionBreakScreen from './MidSessionBreakScreen.jsx';
 import SessionTimer from '../../components/SessionTimer.jsx';
 import BreakSuggestionToast from '../../components/BreakSuggestionToast.jsx';
+import { getSubjectColor } from '../../utils/subjectColors.js';
 
 const PHASES = {
   FOCUS_RITUAL: 'focus-ritual',
@@ -17,6 +19,7 @@ const PHASES = {
   EXPLAIN: 'explain',
   CHECK: 'check',
   COMPLETE: 'complete',
+  LERNZETTEL: 'lernzettel',
   SESSION_SUMMARY: 'session-summary',
 };
 
@@ -28,6 +31,7 @@ export default function SessionScreen({ block, blocks, onRecordCompletion, onPau
   const [phase, setPhase] = useState(PHASES.FOCUS_RITUAL);
   const [depth, setDepth] = useState('simple');
   const [result, setResult] = useState(null);
+  const [sessionCards, setSessionCards] = useState([]);
 
   // Pause-Empfehlung alle 20 aktiven Minuten, als Overlay statt Phasenwechsel
   // (siehe MidSessionBreakScreen), damit Chatverlauf/Antwort erhalten bleiben.
@@ -102,12 +106,23 @@ export default function SessionScreen({ block, blocks, onRecordCompletion, onPau
         result={result}
         onContinue={() => {
           onRecordCompletion(result);
-          setPhase(PHASES.SESSION_SUMMARY);
+          setPhase(PHASES.LERNZETTEL);
         }}
         onPause={() => {
           onRecordCompletion(result);
           onPause();
         }}
+      />
+    );
+  }
+
+  if (phase === PHASES.LERNZETTEL) {
+    return (
+      <LernzettelScreen
+        block={block}
+        cards={sessionCards}
+        subjectColor={block?.subject_color || getSubjectColor(block?.subject)}
+        onDone={() => setPhase(PHASES.SESSION_SUMMARY)}
       />
     );
   }
@@ -134,6 +149,7 @@ export default function SessionScreen({ block, blocks, onRecordCompletion, onPau
           onDone={handleCardsDone}
           onExit={onPause}
           onAskFreely={() => setPhase(PHASES.DEPTH_CHOICE)}
+          onCardsReady={(cards) => setSessionCards(cards)}
         />
       )}
 
