@@ -137,6 +137,16 @@ export function appReducer(state, action) {
         ),
       };
 
+    case 'SAVE_BLOCK_CARDS':
+      return {
+        ...state,
+        blocks: state.blocks.map(b =>
+          b.id === action.payload.blockId
+            ? { ...b, cards: action.payload.cards }
+            : b
+        ),
+      };
+
     case 'RETURN_TO_DASHBOARD':
       return { ...state, screen: SCREENS.DASHBOARD, currentBlockId: null };
 

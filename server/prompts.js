@@ -154,8 +154,16 @@ Deine Aufgabe:
 3. Jedes Konzept besteht aus:
    - explanation: Das Konzept in maximal 3 klaren Sätzen erklärt. Direkt, konkret, mit Alltagsbeispiel wenn möglich
    - question: Eine einzige kurze Verständnisfrage die prüft ob das Konzept verstanden wurde. Keine Ja/Nein-Frage. Immer eine offene Frage.
-4. Beginne mit einer Überblick-Karte (concept: "Überblick") die in 2 Sätzen erklärt worum es in diesem Block überhaupt geht
-5. Sprache: warm, direkt, einfach – nie akademisch`;
+4. Entscheide für jede Karte ob ein Visual helfen würde:
+   - visual_type: 'none' wenn Text ausreicht
+   - visual_type: 'comparison' für A vs B Vergleiche (visual_data: left_label, right_label, items als Unterschiede)
+   - visual_type: 'timeline' für zeitliche Abfolgen (visual_data: items als chronologische Punkte)
+   - visual_type: 'cause_effect' für Ursache → Wirkung (visual_data: items[0] = Ursache, items[1] = Wirkung)
+   - visual_type: 'list' für Aufzählungen die als Bullets klarer sind (visual_data: title, items)
+   - visual_type: 'process' für Schritte/Prozesse (visual_data: steps)
+   Setze visual_type auf 'none' wenn unsicher – nur wenn wirklich hilfreicher als Text.
+5. Beginne mit einer Überblick-Karte (concept: "Überblick") die in 2 Sätzen erklärt worum es in diesem Block überhaupt geht
+6. Sprache: warm, direkt, einfach – nie akademisch`;
 
 export const cardSchema = {
   type: 'object',
@@ -168,8 +176,29 @@ export const cardSchema = {
           concept: { type: 'string' },
           explanation: { type: 'string' },
           question: { type: 'string' },
+          visual_type: {
+            type: 'string',
+            enum: ['none', 'comparison', 'timeline', 'cause_effect', 'list', 'process']
+          },
+          visual_data: {
+            type: 'object',
+            properties: {
+              title: { type: 'string' },
+              items: {
+                type: 'array',
+                items: { type: 'string' }
+              },
+              left_label: { type: 'string' },
+              right_label: { type: 'string' },
+              steps: {
+                type: 'array',
+                items: { type: 'string' }
+              }
+            },
+            additionalProperties: false
+          }
         },
-        required: ['concept', 'explanation', 'question'],
+        required: ['concept', 'explanation', 'question', 'visual_type'],
         additionalProperties: false,
       },
     },

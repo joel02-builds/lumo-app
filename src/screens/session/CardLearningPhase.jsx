@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import LumoMascot from '../../components/LumoMascot.jsx';
 import ErrorBanner from '../../components/ErrorBanner.jsx';
+import CardVisual from '../../components/CardVisual.jsx';
 import { lumoApi } from '../../api/lumo.js';
 import { getSubjectColor } from '../../utils/subjectColors.js';
 
@@ -406,6 +407,14 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely, 
             }}>
               {currentCard?.explanation || ''}
             </p>
+          )}
+
+          {phase === 'reading' && (
+            <CardVisual
+              visual_type={currentCard?.visual_type}
+              visual_data={currentCard?.visual_data}
+              subjectColor={subjectColor}
+            />
           )}
 
           {/* Klick-Check statt direktem Antworten-Button */}
