@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "latest",
+    "canvas-confetti": "^1.9.4",
     "cors": "latest",
     "dotenv": "latest",
     "express": "latest",

@@ -103,13 +103,13 @@ export default function SessionScreen({ block, blocks, onRecordCompletion, onPau
       <BlockCompletePhase
         block={block}
         result={result}
-        onFinish={(payload) => {
-          onRecordCompletion(payload);
+        onContinue={() => {
+          onRecordCompletion(result);
           setPhase(PHASES.SESSION_SUMMARY);
         }}
-        onTakeBreak={(payload) => {
-          onRecordCompletion(payload);
-          setPhase(PHASES.POST_BREAK);
+        onPause={() => {
+          onRecordCompletion(result);
+          onPause();
         }}
       />
     );
