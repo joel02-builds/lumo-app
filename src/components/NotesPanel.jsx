@@ -42,7 +42,7 @@ export default function NotesPanel({ blockId }) {
             className="notes-textarea"
             value={text}
             onChange={handleChange}
-            placeholder="Halt hier fest, was dir auffällt …"
+            placeholder="Allgemeine Notizen zu diesem Block …"
             autoFocus
           />
         </div>

@@ -386,6 +386,10 @@ export const conceptMapSchema = {
   additionalProperties: false,
 };
 
+// Aktuell ungenutzt in index.js: die pretest_question wird direkt als Teil von
+// cardSchema über CARD_SYSTEM erzeugt, nicht über einen eigenen Request. Als
+// Vorlage/Dokumentation für einen möglichen separaten /api/generate-pretest-
+// Endpunkt aufbewahrt.
 export const PRETEST_SYSTEM = `${LUMO_PERSONA}
 
 Erstelle eine kurze Pre-test Frage für ein Lernkonzept.

@@ -679,7 +679,7 @@ export default function CardLearningPhase({ block, goalType, mood, onDone, onExi
                 }}
               >
                 <span>{noteOpen ? '▾' : '▸'}</span>
-                {noteText ? 'Notiz bearbeiten' : '+ Notiz hinzufügen'}
+                {noteText ? 'Notiz bearbeiten' : '+ Notiz zu dieser Karte'}
               </button>
               {noteOpen && (
                 <textarea
