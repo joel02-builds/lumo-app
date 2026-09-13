@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+
 const MASCOT_STATES = {
   idle:      '/mascot/lumo-idle.png',
   learning:  '/mascot/lumo-learning.png',
@@ -16,7 +18,20 @@ const FALLBACKS = {
 
 export default function LumoMascot({ state = 'idle', label, size = 'normal', pulseOnce }) {
   const src = MASCOT_STATES[state] || MASCOT_STATES.idle;
-  const px = size === 'small' ? 40 : 100;
+  const px = size === 'small' ? 40 : 120;
+
+  const [visible, setVisible] = useState(true);
+  const [currentSrc, setCurrentSrc] = useState(src);
+
+  useEffect(() => {
+    if (src === currentSrc) return;
+    setVisible(false);
+    const timer = setTimeout(() => {
+      setCurrentSrc(src);
+      setVisible(true);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [src]);
 
   return (
     <div style={{
@@ -26,12 +41,13 @@ export default function LumoMascot({ state = 'idle', label, size = 'normal', pul
       gap: '6px',
     }}>
       <img
-        src={src}
+        src={currentSrc}
         alt={`Lumo ${state}`}
         width={px}
         height={px}
         style={{
           objectFit: 'contain',
+          opacity: visible ? 1 : 0,
           animation: pulseOnce
             ? 'lumo-pulse-once 0.6s ease-out'
             : state === 'thinking'
@@ -42,7 +58,7 @@ export default function LumoMascot({ state = 'idle', label, size = 'normal', pul
           filter: state === 'complete'
             ? 'drop-shadow(0 0 12px rgba(212,168,67,0.6))'
             : 'none',
-          transition: 'all 0.3s ease',
+          transition: 'opacity 0.15s ease, filter 0.3s ease',
         }}
         onError={(e) => {
           e.target.style.display = 'none';

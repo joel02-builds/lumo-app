@@ -3,6 +3,20 @@ import LumoMascot from '../components/LumoMascot.jsx';
 import Button from '../components/Button.jsx';
 import { SUBJECT_COLORS, getSubjectColor } from '../utils/subjectColors.js';
 
+const SUBJECT_LABELS = {
+  biologie: 'Biologie',
+  chemie: 'Chemie',
+  physik: 'Physik',
+  mathematik: 'Mathematik',
+  geschichte: 'Geschichte',
+  psychologie: 'Psychologie',
+  wirtschaft: 'Wirtschaft',
+  informatik: 'Informatik',
+  sprachen: 'Sprachen',
+  medizin: 'Medizin',
+  jura: 'Jura',
+};
+
 export default function AnalysisResultScreen({ blocks, totalBlocks, recommendedOrder, onStart, onReanalyze, subject }) {
   const subjectColor = getSubjectColor(subject);
   const [selectedColor, setSelectedColor] = useState(null);
@@ -45,7 +59,7 @@ export default function AnalysisResultScreen({ blocks, totalBlocks, recommendedO
                   <button
                     key={key}
                     onClick={() => setSelectedColor(color)}
-                    title={key}
+                    title={SUBJECT_LABELS[key] || key}
                     style={{
                       width: '24px',
                       height: '24px',

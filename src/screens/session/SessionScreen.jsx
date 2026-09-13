@@ -32,6 +32,7 @@ export default function SessionScreen({ block, blocks, goalType, onRecordComplet
   const [depth, setDepth] = useState('simple');
   const [result, setResult] = useState(null);
   const [sessionCards, setSessionCards] = useState([]);
+  const [sessionStartTime] = useState(() => Date.now());
 
   // Pause-Empfehlung alle 20 aktiven Minuten, als Overlay statt Phasenwechsel
   // (siehe MidSessionBreakScreen), damit Chatverlauf/Antwort erhalten bleiben.
@@ -133,6 +134,7 @@ export default function SessionScreen({ block, blocks, goalType, onRecordComplet
         block={block}
         evaluation={result}
         allBlocks={blocks}
+        sessionMinutes={Math.round((Date.now() - sessionStartTime) / 60000)}
         onContinue={onPause}
         onPause={onPause}
       />

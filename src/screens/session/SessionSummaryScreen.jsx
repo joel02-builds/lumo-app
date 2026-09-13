@@ -1,7 +1,7 @@
 import LumoMascot from '../../components/LumoMascot.jsx';
 import { getBlockColor } from '../../utils/subjectColors.js';
 
-export default function SessionSummaryScreen({ block, evaluation, onContinue, onPause, allBlocks }) {
+export default function SessionSummaryScreen({ block, evaluation, onContinue, onPause, allBlocks, sessionMinutes }) {
   const subjectColor = getBlockColor(block);
   const completedCount = allBlocks?.filter(b => b.status === 'completed').length || 0;
   const totalCount = allBlocks?.length || 0;
@@ -43,6 +43,18 @@ export default function SessionSummaryScreen({ block, evaluation, onContinue, on
           <p style={{ color: 'var(--text-secondary)', fontSize: '15px' }}>
             {completedCount} von {totalCount} Blöcken geschafft.
           </p>
+          {sessionMinutes > 45 && (
+            <p style={{
+              fontSize: '13px',
+              color: 'var(--text-secondary)',
+              textAlign: 'center',
+              fontStyle: 'italic',
+              margin: '-8px 0 0',
+            }}>
+              Du hast heute über {sessionMinutes} Minuten gelernt.
+              Schlaf hilft dem Gehirn das jetzt zu festigen.
+            </p>
+          )}
         </div>
 
         {/* Bewertung */}

@@ -417,15 +417,29 @@ export default function CardLearningPhase({ block, goalType, onDone, onExit, onA
 
           {/* Erklärung – verschwindet bei Answering */}
           {(phase === 'reading' || phase === 'loading') && (
-            <p style={{
-              fontSize: '19px',
-              lineHeight: '1.65',
-              color: 'var(--text-primary)',
-              margin: '0 0 24px',
-              fontWeight: '400',
-            }}>
-              {alternativeExplanation || currentCard?.explanation || ''}
-            </p>
+            reexplaining ? (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '16px 0',
+                color: 'var(--text-secondary)',
+                fontSize: '15px',
+              }}>
+                <LumoMascot state="thinking" size="small" />
+                Ich denke mir eine andere Erklärung aus …
+              </div>
+            ) : (
+              <p style={{
+                fontSize: '19px',
+                lineHeight: '1.65',
+                color: 'var(--text-primary)',
+                margin: '0 0 24px',
+                fontWeight: '400',
+              }}>
+                {alternativeExplanation || currentCard?.explanation || ''}
+              </p>
+            )
           )}
 
           {phase === 'reading' && (

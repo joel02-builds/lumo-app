@@ -98,7 +98,7 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
               color: 'var(--gold)',
               margin: '0 0 10px',
             }}>
-              Noch unsicher
+              {gapBlocks.some(b => b.confidence === 'grosse_luecken') ? 'Noch nicht sicher' : 'Noch unsicher'}
             </p>
             {gapBlocks.slice(0, 2).map(b => (
               <p key={b.id} style={{

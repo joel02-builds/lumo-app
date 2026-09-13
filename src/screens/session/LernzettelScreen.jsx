@@ -69,6 +69,21 @@ export default function LernzettelScreen({ block, cards, onDone, subjectColor })
     <div className="screen" style={{ justifyContent: 'flex-start', paddingTop: '40px' }}>
       <div className="screen-content" style={{ maxWidth: '560px', gap: '20px', alignItems: 'flex-start', textAlign: 'left' }}>
 
+        <button
+          onClick={onDone}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--text-secondary)',
+            fontSize: '13px',
+            cursor: 'pointer',
+            alignSelf: 'flex-start',
+            padding: '0 0 8px',
+          }}
+        >
+          ← Überspringen
+        </button>
+
         <div>
           <div style={{
             fontSize: '11px',
