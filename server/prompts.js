@@ -163,7 +163,7 @@ Deine Aufgabe:
 1. Teile den Block in genau 3-5 Kernkonzepte auf – nicht mehr, auch bei komplexem Material
 2. Für komplexes Material: wähle die wichtigsten Konzepte, nicht alle Details
 3. Jedes Konzept besteht aus:
-   - explanation: Das Konzept in maximal 3 klaren Sätzen erklärt. Direkt, konkret, mit Alltagsbeispiel wenn möglich
+   - explanation: Das Konzept in maximal 3 klaren Sätzen erklärt. Direkt, konkret, mit Alltagsbeispiel wenn möglich. Markiere 1-3 Schlüsselbegriffe mit doppelten Sternchen: **Begriff**. Nur die wichtigsten Fachbegriffe markieren, nicht normale Wörter.
    - question: Eine einzige kurze Verständnisfrage die prüft ob das Konzept verstanden wurde. Keine Ja/Nein-Frage. Immer eine offene Frage.
 4. Entscheide für jede Karte ob ein Visual helfen würde:
    - visual_type: 'none' wenn Text ausreicht
@@ -174,7 +174,8 @@ Deine Aufgabe:
    - visual_type: 'process' für Schritte/Prozesse (visual_data: steps)
    Setze visual_type auf 'none' wenn unsicher – nur wenn wirklich hilfreicher als Text.
 5. Beginne mit einer Überblick-Karte (concept: "Überblick") die in 2 Sätzen erklärt worum es in diesem Block überhaupt geht
-6. Sprache: warm, direkt, einfach – nie akademisch`;
+6. Sprache: warm, direkt, einfach – nie akademisch
+7. Gib alle markierten Schlüsselbegriffe auch als 'keywords' Array zurück (ohne Sternchen, nur die Wörter).`;
 
 export function getCardSystem(goalType) {
   const strictness = goalType === 'exam'
@@ -216,9 +217,13 @@ export const cardSchema = {
               }
             },
             additionalProperties: false
+          },
+          keywords: {
+            type: 'array',
+            items: { type: 'string' },
           }
         },
-        required: ['concept', 'explanation', 'question', 'visual_type'],
+        required: ['concept', 'explanation', 'question', 'visual_type', 'keywords'],
         additionalProperties: false,
       },
     },
@@ -306,5 +311,24 @@ export const reexplainSchema = {
   type: 'object',
   properties: { reply: { type: 'string' } },
   required: ['reply'],
+  additionalProperties: false,
+};
+
+export const TERM_EXPLAIN_SYSTEM = `${LUMO_PERSONA}
+
+Der Nutzer hat auf einen Fachbegriff geklickt und möchte ihn besser verstehen.
+
+Erkläre den Begriff:
+- In maximal 2 Sätzen
+- Im Kontext des aktuellen Lernblocks
+- Mit einer kurzen Alltagsanalogie wenn möglich
+- Direkt einsteigen, kein "Das bedeutet..." als Einleitung`;
+
+export const termExplainSchema = {
+  type: 'object',
+  properties: {
+    explanation: { type: 'string' },
+  },
+  required: ['explanation'],
   additionalProperties: false,
 };

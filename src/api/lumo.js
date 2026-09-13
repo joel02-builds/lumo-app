@@ -59,4 +59,5 @@ export const lumoApi = {
   evaluateCardAnswer: (payload) => post('/api/evaluate-card-answer', payload),
   generateLernzettel: (payload) => post('/api/generate-lernzettel', payload),
   reexplain: (payload) => post('/api/reexplain', payload),
+  explainTerm: (payload) => post('/api/explain-term', payload),
 };

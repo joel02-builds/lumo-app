@@ -21,6 +21,8 @@ import {
   lernzettelSchema,
   REEXPLAIN_SYSTEM,
   reexplainSchema,
+  TERM_EXPLAIN_SYSTEM,
+  termExplainSchema,
 } from './prompts.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -274,6 +276,21 @@ app.post('/api/reexplain', async (req, res) => {
       userContent: `Block: ${blockTitle}\nKonzept: ${concept}\nUrsprüngliche Erklärung: ${originalExplanation}`,
       schema: reexplainSchema,
       maxTokens: 300,
+    });
+    res.json({ data });
+  } catch (err) {
+    sendFriendlyError(res, err);
+  }
+});
+
+app.post('/api/explain-term', async (req, res) => {
+  const { term, blockTitle, blockContext } = req.body || {};
+  try {
+    const data = await askLumo({
+      system: TERM_EXPLAIN_SYSTEM,
+      userContent: `Block: ${blockTitle}\nKontext: ${blockContext}\nBegriff: ${term}`,
+      schema: termExplainSchema,
+      maxTokens: 150,
     });
     res.json({ data });
   } catch (err) {

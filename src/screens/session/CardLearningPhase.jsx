@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import LumoMascot from '../../components/LumoMascot.jsx';
 import ErrorBanner from '../../components/ErrorBanner.jsx';
 import CardVisual from '../../components/CardVisual.jsx';
+import HighlightedText from '../../components/HighlightedText.jsx';
 import { lumoApi } from '../../api/lumo.js';
 import { getBlockColor } from '../../utils/subjectColors.js';
 
@@ -24,6 +25,9 @@ export default function CardLearningPhase({ block, goalType, onDone, onExit, onA
   const [clickedCheck, setClickedCheck] = useState(false);
   const [reexplaining, setReexplaining] = useState(false);
   const [alternativeExplanation, setAlternativeExplanation] = useState('');
+  const [activeTerm, setActiveTerm] = useState(null);
+  const [termExplanation, setTermExplanation] = useState('');
+  const [termLoading, setTermLoading] = useState(false);
 
   // Karten laden
   useEffect(() => {
@@ -124,6 +128,8 @@ export default function CardLearningPhase({ block, goalType, onDone, onExit, onA
         setClickedCheck(false);
         setAlternativeExplanation('');
         setReexplaining(false);
+        setActiveTerm(null);
+        setTermExplanation('');
         setAnimating(false);
       } else {
         setCurrentIndex((i) => i + 1);
@@ -135,9 +141,34 @@ export default function CardLearningPhase({ block, goalType, onDone, onExit, onA
         setClickedCheck(false);
         setAlternativeExplanation('');
         setReexplaining(false);
+        setActiveTerm(null);
+        setTermExplanation('');
         setAnimating(false);
       }
     }, 300);
+  }
+
+  async function handleTermClick(term) {
+    if (activeTerm === term) {
+      setActiveTerm(null);
+      setTermExplanation('');
+      return;
+    }
+    setActiveTerm(term);
+    setTermLoading(true);
+    setTermExplanation('');
+    try {
+      const result = await lumoApi.explainTerm({
+        term,
+        blockTitle: block.title,
+        blockContext: currentCard.explanation,
+      });
+      setTermExplanation(result.explanation);
+    } catch {
+      setTermExplanation('Ich kann diesen Begriff gerade nicht erklären.');
+    } finally {
+      setTermLoading(false);
+    }
   }
 
   async function handleFinalSubmit() {
@@ -434,12 +465,65 @@ export default function CardLearningPhase({ block, goalType, onDone, onExit, onA
                 fontSize: '19px',
                 lineHeight: '1.65',
                 color: 'var(--text-primary)',
-                margin: '0 0 24px',
+                margin: '0 0 8px',
                 fontWeight: '400',
               }}>
-                {alternativeExplanation || currentCard?.explanation || ''}
+                <HighlightedText
+                  text={alternativeExplanation || currentCard?.explanation || ''}
+                  color={subjectColor}
+                  onTermClick={phase === 'reading' ? handleTermClick : undefined}
+                />
               </p>
             )
+          )}
+
+          {phase === 'reading' && activeTerm && (
+            <div style={{
+              background: `${subjectColor}11`,
+              border: `1px solid ${subjectColor}44`,
+              borderRadius: '10px',
+              padding: '12px 16px',
+              marginBottom: '16px',
+              display: 'flex',
+              gap: '10px',
+              alignItems: 'flex-start',
+            }}>
+              <LumoMascot state={termLoading ? 'thinking' : 'learning'} size="small" />
+              <div style={{ flex: 1 }}>
+                <p style={{
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  color: subjectColor,
+                  margin: '0 0 4px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                }}>
+                  {activeTerm}
+                </p>
+                <p style={{
+                  fontSize: '14px',
+                  color: 'var(--text-primary)',
+                  margin: '0',
+                  lineHeight: '1.5',
+                }}>
+                  {termLoading ? 'Lumo erklärt …' : termExplanation}
+                </p>
+              </div>
+              <button
+                onClick={() => { setActiveTerm(null); setTermExplanation(''); }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  padding: '0',
+                  flexShrink: 0,
+                }}
+              >
+                ✕
+              </button>
+            </div>
           )}
 
           {phase === 'reading' && (
@@ -469,6 +553,8 @@ export default function CardLearningPhase({ block, goalType, onDone, onExit, onA
                       setFeedback(null);
                       setClickedCheck(false);
                       setAlternativeExplanation('');
+                      setActiveTerm(null);
+                      setTermExplanation('');
                       setAnimating(false);
                     }, 300);
                   }}
@@ -770,6 +856,18 @@ export default function CardLearningPhase({ block, goalType, onDone, onExit, onA
             </>
           )}
         </div>
+
+        {currentIndex === 0 && phase === 'reading' && currentCard?.keywords?.length > 0 && (
+          <p style={{
+            fontSize: '12px',
+            color: 'var(--text-secondary)',
+            textAlign: 'center',
+            fontStyle: 'italic',
+            margin: '-8px 0 0',
+          }}>
+            Tipp: Tippe auf goldene Begriffe für mehr Details.
+          </p>
+        )}
 
         {onAskFreely && phase !== 'answering' && phase !== 'feedback' && alternativeExplanation && (
           <button
