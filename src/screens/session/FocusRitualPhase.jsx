@@ -128,7 +128,7 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
             padding: '4px',
           }}
         >
-          Direkt starten
+          Direkt starten – Briefing überspringen
         </button>
 
       </div>

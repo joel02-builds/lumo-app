@@ -34,30 +34,40 @@ export default function BlockCompletePhase({ block, result, onContinue, onPause 
   const firedRef = useRef(false);
 
   useEffect(() => {
-    if (!isGood || firedRef.current) return;
+    if (firedRef.current) return;
     firedRef.current = true;
 
-    // Erster Konfetti-Burst
-    confetti({
-      particleCount: 120,
-      spread: 80,
-      origin: { y: 0.6 },
-      colors: ['#FFE8A0', '#D4A843', '#FFFFFF', '#4CAF82'],
-      scalar: 1.1,
-    });
-
-    // Zweiter Burst nach kurzer Verzögerung
-    setTimeout(() => {
+    if (isGood) {
+      // Erster Konfetti-Burst
       confetti({
-        particleCount: 60,
-        spread: 120,
-        origin: { y: 0.5 },
-        startVelocity: 20,
-        colors: ['#FFE8A0', '#D4A843'],
-        scalar: 0.9,
+        particleCount: 120,
+        spread: 80,
+        origin: { y: 0.6 },
+        colors: ['#FFE8A0', '#D4A843', '#FFFFFF', '#4CAF82'],
+        scalar: 1.1,
       });
-    }, 400);
-  }, [isGood]);
+
+      // Zweiter Burst nach kurzer Verzögerung
+      setTimeout(() => {
+        confetti({
+          particleCount: 60,
+          spread: 120,
+          origin: { y: 0.5 },
+          startVelocity: 20,
+          colors: ['#FFE8A0', '#D4A843'],
+          scalar: 0.9,
+        });
+      }, 400);
+    } else if (status === 'unsicher') {
+      confetti({
+        particleCount: 30,
+        spread: 60,
+        origin: { y: 0.6 },
+        colors: ['#D4A843', '#FFE8A0'],
+        scalar: 0.8,
+      });
+    }
+  }, [isGood, status]);
 
   return (
     <div style={{

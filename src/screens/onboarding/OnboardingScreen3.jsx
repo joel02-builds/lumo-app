@@ -3,9 +3,26 @@ import LumoMascot from '../../components/LumoMascot.jsx';
 import Button from '../../components/Button.jsx';
 
 const GOALS = [
-  { id: 'exam', label: 'Prüfung', needsDate: true, dateLabel: 'Wann ist die Prüfung?' },
-  { id: 'homework', label: 'Hausarbeit', needsDate: true, dateLabel: 'Wann ist die Abgabe?' },
-  { id: 'understand', label: 'Einfach verstehen', needsDate: false },
+  {
+    id: 'exam',
+    label: 'Prüfung',
+    needsDate: true,
+    dateLabel: 'Wann ist die Prüfung?',
+    sub: 'Lumo fokussiert auf Prüfungsrelevanz und testet dich strenger.',
+  },
+  {
+    id: 'homework',
+    label: 'Hausarbeit',
+    needsDate: true,
+    dateLabel: 'Wann ist die Abgabe?',
+    sub: 'Lumo hilft dir das Thema tief zu verstehen und zu strukturieren.',
+  },
+  {
+    id: 'understand',
+    label: 'Einfach verstehen',
+    needsDate: false,
+    sub: 'Lumo erklärt ohne Druck – du bestimmst das Tempo.',
+  },
 ];
 
 export default function OnboardingScreen3({ onConfirm, onBack }) {
@@ -74,7 +91,8 @@ export default function OnboardingScreen3({ onConfirm, onBack }) {
         <div className="goal-options">
           {GOALS.map((g) => (
             <button key={g.id} className="goal-btn" onClick={() => selectGoal(g)}>
-              {g.label}
+              <span style={{ display: 'block', fontWeight: '700', fontSize: '16px' }}>{g.label}</span>
+              <span style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px', fontWeight: '400' }}>{g.sub}</span>
             </button>
           ))}
         </div>

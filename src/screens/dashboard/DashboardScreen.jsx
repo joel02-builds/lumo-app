@@ -269,9 +269,15 @@ export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock
                       onClick={() => onStartBlock(b.id)}
                       style={{
                         width: '100%',
-                        background: isNext ? color : 'var(--bg-card-bright)',
-                        color: isNext ? '#1a1206' : 'var(--text-primary)',
-                        border: isNext ? 'none' : '1px solid var(--border)',
+                        background: isDone && (b.confidence === 'unsicher' || b.confidence === 'grosse_luecken')
+                          ? 'var(--red)'
+                          : isNext ? color : 'var(--bg-card-bright)',
+                        color: isDone && (b.confidence === 'unsicher' || b.confidence === 'grosse_luecken')
+                          ? 'white'
+                          : isNext ? '#1a1206' : 'var(--text-primary)',
+                        border: isDone && (b.confidence === 'unsicher' || b.confidence === 'grosse_luecken')
+                          ? 'none'
+                          : isNext ? 'none' : '1px solid var(--border)',
                         borderRadius: '10px',
                         padding: '12px',
                         fontSize: '14px',

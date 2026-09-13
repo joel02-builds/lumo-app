@@ -226,6 +226,16 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely, 
                 lineHeight: '1.6',
               }}
             />
+            {!answer.trim() && (
+              <p style={{
+                fontSize: '12px',
+                color: 'var(--text-secondary)',
+                margin: '-4px 0 0',
+                fontStyle: 'italic',
+              }}>
+                Schreib mindestens einen Satz – dann wird der Button aktiv.
+              </p>
+            )}
             <button
               onClick={handleFinalSubmit}
               disabled={!answer.trim() || finalSending}
@@ -317,9 +327,11 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely, 
             textTransform: 'uppercase',
             color: 'var(--gold)',
             marginBottom: '2px',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
+            whiteSpace: 'normal',
           }}>
             {block.title}
           </div>
