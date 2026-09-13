@@ -31,6 +31,27 @@ export default function LernzettelScreen({ block, cards, onDone, subjectColor })
     }).catch(() => {});
   }
 
+  function handleDownload() {
+    if (!lernzettel) return;
+    const text = [
+      lernzettel.title,
+      '',
+      ...lernzettel.points.map(p => `${p.keyword}: ${p.explanation}`),
+      '',
+      `Merksatz: ${lernzettel.merksatz}`,
+    ].join('\n');
+
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Lernzettel – ${block.title}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   if (loading) {
     return (
       <div className="screen">
@@ -145,23 +166,41 @@ export default function LernzettelScreen({ block, cards, onDone, subjectColor })
 
         {/* Buttons */}
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <button
-            onClick={handleCopy}
-            style={{
-              width: '100%',
-              background: copied ? 'var(--green)' : 'var(--bg-card)',
-              color: copied ? 'white' : 'var(--text-secondary)',
-              border: `1px solid ${copied ? 'var(--green)' : 'var(--border)'}`,
-              borderRadius: '12px',
-              padding: '13px',
-              fontSize: '15px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            {copied ? '✓ Kopiert!' : 'Lernzettel kopieren'}
-          </button>
+          <div style={{ width: '100%', display: 'flex', gap: '10px' }}>
+            <button
+              onClick={handleCopy}
+              style={{
+                flex: 1,
+                background: copied ? 'var(--green)' : 'var(--bg-card)',
+                color: copied ? 'white' : 'var(--text-secondary)',
+                border: `1px solid ${copied ? 'var(--green)' : 'var(--border)'}`,
+                borderRadius: '12px',
+                padding: '13px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {copied ? '✓ Kopiert!' : 'Kopieren'}
+            </button>
+            <button
+              onClick={handleDownload}
+              style={{
+                flex: 1,
+                background: 'var(--bg-card)',
+                color: 'var(--text-secondary)',
+                border: '1px solid var(--border)',
+                borderRadius: '12px',
+                padding: '13px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+              }}
+            >
+              ↓ Download
+            </button>
+          </div>
           <button
             onClick={onDone}
             style={{

@@ -3,6 +3,20 @@ import LumoMascot from '../components/LumoMascot.jsx';
 import Button from '../components/Button.jsx';
 import { getRecommendedBlock } from '../utils/blockProgress.js';
 
+function getBlocksDueToday(blocks) {
+  const now = new Date();
+  return blocks.filter(b => {
+    if (b.status !== 'completed') return false;
+    if (!b.completedAt) return false;
+    const completed = new Date(b.completedAt);
+    const diffDays = Math.floor((now - completed) / (1000 * 60 * 60 * 24));
+    if (b.confidence === 'sicher') return diffDays >= 7;
+    if (b.confidence === 'unsicher') return diffDays >= 1;
+    if (b.confidence === 'grosse_luecken') return diffDays >= 0;
+    return false;
+  });
+}
+
 export default function WelcomeBackScreen({ blocks, recommendedOrder, onStartBlock, onGoToDashboard, onNewProject }) {
   const total = blocks.length;
   const completed = blocks.filter((b) => b.status === 'completed').length;
@@ -80,6 +94,42 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, onStartBlo
             </p>
           )}
         </div>
+
+        {(() => {
+          const dueBlocks = getBlocksDueToday(blocks);
+          if (dueBlocks.length === 0) return null;
+          return (
+            <div style={{
+              width: '100%',
+              background: 'rgba(212, 168, 67, 0.08)',
+              border: '1px solid rgba(212, 168, 67, 0.3)',
+              borderRadius: '14px',
+              padding: '16px 18px',
+            }}>
+              <p style={{
+                fontSize: '11px',
+                fontWeight: '700',
+                letterSpacing: '1.5px',
+                textTransform: 'uppercase',
+                color: 'var(--gold)',
+                margin: '0 0 6px',
+              }}>
+                Zeit zur Wiederholung
+              </p>
+              <p style={{
+                fontSize: '15px',
+                color: 'var(--text-primary)',
+                margin: '0',
+                lineHeight: '1.4',
+              }}>
+                {dueBlocks.length === 1
+                  ? `„${dueBlocks[0].title}" sollte heute wiederholt werden.`
+                  : `${dueBlocks.length} Blöcke sind zur Wiederholung fällig.`
+                }
+              </p>
+            </div>
+          );
+        })()}
 
         {next && !allDone && (
           <div style={{

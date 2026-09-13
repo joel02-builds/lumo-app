@@ -27,6 +27,17 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
               ? 'Ich hab alles vorbereitet. Du musst nur anfangen.'
               : `Du hast ${completedCount} von ${totalCount} Blöcken geschafft.`}
           </p>
+          {isFirstBlock && (
+            <p style={{
+              fontSize: '14px',
+              color: 'var(--text-secondary)',
+              textAlign: 'center',
+              margin: '-8px 0 0',
+              lineHeight: '1.5',
+            }}>
+              Ich erkläre dir jeden Schritt. Du musst nichts vorbereiten.
+            </p>
+          )}
         </div>
 
         {/* Was jetzt dran ist */}

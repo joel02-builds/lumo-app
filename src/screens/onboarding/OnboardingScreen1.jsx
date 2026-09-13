@@ -51,6 +51,33 @@ export default function OnboardingScreen1({ onNext }) {
           ))}
         </div>
 
+        <div style={{
+          width: '100%',
+          background: 'var(--bg-card)',
+          borderRadius: '12px',
+          padding: '14px 16px',
+          borderLeft: '3px solid var(--gold)',
+        }}>
+          <p style={{
+            fontSize: '14px',
+            color: 'var(--text-secondary)',
+            margin: '0',
+            lineHeight: '1.5',
+            fontStyle: 'italic',
+          }}>
+            „Ich hab endlich aufgehört Lernmaterial nur durchzulesen.
+            Lumo zwingt mich wirklich zu verstehen."
+          </p>
+          <p style={{
+            fontSize: '12px',
+            color: 'var(--text-secondary)',
+            margin: '6px 0 0',
+            fontWeight: '600',
+          }}>
+            – Beta-Nutzer, Psychologie-Studentin
+          </p>
+        </div>
+
         <Button onClick={onNext} style={{ width: '100%' }}>
           Jetzt starten
         </Button>

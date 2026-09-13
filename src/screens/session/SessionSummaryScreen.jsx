@@ -149,6 +149,35 @@ export default function SessionSummaryScreen({ block, evaluation, onContinue, on
           </div>
         )}
 
+        {allDone && (
+          <div style={{
+            width: '100%',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border)',
+            borderRadius: '14px',
+            padding: '20px',
+            textAlign: 'center',
+          }}>
+            <p style={{
+              fontSize: '15px',
+              color: 'var(--text-primary)',
+              margin: '0 0 8px',
+              lineHeight: '1.5',
+            }}>
+              Du hast alles verstanden.
+            </p>
+            <p style={{
+              fontSize: '14px',
+              color: 'var(--text-secondary)',
+              margin: '0',
+              lineHeight: '1.5',
+            }}>
+              Ich empfehle in 7 Tagen eine kurze Wiederholung –
+              dann bleibt es wirklich sitzen.
+            </p>
+          </div>
+        )}
+
         {/* Buttons */}
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {!allDone && (

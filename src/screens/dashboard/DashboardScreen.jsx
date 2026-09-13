@@ -238,7 +238,7 @@ export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock
                         margin: '0',
                         fontStyle: 'italic',
                       }}>
-                        Starte den Block um die Themen zu sehen.
+                        Die Themen siehst du während du lernst.
                       </p>
                     )}
 

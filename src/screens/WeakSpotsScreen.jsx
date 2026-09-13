@@ -1,5 +1,16 @@
 import LumoMascot from '../components/LumoMascot.jsx';
 
+function formatDate(isoString) {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  const now = new Date();
+  const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return 'Heute';
+  if (diffDays === 1) return 'Gestern';
+  if (diffDays < 7) return `Vor ${diffDays} Tagen`;
+  return date.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' });
+}
+
 export default function WeakSpotsScreen({ blocks, onBack, onStartBlock }) {
   const weakBlocks = blocks.filter(b =>
     b.status === 'completed' && (b.confidence === 'unsicher' || b.confidence === 'grosse_luecken')
@@ -64,6 +75,9 @@ export default function WeakSpotsScreen({ blocks, onBack, onStartBlock }) {
                 >
                   <span style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)' }}>
                     {b.title}
+                  </span>
+                  <span style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                    {formatDate(b.completedAt)}
                   </span>
                   {b.uncertainPoints?.length > 0 && (
                     <span style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
