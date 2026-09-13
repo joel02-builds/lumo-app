@@ -60,14 +60,16 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, onStartBlo
                 : `${total} Blöcke warten auf dich.`}
             </p>
           )}
-          {streakDays > 1 && (
+          {streakDays >= 1 && (
             <p style={{
               fontSize: '13px',
               color: 'var(--text-secondary)',
               margin: '-8px 0 0',
               fontStyle: 'italic',
             }}>
-              {streakDays === 2
+              {streakDays === 1
+                ? 'Ich bin heute dabei.'
+                : streakDays === 2
                 ? 'Ich bin seit gestern dabei.'
                 : streakDays < 7
                 ? `Ich bin seit ${streakDays} Tagen dabei.`

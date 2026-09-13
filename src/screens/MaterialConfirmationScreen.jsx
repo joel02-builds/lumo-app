@@ -18,7 +18,7 @@ export default function AnalysisResultScreen({ blocks, totalBlocks, recommendedO
     <div className="screen">
       <div className="screen-content" style={{ gap: '24px', maxWidth: '480px' }}>
 
-        <LumoMascot state="complete" />
+        <LumoMascot state="cheer" />
 
         <div style={{ textAlign: 'center' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>

@@ -10,7 +10,7 @@ import SessionSummaryScreen from './SessionSummaryScreen.jsx';
 import MidSessionBreakScreen from './MidSessionBreakScreen.jsx';
 import SessionTimer from '../../components/SessionTimer.jsx';
 import BreakSuggestionToast from '../../components/BreakSuggestionToast.jsx';
-import { getSubjectColor } from '../../utils/subjectColors.js';
+import { getBlockColor } from '../../utils/subjectColors.js';
 
 const PHASES = {
   FOCUS_RITUAL: 'focus-ritual',
@@ -121,7 +121,7 @@ export default function SessionScreen({ block, blocks, onRecordCompletion, onSav
       <LernzettelScreen
         block={block}
         cards={sessionCards}
-        subjectColor={block?.subject_color || getSubjectColor(block?.subject)}
+        subjectColor={getBlockColor(block)}
         onDone={() => setPhase(PHASES.SESSION_SUMMARY)}
       />
     );

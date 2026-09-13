@@ -3,10 +3,10 @@ import LumoMascot from '../../components/LumoMascot.jsx';
 import ErrorBanner from '../../components/ErrorBanner.jsx';
 import CardVisual from '../../components/CardVisual.jsx';
 import { lumoApi } from '../../api/lumo.js';
-import { getSubjectColor } from '../../utils/subjectColors.js';
+import { getBlockColor } from '../../utils/subjectColors.js';
 
 export default function CardLearningPhase({ block, onDone, onExit, onAskFreely, onCardsReady }) {
-  const subjectColor = getSubjectColor(block.subject);
+  const subjectColor = getBlockColor(block);
   const [cards, setCards] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [phase, setPhase] = useState('loading'); // loading | reading | answering | feedback | final-recall | done

@@ -142,6 +142,7 @@ export default function BlockCompletePhase({ block, result, onContinue, onPause 
           maxWidth: '360px',
           background: 'var(--bg-card)',
           border: '1px solid var(--border)',
+          borderLeft: `3px solid var(--gold)`,
           borderRadius: '14px',
           padding: '16px 18px',
         }}>
@@ -179,8 +180,17 @@ export default function BlockCompletePhase({ block, result, onContinue, onPause 
         gap: '10px',
       }}>
         <Button onClick={onContinue} style={{ width: '100%' }}>
-          {isGood ? 'Weiter lernen →' : 'Zum nächsten Block'}
+          {isGood ? 'Weiter lernen →' : status === 'grosse_luecken' ? 'Nochmal angehen' : 'Weiter lernen'}
         </Button>
+        {!isGood && (
+          <button onClick={onContinue} style={{
+            background: 'none', border: 'none',
+            color: 'var(--text-secondary)', fontSize: '13px',
+            cursor: 'pointer', textDecoration: 'underline',
+          }}>
+            Zum nächsten Block
+          </button>
+        )}
         <button
           onClick={onPause}
           style={{

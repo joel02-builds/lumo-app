@@ -2,7 +2,7 @@ import { useState } from 'react';
 import LumoMascot from '../../components/LumoMascot.jsx';
 import Button from '../../components/Button.jsx';
 import { getRecommendedBlock } from '../../utils/blockProgress.js';
-import { getSubjectColor } from '../../utils/subjectColors.js';
+import { getBlockColor } from '../../utils/subjectColors.js';
 
 function statusLabel(block) {
   if (block.status === 'not-started') return 'Nicht gestartet';
@@ -68,6 +68,7 @@ export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock
   const weakCount = blocks.filter(b =>
     b.status === 'completed' && (b.confidence === 'unsicher' || b.confidence === 'grosse_luecken')
   ).length;
+  const projectColor = blocks[0]?.subject_color || 'var(--gold)';
 
   return (
     <div className="screen" style={{ justifyContent: 'flex-start', paddingTop: 'clamp(20px, 8vw, 80px)' }}>
@@ -87,7 +88,7 @@ export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock
             {percent}%
           </div>
           <div style={{
-            height: '6px',
+            height: '10px',
             background: 'var(--bg-card)',
             borderRadius: '6px',
             overflow: 'hidden',
@@ -96,10 +97,9 @@ export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock
             <div style={{
               height: '100%',
               width: `${percent}%`,
-              background: percent === 100
-                ? 'var(--green)'
-                : 'linear-gradient(90deg, var(--gold), var(--gold-light))',
+              background: percent === 100 ? 'var(--green)' : projectColor,
               borderRadius: '6px',
+              boxShadow: `0 0 8px ${percent === 100 ? 'var(--green)' : projectColor}`,
               transition: 'width 0.6s ease',
             }} />
           </div>
@@ -114,7 +114,7 @@ export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock
             const isNext = next && b.id === next.id;
             const isDone = b.status === 'completed';
             const isExpanded = expandedBlock === b.id;
-            const color = getSubjectColor(b.subject);
+            const color = getBlockColor(b);
 
             return (
               <div key={b.id} style={{ width: '100%' }}>

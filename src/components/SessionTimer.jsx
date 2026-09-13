@@ -8,7 +8,9 @@ function formatTime(totalSeconds) {
 export default function SessionTimer({ seconds }) {
   return (
     <div className="session-timer" aria-hidden="true">
-      {formatTime(seconds)}
+      <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+        {formatTime(seconds)} gelernt
+      </span>
     </div>
   );
 }

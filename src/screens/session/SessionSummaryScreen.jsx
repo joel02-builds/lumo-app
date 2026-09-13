@@ -1,8 +1,8 @@
 import LumoMascot from '../../components/LumoMascot.jsx';
-import { getSubjectColor } from '../../utils/subjectColors.js';
+import { getBlockColor } from '../../utils/subjectColors.js';
 
 export default function SessionSummaryScreen({ block, evaluation, onContinue, onPause, allBlocks }) {
-  const subjectColor = getSubjectColor(block?.subject);
+  const subjectColor = getBlockColor(block);
   const completedCount = allBlocks?.filter(b => b.status === 'completed').length || 0;
   const totalCount = allBlocks?.length || 0;
   const gapBlocks = allBlocks?.filter(b =>

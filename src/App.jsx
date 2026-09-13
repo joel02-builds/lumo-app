@@ -49,8 +49,9 @@ export default function App() {
       goalDate: state.goalDate,
       blocks: state.blocks,
       recommendedOrder: state.recommendedOrder,
+      subjectColor: state.subjectColor,
     });
-  }, [state.topic, state.fileName, state.goalType, state.goalDate, state.blocks, state.recommendedOrder]);
+  }, [state.topic, state.fileName, state.goalType, state.goalDate, state.blocks, state.recommendedOrder, state.subjectColor]);
 
   const handleMaterial = useCallback((payload) => {
     dispatch({ type: 'SET_MATERIAL', ...payload });

@@ -46,9 +46,9 @@ export default function LernzettelScreen({ block, cards, onDone, subjectColor })
 
   return (
     <div className="screen" style={{ justifyContent: 'flex-start', paddingTop: '40px' }}>
-      <div className="screen-content" style={{ maxWidth: '560px', gap: '20px' }}>
+      <div className="screen-content" style={{ maxWidth: '560px', gap: '20px', alignItems: 'flex-start', textAlign: 'left' }}>
 
-        <div style={{ textAlign: 'center' }}>
+        <div>
           <div style={{
             fontSize: '11px',
             fontWeight: '700',
@@ -74,7 +74,7 @@ export default function LernzettelScreen({ block, cards, onDone, subjectColor })
           padding: '20px 24px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '14px',
+          gap: '18px',
         }}>
           {lernzettel?.points.map((point, i) => (
             <div key={i} style={{
@@ -119,7 +119,6 @@ export default function LernzettelScreen({ block, cards, onDone, subjectColor })
             border: `1px solid ${color}44`,
             borderRadius: '12px',
             padding: '16px 20px',
-            textAlign: 'center',
           }}>
             <p style={{
               fontSize: '11px',

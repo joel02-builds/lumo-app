@@ -38,6 +38,7 @@ export function createInitialState(savedProject) {
     goalDate: savedProject.goalDate || '',
     blocks: savedProject.blocks || [],
     recommendedOrder: savedProject.recommendedOrder || [],
+    subjectColor: savedProject.subjectColor || null,
   };
 }
 

@@ -18,3 +18,7 @@ export function getSubjectColor(subject) {
   const key = subject.toLowerCase().trim();
   return SUBJECT_COLORS[key] || SUBJECT_COLORS.default;
 }
+
+export function getBlockColor(block) {
+  return block?.subject_color || getSubjectColor(block?.subject);
+}

@@ -239,7 +239,7 @@ export const LERNZETTEL_SYSTEM = `${LUMO_PERSONA}
 Du erstellst einen kompakten Lernzettel nach einem abgeschlossenen Lernblock.
 
 Der Lernzettel soll:
-- Die 4-6 wichtigsten Punkte des Blocks als klare, kurze Sätze enthalten
+- Die 3-4 wichtigsten Punkte des Blocks enthalten, jeweils maximal 15 Wörter
 - Jeden Punkt mit einem Schlüsselbegriff beginnen (fett formatiert als **Begriff**: Erklärung)
 - Auf das Wesentliche reduziert sein – nur was wirklich geprüft werden könnte
 - In eigener Sprache formuliert sein, nicht als Kopie des Materials
