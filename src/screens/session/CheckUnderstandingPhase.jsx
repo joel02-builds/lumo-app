@@ -65,31 +65,64 @@ export default function CheckUnderstandingPhase({ block, onDone, onExit }) {
     return (
       <div className="screen" key="check-result">
         <div className="screen-content">
-          <LumoMascot state="learning" label="Lumo" />
+          <LumoMascot state={result.status === 'sicher' ? 'cheer' : 'learning'} />
           <p className="feedback-text">{result.summaryText}</p>
 
           {result.goodPoints.length > 0 && (
-            <div className="summary-block summary-good">
-              <h3>Das hast du gut erklärt</h3>
-              <ul>
-                {result.goodPoints.map((p, i) => (
-                  <li key={i}>{p}</li>
-                ))}
-              </ul>
+            <div style={{
+              width: '100%',
+              background: 'var(--green-soft)',
+              border: '1px solid var(--green)',
+              borderRadius: '12px',
+              padding: '14px 18px',
+            }}>
+              <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--green)', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                Das hast du gut erklärt
+              </p>
+              {result.goodPoints.map((p, i) => (
+                <p key={i} style={{ fontSize: '14px', color: 'var(--text-primary)', margin: '0 0 4px', lineHeight: '1.4' }}>
+                  • {p}
+                </p>
+              ))}
             </div>
           )}
           {result.uncertainPoints.length > 0 && (
-            <div className="summary-block summary-uncertain">
-              <h3>Das fehlte noch</h3>
-              <ul>
-                {result.uncertainPoints.map((p, i) => (
-                  <li key={i}>{p}</li>
-                ))}
-              </ul>
+            <div style={{
+              width: '100%',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border)',
+              borderLeft: '3px solid var(--gold)',
+              borderRadius: '12px',
+              padding: '14px 18px',
+            }}>
+              <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--gold)', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                Das fehlte noch
+              </p>
+              {result.uncertainPoints.map((p, i) => (
+                <p key={i} style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: '0 0 4px', lineHeight: '1.4' }}>
+                  • {p}
+                </p>
+              ))}
             </div>
           )}
 
-          <Button onClick={() => onDone(result)}>Weiter</Button>
+          <button
+            onClick={() => onDone(result)}
+            style={{
+              width: '100%',
+              background: 'var(--gold)',
+              color: '#1a1206',
+              border: 'none',
+              borderRadius: '12px',
+              padding: '15px',
+              fontSize: '16px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              marginTop: '8px',
+            }}
+          >
+            {result.status === 'sicher' ? 'Weiter →' : 'Verstanden, weiter'}
+          </button>
         </div>
       </div>
     );
@@ -98,18 +131,20 @@ export default function CheckUnderstandingPhase({ block, onDone, onExit }) {
   return (
     <div className="screen" key="check-asking">
       <div className="screen-content">
-        <LumoMascot state="learning" label="Lumo hört zu" />
+        <LumoMascot state="learning" />
         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 4px' }}>
           Lumo hört zu. Kein Zurückschauen.
         </p>
-        <h1>Erklär mir in deinen eigenen Worten, was du gerade gelernt hast.</h1>
+        <h1 style={{ fontSize: '22px', lineHeight: '1.3' }}>
+          Stell dir vor du erklärst es deinem besten Freund.<br />Was würdest du sagen?
+        </h1>
         {hint && <p className="hint-text">{hint}</p>}
         <textarea
           rows={5}
           style={{ width: '100%' }}
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
-          placeholder="Schreib es in deinen eigenen Worten …"
+          placeholder="Fang einfach an – auch ein Satz reicht …"
           autoFocus
         />
         {error && (
@@ -119,9 +154,11 @@ export default function CheckUnderstandingPhase({ block, onDone, onExit }) {
           <Button onClick={handleSubmit} disabled={!answer.trim() || submitting || hintLoading}>
             {submitting ? 'Lumo liest …' : 'Abschicken'}
           </Button>
-          <button className="text-link" onClick={handleNoIdea} disabled={submitting || hintLoading}>
-            {hintLoading ? 'Lumo überlegt …' : 'Keine Ahnung'}
-          </button>
+          {!hint && (
+            <button className="text-link" onClick={handleNoIdea} disabled={submitting || hintLoading}>
+              {hintLoading ? 'Ich denke …' : 'Zeig mir einen Einstieg'}
+            </button>
+          )}
         </div>
       </div>
     </div>

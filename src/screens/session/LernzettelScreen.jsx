@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import LumoMascot from '../../components/LumoMascot.jsx';
 import { lumoApi } from '../../api/lumo.js';
 
-export default function LernzettelScreen({ block, cards, onDone, subjectColor }) {
+export default function LernzettelScreen({ block, cards, goalType, onDone, subjectColor }) {
   const [lernzettel, setLernzettel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -12,6 +12,7 @@ export default function LernzettelScreen({ block, cards, onDone, subjectColor })
       blockTitle: block.title,
       blockContent: block.content,
       cards,
+      goalType,
     }).then(data => {
       setLernzettel(data);
       setLoading(false);
@@ -152,9 +153,10 @@ export default function LernzettelScreen({ block, cards, onDone, subjectColor })
           <div style={{
             width: '100%',
             background: `${color}11`,
-            border: `1px solid ${color}44`,
+            border: `2px solid ${color}`,
             borderRadius: '12px',
-            padding: '16px 20px',
+            padding: '18px 20px',
+            textAlign: 'center',
           }}>
             <p style={{
               fontSize: '11px',
@@ -162,13 +164,13 @@ export default function LernzettelScreen({ block, cards, onDone, subjectColor })
               letterSpacing: '1.5px',
               textTransform: 'uppercase',
               color: color,
-              margin: '0 0 6px',
+              margin: '0 0 8px',
             }}>
               Merksatz
             </p>
             <p style={{
-              fontSize: '16px',
-              fontWeight: '600',
+              fontSize: '17px',
+              fontWeight: '700',
               color: 'var(--text-primary)',
               margin: '0',
               lineHeight: '1.5',

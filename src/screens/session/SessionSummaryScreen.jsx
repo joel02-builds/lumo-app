@@ -57,12 +57,25 @@ export default function SessionSummaryScreen({ block, evaluation, onContinue, on
           )}
         </div>
 
+        {completedCount >= 3 && !allDone && completedCount % 3 === 0 && (
+          <p style={{
+            fontSize: '13px',
+            color: 'var(--text-secondary)',
+            fontStyle: 'italic',
+            textAlign: 'center',
+            margin: '-4px 0 0',
+          }}>
+            Tipp: Abwechslungsreiches Lernen festigt Wissen besser als alles hintereinander.
+          </p>
+        )}
+
         {/* Bewertung */}
         {evaluation?.summaryText && (
           <div style={{
             width: '100%',
-            background: isGood ? 'var(--green-soft)' : 'var(--red-soft)',
-            border: `1px solid ${isGood ? 'var(--green)' : 'var(--red)'}`,
+            background: isGood ? 'var(--green-soft)' : 'var(--bg-card)',
+            border: `1px solid ${isGood ? 'var(--green)' : 'var(--border)'}`,
+            borderLeft: isGood ? undefined : '3px solid var(--gold)',
             borderRadius: '14px',
             padding: '16px 18px',
           }}>

@@ -59,7 +59,7 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, onStartBlo
   return (
     <div className="screen">
       <div className="screen-content" style={{ gap: '24px', maxWidth: '480px' }}>
-        <LumoMascot state={allDone ? 'complete' : 'idle'} label="Lumo" />
+        <LumoMascot state={allDone ? 'complete' : getBlocksDueToday(blocks).length > 0 ? 'cheer' : 'idle'} />
 
         <div style={{ textAlign: 'center' }}>
           <h1 style={{ fontSize: '32px', marginBottom: '8px' }}>{getGreeting()}</h1>
@@ -105,6 +105,9 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, onStartBlo
               border: '1px solid rgba(212, 168, 67, 0.3)',
               borderRadius: '14px',
               padding: '16px 18px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px',
             }}>
               <p style={{
                 fontSize: '11px',
@@ -112,21 +115,29 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, onStartBlo
                 letterSpacing: '1.5px',
                 textTransform: 'uppercase',
                 color: 'var(--gold)',
-                margin: '0 0 6px',
+                margin: '0',
               }}>
                 Zeit zur Wiederholung
               </p>
-              <p style={{
-                fontSize: '15px',
-                color: 'var(--text-primary)',
-                margin: '0',
-                lineHeight: '1.4',
-              }}>
-                {dueBlocks.length === 1
-                  ? `„${dueBlocks[0].title}" sollte heute wiederholt werden.`
-                  : `${dueBlocks.length} Blöcke sind zur Wiederholung fällig.`
-                }
-              </p>
+              {dueBlocks.map(b => (
+                <button
+                  key={b.id}
+                  onClick={() => onStartBlock(b.id)}
+                  style={{
+                    background: 'var(--bg-card)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '10px',
+                    padding: '12px 14px',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    color: 'var(--text-primary)',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                  }}
+                >
+                  {b.title} →
+                </button>
+              ))}
             </div>
           );
         })()}

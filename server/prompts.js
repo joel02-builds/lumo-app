@@ -263,6 +263,13 @@ Der Lernzettel soll:
 - In eigener Sprache formuliert sein, nicht als Kopie des Materials
 - Am Ende eine 'Merksatz' Zeile haben: ein einziger Satz der den ganzen Block zusammenfasst`;
 
+export function getLernzettelSystem(goalType) {
+  const context = goalType === 'exam'
+    ? '\nDer Nutzer lernt für eine PRÜFUNG: Betone besonders prüfungsrelevante Punkte im Merksatz.'
+    : '';
+  return LERNZETTEL_SYSTEM + context;
+}
+
 export const lernzettelSchema = {
   type: 'object',
   properties: {

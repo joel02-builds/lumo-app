@@ -122,6 +122,7 @@ export default function SessionScreen({ block, blocks, goalType, onRecordComplet
       <LernzettelScreen
         block={block}
         cards={sessionCards}
+        goalType={goalType}
         subjectColor={getBlockColor(block)}
         onDone={() => setPhase(PHASES.SESSION_SUMMARY)}
       />

@@ -17,7 +17,7 @@ import {
   cardSchema,
   EVALUATE_CARD_ANSWER_SYSTEM,
   evaluateCardAnswerSchema,
-  LERNZETTEL_SYSTEM,
+  getLernzettelSystem,
   lernzettelSchema,
   REEXPLAIN_SYSTEM,
   reexplainSchema,
@@ -252,10 +252,10 @@ app.post('/api/evaluate-card-answer', async (req, res) => {
 });
 
 app.post('/api/generate-lernzettel', async (req, res) => {
-  const { blockTitle, blockContent, cards } = req.body || {};
+  const { blockTitle, blockContent, cards, goalType } = req.body || {};
   try {
     const data = await askLumo({
-      system: LERNZETTEL_SYSTEM,
+      system: getLernzettelSystem(goalType),
       userContent: `Block: ${blockTitle}\nInhalt: ${blockContent}\nGelernte Konzepte: ${cards?.map((c) => c.concept + ': ' + c.explanation).join('\n') || ''}`,
       schema: lernzettelSchema,
       maxTokens: 800,
