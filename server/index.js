@@ -4,7 +4,7 @@ import express from 'express';
 import cors from 'cors';
 import Anthropic from '@anthropic-ai/sdk';
 import {
-  ANALYZE_SYSTEM,
+  getAnalyzeSystem,
   analyzeSchema,
   EXPLAIN_CHAT_SYSTEM_SIMPLE,
   EXPLAIN_CHAT_SYSTEM_DETAILED,
@@ -13,12 +13,14 @@ import {
   understandingHintSchema,
   EVALUATE_UNDERSTANDING_SYSTEM,
   evaluateUnderstandingSchema,
-  CARD_SYSTEM,
+  getCardSystem,
   cardSchema,
   EVALUATE_CARD_ANSWER_SYSTEM,
   evaluateCardAnswerSchema,
   LERNZETTEL_SYSTEM,
   lernzettelSchema,
+  REEXPLAIN_SYSTEM,
+  reexplainSchema,
 } from './prompts.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -155,7 +157,7 @@ app.post('/api/analyze', async (req, res) => {
     userContent.push({ type: 'text', text: textPrompt });
 
     const data = await askLumo({
-      system: ANALYZE_SYSTEM,
+      system: getAnalyzeSystem(goalType),
       userContent,
       schema: analyzeSchema,
       maxTokens: 8000,
@@ -221,9 +223,9 @@ app.post('/api/evaluate-understanding', async (req, res) => {
 
 app.post('/api/generate-cards', async (req, res) => {
   try {
-    const { blockTitle, blockContent, difficulty } = req.body || {};
+    const { blockTitle, blockContent, difficulty, goalType } = req.body || {};
     const data = await askLumo({
-      system: CARD_SYSTEM,
+      system: getCardSystem(goalType),
       userContent: `Block: ${blockTitle}\nSchwierigkeit: ${difficulty}\nInhalt: ${blockContent}`,
       schema: cardSchema,
       maxTokens: 1500,
@@ -257,6 +259,21 @@ app.post('/api/generate-lernzettel', async (req, res) => {
       userContent: `Block: ${blockTitle}\nInhalt: ${blockContent}\nGelernte Konzepte: ${cards?.map((c) => c.concept + ': ' + c.explanation).join('\n') || ''}`,
       schema: lernzettelSchema,
       maxTokens: 800,
+    });
+    res.json({ data });
+  } catch (err) {
+    sendFriendlyError(res, err);
+  }
+});
+
+app.post('/api/reexplain', async (req, res) => {
+  const { concept, originalExplanation, blockTitle } = req.body || {};
+  try {
+    const data = await askLumo({
+      system: REEXPLAIN_SYSTEM,
+      userContent: `Block: ${blockTitle}\nKonzept: ${concept}\nUrsprüngliche Erklärung: ${originalExplanation}`,
+      schema: reexplainSchema,
+      maxTokens: 300,
     });
     res.json({ data });
   } catch (err) {

@@ -38,6 +38,15 @@ Deine Aufgabe:
 7. Fülle "content" mit einer kompakten Zusammenfassung des Stoffs dieses Blocks (2-6 Sätze), die als Grundlage für spätere Erklärungen dient
 8. Bestimme das Fach (subject) – ein einziges Wort auf Deutsch, kleingeschrieben: biologie, chemie, physik, mathematik, geschichte, psychologie, wirtschaft, informatik, sprachen, medizin, jura – oder ein anderes passendes Fach.`;
 
+export function getAnalyzeSystem(goalType) {
+  const goalContext = goalType === 'exam'
+    ? '\nDer Nutzer lernt für eine PRÜFUNG: Betone Prüfungsrelevanz, markiere was besonders wichtig ist.'
+    : goalType === 'homework'
+    ? '\nDer Nutzer schreibt eine HAUSARBEIT: Betone Zusammenhänge und tiefes Verstehen über reine Fakten.'
+    : '\nDer Nutzer möchte VERSTEHEN ohne Druck: Erkläre breiter, weniger streng, mehr Kontext.';
+  return ANALYZE_SYSTEM + goalContext;
+}
+
 export const analyzeSchema = {
   type: 'object',
   properties: {
@@ -167,6 +176,15 @@ Deine Aufgabe:
 5. Beginne mit einer Überblick-Karte (concept: "Überblick") die in 2 Sätzen erklärt worum es in diesem Block überhaupt geht
 6. Sprache: warm, direkt, einfach – nie akademisch`;
 
+export function getCardSystem(goalType) {
+  const strictness = goalType === 'exam'
+    ? '\nDer Nutzer lernt für eine Prüfung: Stelle striktere Fragen, betone was klausurrelevant ist.'
+    : goalType === 'understand'
+    ? '\nDer Nutzer lernt ohne Druck: Stelle einladende Fragen, keine strengen Prüfungsfragen.'
+    : '';
+  return CARD_SYSTEM + strictness;
+}
+
 export const cardSchema = {
   type: 'object',
   properties: {
@@ -264,5 +282,22 @@ export const lernzettelSchema = {
     merksatz: { type: 'string' },
   },
   required: ['title', 'points', 'merksatz'],
+  additionalProperties: false,
+};
+
+export const REEXPLAIN_SYSTEM = `${LUMO_PERSONA}
+
+Der Nutzer hat angegeben dass er ein Konzept noch nicht verstanden hat.
+Erkläre dasselbe Konzept nochmal komplett anders:
+- Nutze eine andere Analogie aus dem Alltag
+- Beginne von einer anderen Perspektive
+- Maximal 3 Sätze
+- Keine Wiederholung der vorherigen Erklärung
+- Direkt einsteigen ohne Einleitung`;
+
+export const reexplainSchema = {
+  type: 'object',
+  properties: { reply: { type: 'string' } },
+  required: ['reply'],
   additionalProperties: false,
 };

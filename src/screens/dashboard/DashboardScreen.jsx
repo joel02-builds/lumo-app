@@ -87,22 +87,29 @@ export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock
           }}>
             {percent}%
           </div>
-          <div style={{
-            height: '10px',
-            background: 'var(--bg-card)',
-            borderRadius: '6px',
-            overflow: 'hidden',
-            margin: '0 0 8px',
-          }}>
+          {percent > 0 && (
             <div style={{
-              height: '100%',
-              width: `${percent}%`,
-              background: percent === 100 ? 'var(--green)' : projectColor,
+              height: '10px',
+              background: 'var(--bg-card)',
               borderRadius: '6px',
-              boxShadow: `0 0 8px ${percent === 100 ? 'var(--green)' : projectColor}`,
-              transition: 'width 0.6s ease',
-            }} />
-          </div>
+              overflow: 'hidden',
+              margin: '0 0 8px',
+            }}>
+              <div style={{
+                height: '100%',
+                width: `${percent}%`,
+                background: percent === 100 ? 'var(--green)' : projectColor,
+                borderRadius: '6px',
+                boxShadow: `0 0 8px ${percent === 100 ? 'var(--green)' : projectColor}`,
+                transition: 'width 0.6s ease',
+              }} />
+            </div>
+          )}
+          {percent === 0 && (
+            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: '8px 0 0' }}>
+              Bereit loszulegen.
+            </p>
+          )}
           <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
             {completed} von {total} Blöcken geschafft
           </p>

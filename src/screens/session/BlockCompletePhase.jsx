@@ -5,7 +5,7 @@ import Button from '../../components/Button.jsx';
 const MESSAGES = {
   sicher: [
     'Du hast es. Wirklich.',
-    'Das sitzt. Ich bin stolz auf dich.',
+    'Das sitzt. Wirklich.',
     'Verstanden. Abgehakt. Weiter geht\'s.',
     'Das war echter Fortschritt heute.',
     'Ich hab\'s gesehen – du hast das verstanden.',

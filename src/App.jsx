@@ -181,6 +181,7 @@ export default function App() {
           key={currentBlock.id}
           block={currentBlock}
           blocks={state.blocks}
+          goalType={state.goalType}
           onRecordCompletion={(result) => dispatch({ type: 'BLOCK_FINISHED', blockId: currentBlock.id, ...result })}
           onSaveCards={(cards) => dispatch({ type: 'SAVE_BLOCK_CARDS', payload: { blockId: currentBlock.id, cards } })}
           onPause={() => dispatch({ type: 'RETURN_TO_DASHBOARD' })}

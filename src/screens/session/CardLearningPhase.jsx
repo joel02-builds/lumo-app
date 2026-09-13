@@ -5,7 +5,7 @@ import CardVisual from '../../components/CardVisual.jsx';
 import { lumoApi } from '../../api/lumo.js';
 import { getBlockColor } from '../../utils/subjectColors.js';
 
-export default function CardLearningPhase({ block, onDone, onExit, onAskFreely, onCardsReady }) {
+export default function CardLearningPhase({ block, goalType, onDone, onExit, onAskFreely, onCardsReady }) {
   const subjectColor = getBlockColor(block);
   const [cards, setCards] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -22,6 +22,8 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely, 
   const [hint, setHint] = useState('');
   const [hintLoading, setHintLoading] = useState(false);
   const [clickedCheck, setClickedCheck] = useState(false);
+  const [reexplaining, setReexplaining] = useState(false);
+  const [alternativeExplanation, setAlternativeExplanation] = useState('');
 
   // Karten laden
   useEffect(() => {
@@ -30,6 +32,7 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely, 
       blockTitle: block.title,
       blockContent: block.content,
       difficulty: block.difficulty,
+      goalType,
     }).then((data) => {
       if (!cancelled) {
         setCards(data.cards);
@@ -119,6 +122,8 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely, 
         setHint('');
         setHintLoading(false);
         setClickedCheck(false);
+        setAlternativeExplanation('');
+        setReexplaining(false);
         setAnimating(false);
       } else {
         setCurrentIndex((i) => i + 1);
@@ -128,6 +133,8 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely, 
         setHint('');
         setHintLoading(false);
         setClickedCheck(false);
+        setAlternativeExplanation('');
+        setReexplaining(false);
         setAnimating(false);
       }
     }, 300);
@@ -215,7 +222,7 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely, 
               autoFocus
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
-              placeholder="Fass den gesamten Block in eigenen Worten zusammen …"
+              placeholder="Stell dir vor du erklärst es deinem besten Freund. Was würdest du sagen?"
               rows={6}
               style={{
                 width: '100%',
@@ -417,7 +424,7 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely, 
               margin: '0 0 24px',
               fontWeight: '400',
             }}>
-              {currentCard?.explanation || ''}
+              {alternativeExplanation || currentCard?.explanation || ''}
             </p>
           )}
 
@@ -437,7 +444,36 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely, 
                 background: 'var(--border)',
                 margin: '0 0 20px',
               }} />
-              {!clickedCheck ? (
+              {currentIndex === 0 && currentCard?.concept === 'Überblick' ? (
+                <button
+                  onClick={() => {
+                    setAnimating(true);
+                    setTimeout(() => {
+                      setCurrentIndex(1);
+                      setPhase('reading');
+                      setAnswer('');
+                      setFeedback(null);
+                      setClickedCheck(false);
+                      setAlternativeExplanation('');
+                      setAnimating(false);
+                    }, 300);
+                  }}
+                  style={{
+                    width: '100%',
+                    background: 'var(--gold)',
+                    color: '#1a1206',
+                    border: 'none',
+                    borderRadius: '12px',
+                    padding: '14px',
+                    fontSize: '16px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    marginTop: '8px',
+                  }}
+                >
+                  Verstanden, weiter →
+                </button>
+              ) : !clickedCheck ? (
                 <button
                   onClick={() => setClickedCheck(true)}
                   style={{
@@ -483,20 +519,36 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely, 
                       Ja, verstanden
                     </button>
                     <button
-                      onClick={() => setClickedCheck(false)}
+                      onClick={async () => {
+                        setClickedCheck(false);
+                        setReexplaining(true);
+                        try {
+                          const result = await lumoApi.reexplain({
+                            concept: currentCard.concept,
+                            originalExplanation: currentCard.explanation,
+                            blockTitle: block.title,
+                          });
+                          setAlternativeExplanation(result.reply);
+                        } catch {
+                          // Fallback: einfach zurück zur Originalerklärung
+                        } finally {
+                          setReexplaining(false);
+                        }
+                      }}
+                      disabled={reexplaining}
                       style={{
                         flex: 1,
                         background: 'var(--bg-card-bright)',
-                        color: 'var(--text-secondary)',
+                        color: reexplaining ? 'var(--text-secondary)' : 'var(--text-primary)',
                         border: '1px solid var(--border)',
                         borderRadius: '12px',
                         padding: '13px',
                         fontSize: '15px',
                         fontWeight: '600',
-                        cursor: 'pointer',
+                        cursor: reexplaining ? 'not-allowed' : 'pointer',
                       }}
                     >
-                      Nein, nochmal
+                      {reexplaining ? 'Lumo denkt …' : 'Nein, nochmal'}
                     </button>
                   </div>
                 </div>
@@ -527,7 +579,7 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely, 
                 autoFocus
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
-                placeholder="Schreib in deinen eigenen Worten …"
+                placeholder="Fang einfach an – auch ein Satz reicht …"
                 rows={4}
                 style={{
                   width: '100%',
@@ -705,7 +757,7 @@ export default function CardLearningPhase({ block, onDone, onExit, onAskFreely, 
           )}
         </div>
 
-        {onAskFreely && phase !== 'answering' && phase !== 'feedback' && (
+        {onAskFreely && phase !== 'answering' && phase !== 'feedback' && alternativeExplanation && (
           <button
             className="text-link"
             onClick={onAskFreely}

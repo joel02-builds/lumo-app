@@ -27,7 +27,7 @@ const BREAK_INTERVAL_SECONDS = 20 * 60;
 
 // Owns the full flow for exactly one block. Mount with key={block.id} from
 // the parent so a new block always starts with a clean phase state.
-export default function SessionScreen({ block, blocks, onRecordCompletion, onSaveCards, onPause, onHeaderVisibilityChange }) {
+export default function SessionScreen({ block, blocks, goalType, onRecordCompletion, onSaveCards, onPause, onHeaderVisibilityChange }) {
   const [phase, setPhase] = useState(PHASES.FOCUS_RITUAL);
   const [depth, setDepth] = useState('simple');
   const [result, setResult] = useState(null);
@@ -146,6 +146,7 @@ export default function SessionScreen({ block, blocks, onRecordCompletion, onSav
       {phase === PHASES.CARDS && (
         <CardLearningPhase
           block={block}
+          goalType={goalType}
           onDone={handleCardsDone}
           onExit={onPause}
           onAskFreely={() => setPhase(PHASES.DEPTH_CHOICE)}
