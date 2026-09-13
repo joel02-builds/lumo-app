@@ -28,6 +28,8 @@ export default function CardLearningPhase({ block, goalType, onDone, onExit, onA
   const [activeTerm, setActiveTerm] = useState(null);
   const [termExplanation, setTermExplanation] = useState('');
   const [termLoading, setTermLoading] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(false);
+  const [noteText, setNoteText] = useState('');
 
   // Karten laden
   useEffect(() => {
@@ -67,6 +69,32 @@ export default function CardLearningPhase({ block, goalType, onDone, onExit, onA
   const currentCard = cards[currentIndex];
   const isLast = currentIndex === cards.length - 1;
   const progress = cards.length > 0 ? currentIndex / cards.length : 0;
+
+  function saveNote(text) {
+    try {
+      const key = `lumo_note_${block.id}_${currentCard?.concept}`;
+      if (text.trim()) {
+        localStorage.setItem(key, text);
+      } else {
+        localStorage.removeItem(key);
+      }
+    } catch {}
+  }
+
+  function loadNote() {
+    try {
+      const key = `lumo_note_${block.id}_${currentCard?.concept}`;
+      return localStorage.getItem(key) || '';
+    } catch { return ''; }
+  }
+
+  useEffect(() => {
+    if (currentCard) {
+      const saved = loadNote();
+      setNoteText(saved);
+      setNoteOpen(!!saved);
+    }
+  }, [currentIndex]);
 
   function handleReadingDone() {
     setPhase('answering');
@@ -130,6 +158,8 @@ export default function CardLearningPhase({ block, goalType, onDone, onExit, onA
         setReexplaining(false);
         setActiveTerm(null);
         setTermExplanation('');
+        setNoteOpen(false);
+        setNoteText('');
         setAnimating(false);
       } else {
         setCurrentIndex((i) => i + 1);
@@ -143,6 +173,8 @@ export default function CardLearningPhase({ block, goalType, onDone, onExit, onA
         setReexplaining(false);
         setActiveTerm(null);
         setTermExplanation('');
+        setNoteOpen(false);
+        setNoteText('');
         setAnimating(false);
       }
     }, 300);
@@ -527,6 +559,48 @@ export default function CardLearningPhase({ block, goalType, onDone, onExit, onA
           )}
 
           {phase === 'reading' && (
+            <div style={{ width: '100%', marginBottom: '16px' }}>
+              <button
+                onClick={() => setNoteOpen(!noteOpen)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: noteText ? 'var(--gold)' : 'var(--text-secondary)',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  padding: '4px 0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                <span>{noteOpen ? '▾' : '▸'}</span>
+                {noteText ? 'Notiz bearbeiten' : '+ Notiz hinzufügen'}
+              </button>
+              {noteOpen && (
+                <textarea
+                  value={noteText}
+                  onChange={(e) => {
+                    setNoteText(e.target.value);
+                    saveNote(e.target.value);
+                  }}
+                  placeholder="Schreib dir etwas auf …"
+                  rows={3}
+                  style={{
+                    width: '100%',
+                    marginTop: '6px',
+                    fontSize: '14px',
+                    borderRadius: '8px',
+                    resize: 'none',
+                    background: 'var(--bg-elevated)',
+                    border: '1px solid var(--border)',
+                  }}
+                />
+              )}
+            </div>
+          )}
+
+          {phase === 'reading' && (
             <CardVisual
               visual_type={currentCard?.visual_type}
               visual_data={currentCard?.visual_data}
@@ -555,6 +629,8 @@ export default function CardLearningPhase({ block, goalType, onDone, onExit, onA
                       setAlternativeExplanation('');
                       setActiveTerm(null);
                       setTermExplanation('');
+                      setNoteOpen(false);
+                      setNoteText('');
                       setAnimating(false);
                     }, 300);
                   }}

@@ -23,6 +23,8 @@ import {
   reexplainSchema,
   TERM_EXPLAIN_SYSTEM,
   termExplainSchema,
+  CONCEPT_MAP_SYSTEM,
+  conceptMapSchema,
 } from './prompts.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -291,6 +293,21 @@ app.post('/api/explain-term', async (req, res) => {
       userContent: `Block: ${blockTitle}\nKontext: ${blockContext}\nBegriff: ${term}`,
       schema: termExplainSchema,
       maxTokens: 150,
+    });
+    res.json({ data });
+  } catch (err) {
+    sendFriendlyError(res, err);
+  }
+});
+
+app.post('/api/generate-concept-map', async (req, res) => {
+  const { blockTitle, blockContent, cards } = req.body || {};
+  try {
+    const data = await askLumo({
+      system: CONCEPT_MAP_SYSTEM,
+      userContent: `Block: ${blockTitle}\nKernkonzepte: ${cards?.map((c) => c.concept).join(', ') || ''}\nInhalt: ${blockContent}`,
+      schema: conceptMapSchema,
+      maxTokens: 600,
     });
     res.json({ data });
   } catch (err) {

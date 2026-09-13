@@ -6,6 +6,7 @@ import ExplainChatPhase from './ExplainChatPhase.jsx';
 import CheckUnderstandingPhase from './CheckUnderstandingPhase.jsx';
 import BlockCompletePhase from './BlockCompletePhase.jsx';
 import LernzettelScreen from './LernzettelScreen.jsx';
+import ConceptMapScreen from './ConceptMapScreen.jsx';
 import SessionSummaryScreen from './SessionSummaryScreen.jsx';
 import MidSessionBreakScreen from './MidSessionBreakScreen.jsx';
 import SessionTimer from '../../components/SessionTimer.jsx';
@@ -20,6 +21,7 @@ const PHASES = {
   CHECK: 'check',
   COMPLETE: 'complete',
   LERNZETTEL: 'lernzettel',
+  CONCEPT_MAP: 'concept-map',
   SESSION_SUMMARY: 'session-summary',
 };
 
@@ -124,6 +126,16 @@ export default function SessionScreen({ block, blocks, goalType, onRecordComplet
         cards={sessionCards}
         goalType={goalType}
         subjectColor={getBlockColor(block)}
+        onDone={() => setPhase(PHASES.CONCEPT_MAP)}
+      />
+    );
+  }
+
+  if (phase === PHASES.CONCEPT_MAP) {
+    return (
+      <ConceptMapScreen
+        block={block}
+        cards={sessionCards}
         onDone={() => setPhase(PHASES.SESSION_SUMMARY)}
       />
     );

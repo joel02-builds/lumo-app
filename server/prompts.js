@@ -332,3 +332,49 @@ export const termExplainSchema = {
   required: ['explanation'],
   additionalProperties: false,
 };
+
+export const CONCEPT_MAP_SYSTEM = `${LUMO_PERSONA}
+
+Erstelle eine einfache Concept Map für einen Lernblock.
+
+Die Map zeigt wie die Kernkonzepte zusammenhängen.
+Maximal 5 Knoten. Maximal 6 Verbindungen.
+Jede Verbindung hat ein kurzes Verb oder eine Phrase (2-4 Wörter).
+Beispiel: 'Photosynthese' --[benötigt]--> 'Sonnenlicht'
+
+Halte Knotenbezeichnungen kurz (maximal 3 Wörter).
+Verbindungsphrasen direkt und aktiv ('führt zu', 'besteht aus', 'ermöglicht').`;
+
+export const conceptMapSchema = {
+  type: 'object',
+  properties: {
+    nodes: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          label: { type: 'string' },
+          isCenter: { type: 'boolean' },
+        },
+        required: ['id', 'label', 'isCenter'],
+        additionalProperties: false,
+      },
+    },
+    edges: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          from: { type: 'string' },
+          to: { type: 'string' },
+          label: { type: 'string' },
+        },
+        required: ['from', 'to', 'label'],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ['nodes', 'edges'],
+  additionalProperties: false,
+};

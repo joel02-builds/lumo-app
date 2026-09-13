@@ -60,4 +60,5 @@ export const lumoApi = {
   generateLernzettel: (payload) => post('/api/generate-lernzettel', payload),
   reexplain: (payload) => post('/api/reexplain', payload),
   explainTerm: (payload) => post('/api/explain-term', payload),
+  generateConceptMap: (payload) => post('/api/generate-concept-map', payload),
 };
