@@ -6,7 +6,7 @@ import HighlightedText from '../../components/HighlightedText.jsx';
 import { lumoApi } from '../../api/lumo.js';
 import { getBlockColor } from '../../utils/subjectColors.js';
 
-export default function CardLearningPhase({ block, goalType, onDone, onExit, onAskFreely, onCardsReady }) {
+export default function CardLearningPhase({ block, goalType, mood, onDone, onExit, onAskFreely, onCardsReady }) {
   const subjectColor = getBlockColor(block);
   const [cards, setCards] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -30,6 +30,8 @@ export default function CardLearningPhase({ block, goalType, onDone, onExit, onA
   const [termLoading, setTermLoading] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteText, setNoteText] = useState('');
+  const [pretestAnswer, setPretestAnswer] = useState('');
+  const [pretestDone, setPretestDone] = useState(false);
 
   // Karten laden
   useEffect(() => {
@@ -39,6 +41,7 @@ export default function CardLearningPhase({ block, goalType, onDone, onExit, onA
       blockContent: block.content,
       difficulty: block.difficulty,
       goalType,
+      mood,
     }).then((data) => {
       if (!cancelled) {
         setCards(data.cards);
@@ -69,6 +72,10 @@ export default function CardLearningPhase({ block, goalType, onDone, onExit, onA
   const currentCard = cards[currentIndex];
   const isLast = currentIndex === cards.length - 1;
   const progress = cards.length > 0 ? currentIndex / cards.length : 0;
+
+  function shouldShowPretest() {
+    return currentIndex > 0 && currentCard?.pretest_question && !pretestDone;
+  }
 
   function saveNote(text) {
     try {
@@ -160,6 +167,8 @@ export default function CardLearningPhase({ block, goalType, onDone, onExit, onA
         setTermExplanation('');
         setNoteOpen(false);
         setNoteText('');
+        setPretestAnswer('');
+        setPretestDone(false);
         setAnimating(false);
       } else {
         setCurrentIndex((i) => i + 1);
@@ -175,6 +184,8 @@ export default function CardLearningPhase({ block, goalType, onDone, onExit, onA
         setTermExplanation('');
         setNoteOpen(false);
         setNoteText('');
+        setPretestAnswer('');
+        setPretestDone(false);
         setAnimating(false);
       }
     }, 300);
@@ -478,8 +489,72 @@ export default function CardLearningPhase({ block, goalType, onDone, onExit, onA
             {currentCard?.concept || ''}
           </div>
 
+          {/* Pre-test: Vermutung des Nutzers, BEVOR er die Erklärung sieht */}
+          {phase === 'reading' && shouldShowPretest() && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <p style={{
+                fontSize: '11px',
+                fontWeight: '700',
+                letterSpacing: '1.5px',
+                textTransform: 'uppercase',
+                color: subjectColor,
+                margin: '0',
+              }}>
+                Deine Vermutung
+              </p>
+              <p style={{
+                fontSize: '19px',
+                lineHeight: '1.5',
+                color: 'var(--text-primary)',
+                margin: '0',
+                fontWeight: '500',
+              }}>
+                {currentCard.pretest_question}
+              </p>
+              <p style={{
+                fontSize: '13px',
+                color: 'var(--text-secondary)',
+                margin: '0',
+                fontStyle: 'italic',
+              }}>
+                Es gibt keine falsche Antwort – rate einfach drauflos.
+              </p>
+              <textarea
+                autoFocus
+                value={pretestAnswer}
+                onChange={(e) => setPretestAnswer(e.target.value)}
+                placeholder="Was glaubst du?"
+                rows={3}
+                style={{
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  resize: 'none',
+                  fontSize: '15px',
+                  borderRadius: '12px',
+                  lineHeight: '1.5',
+                }}
+              />
+              <button
+                onClick={() => setPretestDone(true)}
+                style={{
+                  width: '100%',
+                  background: 'var(--gold)',
+                  color: '#1a1206',
+                  border: 'none',
+                  borderRadius: '12px',
+                  padding: '14px',
+                  fontSize: '16px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                }}
+              >
+                {pretestAnswer.trim() ? 'Meine Vermutung' : 'Ich habe keine Ahnung – zeig mir die Erklärung'}
+              </button>
+            </div>
+          )}
+
           {/* Erklärung – verschwindet bei Answering */}
-          {(phase === 'reading' || phase === 'loading') && (
+          {((phase === 'reading' && !shouldShowPretest()) || phase === 'loading') && (
             reexplaining ? (
               <div style={{
                 display: 'flex',
@@ -493,23 +568,52 @@ export default function CardLearningPhase({ block, goalType, onDone, onExit, onA
                 Ich denke mir eine andere Erklärung aus …
               </div>
             ) : (
-              <p style={{
-                fontSize: '19px',
-                lineHeight: '1.65',
-                color: 'var(--text-primary)',
-                margin: '0 0 8px',
-                fontWeight: '400',
-              }}>
-                <HighlightedText
-                  text={alternativeExplanation || currentCard?.explanation || ''}
-                  color={subjectColor}
-                  onTermClick={phase === 'reading' ? handleTermClick : undefined}
-                />
-              </p>
+              <>
+                {pretestDone && pretestAnswer.trim() && (
+                  <div style={{
+                    borderLeft: `3px solid ${subjectColor}`,
+                    paddingLeft: '12px',
+                    margin: '0 0 12px',
+                  }}>
+                    <p style={{
+                      fontSize: '12px',
+                      color: 'var(--text-secondary)',
+                      margin: '0 0 2px',
+                      fontWeight: '600',
+                      textTransform: 'uppercase',
+                      letterSpacing: '1px',
+                    }}>
+                      Deine Vermutung
+                    </p>
+                    <p style={{
+                      fontSize: '14px',
+                      color: 'var(--text-secondary)',
+                      margin: '0',
+                      fontStyle: 'italic',
+                      lineHeight: '1.5',
+                    }}>
+                      {pretestAnswer}
+                    </p>
+                  </div>
+                )}
+                <p style={{
+                  fontSize: '19px',
+                  lineHeight: '1.65',
+                  color: 'var(--text-primary)',
+                  margin: '0 0 8px',
+                  fontWeight: '400',
+                }}>
+                  <HighlightedText
+                    text={alternativeExplanation || currentCard?.explanation || ''}
+                    color={subjectColor}
+                    onTermClick={phase === 'reading' ? handleTermClick : undefined}
+                  />
+                </p>
+              </>
             )
           )}
 
-          {phase === 'reading' && activeTerm && (
+          {phase === 'reading' && !shouldShowPretest() && activeTerm && (
             <div style={{
               background: `${subjectColor}11`,
               border: `1px solid ${subjectColor}44`,
@@ -558,7 +662,7 @@ export default function CardLearningPhase({ block, goalType, onDone, onExit, onA
             </div>
           )}
 
-          {phase === 'reading' && (
+          {phase === 'reading' && !shouldShowPretest() && (
             <div style={{ width: '100%', marginBottom: '16px' }}>
               <button
                 onClick={() => setNoteOpen(!noteOpen)}
@@ -600,7 +704,7 @@ export default function CardLearningPhase({ block, goalType, onDone, onExit, onA
             </div>
           )}
 
-          {phase === 'reading' && (
+          {phase === 'reading' && !shouldShowPretest() && (
             <CardVisual
               visual_type={currentCard?.visual_type}
               visual_data={currentCard?.visual_data}
@@ -609,7 +713,7 @@ export default function CardLearningPhase({ block, goalType, onDone, onExit, onA
           )}
 
           {/* Klick-Check statt direktem Antworten-Button */}
-          {phase === 'reading' && (
+          {phase === 'reading' && !shouldShowPretest() && (
             <>
               <div style={{
                 height: '1px',
@@ -631,6 +735,8 @@ export default function CardLearningPhase({ block, goalType, onDone, onExit, onA
                       setTermExplanation('');
                       setNoteOpen(false);
                       setNoteText('');
+                      setPretestAnswer('');
+                      setPretestDone(false);
                       setAnimating(false);
                     }, 300);
                   }}

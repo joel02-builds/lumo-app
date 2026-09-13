@@ -175,15 +175,21 @@ Deine Aufgabe:
    Setze visual_type auf 'none' wenn unsicher – nur wenn wirklich hilfreicher als Text.
 5. Beginne mit einer Überblick-Karte (concept: "Überblick") die in 2 Sätzen erklärt worum es in diesem Block überhaupt geht
 6. Sprache: warm, direkt, einfach – nie akademisch
-7. Gib alle markierten Schlüsselbegriffe auch als 'keywords' Array zurück (ohne Sternchen, nur die Wörter).`;
+7. Füge für jede Karte (außer Überblick) eine kurze pretest_question hinzu – eine einladende Frage die den Nutzer zum Nachdenken bringt BEVOR er die Erklärung sieht. Maximal 1 Satz. Einladend, kein Druck.
+8. Gib alle markierten Schlüsselbegriffe auch als 'keywords' Array zurück (ohne Sternchen, nur die Wörter).`;
 
-export function getCardSystem(goalType) {
+export function getCardSystem(goalType, mood) {
   const strictness = goalType === 'exam'
     ? '\nDer Nutzer lernt für eine Prüfung: Stelle striktere Fragen, betone was klausurrelevant ist.'
     : goalType === 'understand'
     ? '\nDer Nutzer lernt ohne Druck: Stelle einladende Fragen, keine strengen Prüfungsfragen.'
     : '';
-  return CARD_SYSTEM + strictness;
+  const moodContext = mood === 'bad'
+    ? '\nDer Nutzer fühlt sich heute nicht gut: Erkläre besonders einfach und kurz. Maximal 2 Sätze pro Erklärung. Stelle nur eine sehr einfache Frage.'
+    : mood === 'okay'
+    ? '\nDer Nutzer ist heute nicht ganz fit: Halte Erklärungen übersichtlich.'
+    : '';
+  return CARD_SYSTEM + strictness + moodContext;
 }
 
 export const cardSchema = {
@@ -221,7 +227,8 @@ export const cardSchema = {
           keywords: {
             type: 'array',
             items: { type: 'string' },
-          }
+          },
+          pretest_question: { type: 'string' }
         },
         required: ['concept', 'explanation', 'question', 'visual_type', 'keywords'],
         additionalProperties: false,
@@ -376,5 +383,22 @@ export const conceptMapSchema = {
     },
   },
   required: ['nodes', 'edges'],
+  additionalProperties: false,
+};
+
+export const PRETEST_SYSTEM = `${LUMO_PERSONA}
+
+Erstelle eine kurze Pre-test Frage für ein Lernkonzept.
+Die Frage soll den Nutzer zum Raten/Nachdenken bringen BEVOR er die Erklärung sieht.
+Maximal 1 Satz. Einladend formuliert, kein Prüfungsdruck.
+Beispiel: 'Was glaubst du: Wie könnte ein Körper Energie aus Licht gewinnen?'
+Nie mit 'Definiere' oder 'Erkläre' beginnen – nur 'Was glaubst du', 'Wie würdest du', 'Warum könnte'.`;
+
+export const pretestSchema = {
+  type: 'object',
+  properties: {
+    question: { type: 'string' },
+  },
+  required: ['question'],
   additionalProperties: false,
 };

@@ -227,9 +227,9 @@ app.post('/api/evaluate-understanding', async (req, res) => {
 
 app.post('/api/generate-cards', async (req, res) => {
   try {
-    const { blockTitle, blockContent, difficulty, goalType } = req.body || {};
+    const { blockTitle, blockContent, difficulty, goalType, mood } = req.body || {};
     const data = await askLumo({
-      system: getCardSystem(goalType),
+      system: getCardSystem(goalType, mood),
       userContent: `Block: ${blockTitle}\nSchwierigkeit: ${difficulty}\nInhalt: ${blockContent}`,
       schema: cardSchema,
       maxTokens: 1500,
