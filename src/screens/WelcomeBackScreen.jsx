@@ -17,6 +17,23 @@ function getBlocksDueToday(blocks) {
   });
 }
 
+function shouldAskExamResult(blocks, goalType, examResult, examResultAskedAt) {
+  if (goalType !== 'exam') return false;
+  if (examResult) return false;
+  const allDone = blocks.length > 0 && blocks.every(b => b.status === 'completed');
+  if (!allDone) return false;
+  return true;
+}
+
+function getDaysSinceLastLearning(blocks) {
+  const lastCompleted = blocks
+    .filter(b => b.completedAt)
+    .map(b => new Date(b.completedAt))
+    .sort((a, b) => b - a)[0];
+  if (!lastCompleted) return null;
+  return Math.floor((new Date() - lastCompleted) / (1000 * 60 * 60 * 24));
+}
+
 function getLernzeitHinweis() {
   const hour = new Date().getHours();
   if (hour >= 6 && hour < 9) {
@@ -31,7 +48,7 @@ function getLernzeitHinweis() {
   return { show: false, text: '' };
 }
 
-export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHistory, onStartBlock, onGoToDashboard, onNewProject }) {
+export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHistory, goalType, examResult, examResultAskedAt, onStartBlock, onGoToDashboard, onNewProject, onAskExamResult }) {
   const total = blocks.length;
   const completed = blocks.filter((b) => b.status === 'completed').length;
   const remaining = total - completed;
@@ -151,6 +168,50 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHis
             </p>
           )}
         </div>
+
+        {(() => {
+          const days = getDaysSinceLastLearning(blocks);
+          if (!days || days < 7) return null;
+          return (
+            <div style={{
+              width: '100%',
+              background: 'rgba(212, 168, 67, 0.08)',
+              border: '1px solid rgba(212, 168, 67, 0.2)',
+              borderRadius: '14px',
+              padding: '16px 18px',
+              textAlign: 'center',
+            }}>
+              <p style={{ fontSize: '15px', color: 'var(--text-primary)', margin: '0 0 4px', fontWeight: '600' }}>
+                {days} Tage. Willkommen zurück.
+              </p>
+              <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: '0', lineHeight: '1.5' }}>
+                Ich bin noch hier. Fangen wir da an wo du aufgehört hast.
+              </p>
+            </div>
+          );
+        })()}
+
+        {shouldAskExamResult(blocks, goalType, examResult, examResultAskedAt) && (
+          <button
+            onClick={onAskExamResult}
+            style={{
+              width: '100%',
+              background: 'rgba(212, 168, 67, 0.1)',
+              border: '1px solid rgba(212, 168, 67, 0.4)',
+              borderRadius: '12px',
+              padding: '14px 18px',
+              cursor: 'pointer',
+              textAlign: 'left',
+            }}
+          >
+            <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--gold)', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Wie lief die Prüfung?
+            </p>
+            <p style={{ fontSize: '14px', color: 'var(--text-primary)', margin: '0' }}>
+              Lumo möchte wissen wie es war. Tippe um es zu erzählen.
+            </p>
+          </button>
+        )}
 
         {(() => {
           const dueBlocks = getBlocksDueToday(blocks);

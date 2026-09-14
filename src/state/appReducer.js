@@ -7,6 +7,7 @@ export const SCREENS = {
   WELCOME_BACK: 'welcome-back',
   WEAK_SPOTS: 'weak-spots',
   PROJECTS: 'projects',
+  EXAM_RESULT: 'exam-result',
 };
 
 export const initialState = {
@@ -28,6 +29,8 @@ export const initialState = {
   subjectHistory: [],
   projects: [],
   activeProjectId: null,
+  examResult: null,
+  examResultAskedAt: null,
 };
 
 // Lazy-Init für useReducer: baut den Startzustand aus einem evtl. in
@@ -53,6 +56,8 @@ export function createInitialState(savedProject) {
     subjectHistory: savedProject.subjectHistory || [],
     projects,
     activeProjectId: savedProject.activeProjectId || null,
+    examResult: savedProject.examResult || null,
+    examResultAskedAt: savedProject.examResultAskedAt || null,
   };
 }
 
@@ -186,6 +191,12 @@ export function appReducer(state, action) {
     case 'VIEW_PROJECTS':
       return { ...state, screen: SCREENS.PROJECTS };
 
+    case 'VIEW_EXAM_RESULT':
+      return { ...state, screen: SCREENS.EXAM_RESULT };
+
+    case 'SET_EXAM_RESULT':
+      return { ...state, examResult: action.payload, examResultAskedAt: new Date().toISOString() };
+
     case 'SAVE_CURRENT_PROJECT': {
       const current = {
         id: state.activeProjectId || Date.now().toString(),
@@ -195,6 +206,11 @@ export function appReducer(state, action) {
         recommendedOrder: state.recommendedOrder,
         subject: state.blocks[0]?.subject || null,
         subjectColor: state.subjectColor,
+        // examResult ist projektbezogen (das Ergebnis der Prüfung DIESES
+        // Projekts) – ohne diese Felder würde ein zweites Exam-Projekt beim
+        // Laden fälschlich als "bereits beantwortet" gelten.
+        examResult: state.examResult,
+        examResultAskedAt: state.examResultAskedAt,
         savedAt: new Date().toISOString(),
       };
       const existing = state.projects.findIndex(p => p.id === current.id);
@@ -216,6 +232,8 @@ export function appReducer(state, action) {
         subjectColor: project.subjectColor,
         activeProjectId: project.id,
         currentBlockId: null,
+        examResult: project.examResult || null,
+        examResultAskedAt: project.examResultAskedAt || null,
         screen: SCREENS.WELCOME_BACK,
       };
     }
@@ -236,6 +254,8 @@ export function appReducer(state, action) {
           subjectColor: null,
           activeProjectId: null,
           currentBlockId: null,
+          examResult: null,
+          examResultAskedAt: null,
         };
       }
       return { ...state, projects };

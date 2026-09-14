@@ -12,6 +12,7 @@ import SessionScreen from './screens/session/SessionScreen.jsx';
 import WelcomeBackScreen from './screens/WelcomeBackScreen.jsx';
 import WeakSpotsScreen from './screens/WeakSpotsScreen.jsx';
 import ProjectsScreen from './screens/ProjectsScreen.jsx';
+import ExamResultScreen from './screens/ExamResultScreen.jsx';
 import MaterialConfirmationScreen from './screens/MaterialConfirmationScreen.jsx';
 import ErrorBanner from './components/ErrorBanner.jsx';
 import LumoWordmark from './components/LumoWordmark.jsx';
@@ -57,8 +58,10 @@ export default function App() {
       subjectHistory: state.subjectHistory,
       projects: state.projects,
       activeProjectId: state.activeProjectId,
+      examResult: state.examResult,
+      examResultAskedAt: state.examResultAskedAt,
     });
-  }, [state.topic, state.fileName, state.goalType, state.goalDate, state.blocks, state.recommendedOrder, state.subjectColor, state.learningStyle, state.subjectHistory, state.projects, state.activeProjectId]);
+  }, [state.topic, state.fileName, state.goalType, state.goalDate, state.blocks, state.recommendedOrder, state.subjectColor, state.learningStyle, state.subjectHistory, state.projects, state.activeProjectId, state.examResult, state.examResultAskedAt]);
 
   const handleMaterial = useCallback((payload) => {
     dispatch({ type: 'SET_MATERIAL', ...payload });
@@ -131,6 +134,15 @@ export default function App() {
     dispatch({ type: 'VIEW_PROJECTS' });
   }, [state.blocks.length]);
 
+  const handleExamResultDone = useCallback((result) => {
+    dispatch({ type: 'SET_EXAM_RESULT', payload: result });
+    dispatch({ type: 'RETURN_TO_DASHBOARD' });
+  }, []);
+
+  const handleExamResultDismiss = useCallback(() => {
+    dispatch({ type: 'RETURN_TO_DASHBOARD' });
+  }, []);
+
   const currentBlock = state.blocks.find((b) => b.id === state.currentBlockId);
   const isWelcomeScreen = state.screen === SCREENS.ONBOARDING && state.onboardingStep === 1;
 
@@ -150,9 +162,13 @@ export default function App() {
           blocks={state.blocks}
           recommendedOrder={state.recommendedOrder}
           subjectHistory={state.subjectHistory}
+          goalType={state.goalType}
+          examResult={state.examResult}
+          examResultAskedAt={state.examResultAskedAt}
           onStartBlock={(blockId) => dispatch({ type: 'START_BLOCK', blockId })}
           onGoToDashboard={() => dispatch({ type: 'RETURN_TO_DASHBOARD' })}
           onNewProject={handleNewProject}
+          onAskExamResult={() => dispatch({ type: 'VIEW_EXAM_RESULT' })}
         />
       )}
 
@@ -212,6 +228,13 @@ export default function App() {
           onLoad={(id) => dispatch({ type: 'LOAD_PROJECT', payload: id })}
           onNew={handleStartFreshProject}
           onDelete={(id) => dispatch({ type: 'DELETE_PROJECT', payload: id })}
+        />
+      )}
+
+      {state.screen === SCREENS.EXAM_RESULT && (
+        <ExamResultScreen
+          onDone={handleExamResultDone}
+          onDismiss={handleExamResultDismiss}
         />
       )}
 

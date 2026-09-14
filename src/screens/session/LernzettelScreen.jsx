@@ -32,6 +32,21 @@ export default function LernzettelScreen({ block, cards, goalType, onDone, subje
     }).catch(() => {});
   }
 
+  async function handleShare() {
+    if (!lernzettel) return;
+    const text = `📚 ${lernzettel.title}\n\n${lernzettel.points.map(p => `• ${p.keyword}: ${p.explanation}`).join('\n')}\n\n💡 Merksatz: ${lernzettel.merksatz}\n\nErstellt mit Lumo`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: lernzettel.title, text });
+      } catch {}
+    } else {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }
+
   function handleDownload() {
     if (!lernzettel) return;
     const text = [
@@ -218,6 +233,24 @@ export default function LernzettelScreen({ block, cards, goalType, onDone, subje
               ↓ Download
             </button>
           </div>
+          {navigator.share && (
+            <button
+              onClick={handleShare}
+              style={{
+                width: '100%',
+                background: 'var(--bg-card)',
+                color: 'var(--text-secondary)',
+                border: '1px solid var(--border)',
+                borderRadius: '12px',
+                padding: '13px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+              }}
+            >
+              ↗ Mit Kommilitonen teilen
+            </button>
+          )}
           <button
             onClick={onDone}
             style={{
