@@ -50,11 +50,17 @@ export default function App() {
       blocks: state.blocks,
       recommendedOrder: state.recommendedOrder,
       subjectColor: state.subjectColor,
+      learningStyle: state.learningStyle,
     });
-  }, [state.topic, state.fileName, state.goalType, state.goalDate, state.blocks, state.recommendedOrder, state.subjectColor]);
+  }, [state.topic, state.fileName, state.goalType, state.goalDate, state.blocks, state.recommendedOrder, state.subjectColor, state.learningStyle]);
 
   const handleMaterial = useCallback((payload) => {
     dispatch({ type: 'SET_MATERIAL', ...payload });
+  }, []);
+
+  const handleOnboardingNext = useCallback(({ learningStyle } = {}) => {
+    dispatch({ type: 'SET_LEARNING_STYLE', learningStyle });
+    dispatch({ type: 'GO_TO_STEP2' });
   }, []);
 
   const handleStart = useCallback(({ subject, color } = {}) => {
@@ -120,7 +126,7 @@ export default function App() {
       )}
 
       {isWelcomeScreen && (
-        <OnboardingScreen1 onNext={() => dispatch({ type: 'GO_TO_STEP2' })} />
+        <OnboardingScreen1 onNext={handleOnboardingNext} />
       )}
 
       {state.screen === SCREENS.ONBOARDING && state.onboardingStep === 2 && (
@@ -182,6 +188,7 @@ export default function App() {
           block={currentBlock}
           blocks={state.blocks}
           goalType={state.goalType}
+          learningStyle={state.learningStyle}
           onRecordCompletion={(result) => dispatch({ type: 'BLOCK_FINISHED', blockId: currentBlock.id, ...result })}
           onSaveCards={(cards) => dispatch({ type: 'SAVE_BLOCK_CARDS', payload: { blockId: currentBlock.id, cards } })}
           onPause={() => dispatch({ type: 'RETURN_TO_DASHBOARD' })}

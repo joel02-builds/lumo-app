@@ -6,7 +6,7 @@ import HighlightedText from '../../components/HighlightedText.jsx';
 import { lumoApi } from '../../api/lumo.js';
 import { getBlockColor } from '../../utils/subjectColors.js';
 
-export default function CardLearningPhase({ block, goalType, mood, onDone, onExit, onAskFreely, onCardsReady }) {
+export default function CardLearningPhase({ block, goalType, mood, learningStyle, onDone, onExit, onAskFreely, onCardsReady }) {
   const subjectColor = getBlockColor(block);
   const [cards, setCards] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -32,6 +32,10 @@ export default function CardLearningPhase({ block, goalType, mood, onDone, onExi
   const [noteText, setNoteText] = useState('');
   const [pretestAnswer, setPretestAnswer] = useState('');
   const [pretestDone, setPretestDone] = useState(false);
+  const [whyAnswer, setWhyAnswer] = useState('');
+  const [whyMode, setWhyMode] = useState(false);
+  const [whyFeedback, setWhyFeedback] = useState('');
+  const [whySending, setWhySending] = useState(false);
 
   // Karten laden
   useEffect(() => {
@@ -42,6 +46,7 @@ export default function CardLearningPhase({ block, goalType, mood, onDone, onExi
       difficulty: block.difficulty,
       goalType,
       mood,
+      learningStyle,
     }).then((data) => {
       if (!cancelled) {
         setCards(data.cards);
@@ -169,6 +174,9 @@ export default function CardLearningPhase({ block, goalType, mood, onDone, onExi
         setNoteText('');
         setPretestAnswer('');
         setPretestDone(false);
+        setWhyAnswer('');
+        setWhyMode(false);
+        setWhyFeedback('');
         setAnimating(false);
       } else {
         setCurrentIndex((i) => i + 1);
@@ -186,6 +194,9 @@ export default function CardLearningPhase({ block, goalType, mood, onDone, onExi
         setNoteText('');
         setPretestAnswer('');
         setPretestDone(false);
+        setWhyAnswer('');
+        setWhyMode(false);
+        setWhyFeedback('');
         setAnimating(false);
       }
     }, 300);
@@ -737,6 +748,9 @@ export default function CardLearningPhase({ block, goalType, mood, onDone, onExi
                       setNoteText('');
                       setPretestAnswer('');
                       setPretestDone(false);
+                      setWhyAnswer('');
+                      setWhyMode(false);
+                      setWhyFeedback('');
                       setAnimating(false);
                     }, 300);
                   }}
@@ -981,6 +995,117 @@ export default function CardLearningPhase({ block, goalType, mood, onDone, onExi
                   {feedback}
                 </p>
               </div>
+
+              {isGoodAnswer && currentCard?.why_question && !whyMode && !whyFeedback && (
+                <div style={{
+                  background: `${subjectColor}11`,
+                  border: `1px solid ${subjectColor}33`,
+                  borderRadius: '10px',
+                  padding: '12px 16px',
+                  marginBottom: '8px',
+                }}>
+                  <p style={{ fontSize: '11px', color: subjectColor, fontWeight: '600', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                    Tiefer denken
+                  </p>
+                  <p style={{ fontSize: '14px', color: 'var(--text-primary)', margin: '0 0 10px', lineHeight: '1.5' }}>
+                    {currentCard.why_question}
+                  </p>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      onClick={() => setWhyMode(true)}
+                      style={{
+                        flex: 1,
+                        background: subjectColor,
+                        color: '#1a1206',
+                        border: 'none',
+                        borderRadius: '8px',
+                        padding: '9px',
+                        fontSize: '13px',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Nachdenken
+                    </button>
+                    <button
+                      onClick={handleNext}
+                      style={{
+                        background: 'none',
+                        border: '1px solid var(--border)',
+                        borderRadius: '8px',
+                        padding: '9px 14px',
+                        fontSize: '13px',
+                        color: 'var(--text-secondary)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Überspringen
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {whyMode && !whyFeedback && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '8px' }}>
+                  <p style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: '600', margin: '0' }}>
+                    {currentCard.why_question}
+                  </p>
+                  <textarea
+                    autoFocus
+                    value={whyAnswer}
+                    onChange={(e) => setWhyAnswer(e.target.value)}
+                    placeholder="Dein Gedanke dazu …"
+                    rows={3}
+                    style={{ width: '100%', fontSize: '14px', borderRadius: '10px', resize: 'none' }}
+                  />
+                  <button
+                    onClick={async () => {
+                      if (!whyAnswer.trim() || whySending) return;
+                      setWhySending(true);
+                      try {
+                        const result = await lumoApi.evaluateCardAnswer({
+                          concept: currentCard.concept,
+                          explanation: currentCard.why_question,
+                          question: currentCard.why_question,
+                          userAnswer: whyAnswer,
+                        });
+                        setWhyFeedback(result.feedback);
+                      } catch {
+                        setWhyFeedback('Interessanter Gedanke. Weiter.');
+                      } finally {
+                        setWhySending(false);
+                      }
+                    }}
+                    disabled={!whyAnswer.trim() || whySending}
+                    style={{
+                      background: whyAnswer.trim() ? subjectColor : 'var(--bg-card)',
+                      color: whyAnswer.trim() ? '#1a1206' : 'var(--text-secondary)',
+                      border: 'none',
+                      borderRadius: '10px',
+                      padding: '12px',
+                      fontSize: '14px',
+                      fontWeight: '700',
+                      cursor: whyAnswer.trim() ? 'pointer' : 'not-allowed',
+                    }}
+                  >
+                    {whySending ? 'Lumo liest …' : 'Abschicken'}
+                  </button>
+                </div>
+              )}
+
+              {whyFeedback && (
+                <div style={{
+                  background: 'var(--bg-elevated)',
+                  borderRadius: '10px',
+                  padding: '12px 16px',
+                  marginBottom: '8px',
+                  borderLeft: `3px solid ${subjectColor}`,
+                }}>
+                  <p style={{ fontSize: '14px', color: 'var(--text-primary)', margin: '0', lineHeight: '1.5' }}>
+                    {whyFeedback}
+                  </p>
+                </div>
+              )}
 
               {isGoodAnswer ? (
                 <button onClick={handleNext} style={{

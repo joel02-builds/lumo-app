@@ -23,6 +23,7 @@ export const initialState = {
   currentBlockId: null,
   error: null,
   subjectColor: null,
+  learningStyle: null,
 };
 
 // Lazy-Init für useReducer: baut den Startzustand aus einem evtl. in
@@ -39,6 +40,7 @@ export function createInitialState(savedProject) {
     blocks: savedProject.blocks || [],
     recommendedOrder: savedProject.recommendedOrder || [],
     subjectColor: savedProject.subjectColor || null,
+    learningStyle: savedProject.learningStyle || null,
   };
 }
 
@@ -97,6 +99,9 @@ export function appReducer(state, action) {
 
     case 'CONFIRM_MATERIAL':
       return { ...state, screen: SCREENS.DASHBOARD };
+
+    case 'SET_LEARNING_STYLE':
+      return { ...state, learningStyle: action.learningStyle };
 
     case 'SET_SUBJECT_COLOR':
       return {

@@ -176,9 +176,10 @@ Deine Aufgabe:
 5. Beginne mit einer Überblick-Karte (concept: "Überblick") die in 2 Sätzen erklärt worum es in diesem Block überhaupt geht
 6. Sprache: warm, direkt, einfach – nie akademisch
 7. Füge für jede Karte (außer Überblick) eine kurze pretest_question hinzu – eine einladende Frage die den Nutzer zum Nachdenken bringt BEVOR er die Erklärung sieht. Maximal 1 Satz. Einladend, kein Druck.
-8. Gib alle markierten Schlüsselbegriffe auch als 'keywords' Array zurück (ohne Sternchen, nur die Wörter).`;
+8. Gib alle markierten Schlüsselbegriffe auch als 'keywords' Array zurück (ohne Sternchen, nur die Wörter).
+9. Füge für komplexere Konzepte (nicht für Überblick, nicht für einfache Definitionen) eine optionale why_question hinzu: Eine 'Warum'- oder 'Wie kommt es dass'-Frage die zum tieferen Nachdenken anregt. Maximal 1 Satz. Nur wenn wirklich sinnvoll – lieber weglassen als eine schlechte Frage stellen.`;
 
-export function getCardSystem(goalType, mood) {
+export function getCardSystem(goalType, mood, learningStyle) {
   const strictness = goalType === 'exam'
     ? '\nDer Nutzer lernt für eine Prüfung: Stelle striktere Fragen, betone was klausurrelevant ist.'
     : goalType === 'understand'
@@ -189,7 +190,14 @@ export function getCardSystem(goalType, mood) {
     : mood === 'okay'
     ? '\nDer Nutzer ist heute nicht ganz fit: Halte Erklärungen übersichtlich.'
     : '';
-  return CARD_SYSTEM + strictness + moodContext;
+  const styleContext = learningStyle === 'examples'
+    ? '\nDer Nutzer lernt am besten mit konkreten Beispielen: Nutze für jede Erklärung mindestens ein Alltagsbeispiel.'
+    : learningStyle === 'connections'
+    ? '\nDer Nutzer lernt am besten durch Zusammenhänge: Erkläre wie jedes Konzept mit anderen zusammenhängt.'
+    : learningStyle === 'stepbystep'
+    ? '\nDer Nutzer lernt am besten Schritt für Schritt: Erkläre in klaren, sequenziellen Schritten.'
+    : '';
+  return CARD_SYSTEM + strictness + moodContext + styleContext;
 }
 
 export const cardSchema = {
@@ -228,7 +236,8 @@ export const cardSchema = {
             type: 'array',
             items: { type: 'string' },
           },
-          pretest_question: { type: 'string' }
+          pretest_question: { type: 'string' },
+          why_question: { type: 'string' }
         },
         required: ['concept', 'explanation', 'question', 'visual_type', 'keywords'],
         additionalProperties: false,
