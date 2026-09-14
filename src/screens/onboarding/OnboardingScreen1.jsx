@@ -9,11 +9,12 @@ export default function OnboardingScreen1({ onNext }) {
     <div className="screen">
       <div className="screen-content" style={{ gap: '24px', maxWidth: '400px' }}>
 
-        <LumoMascot state="idle" />
+        <LumoMascot state="idle" size="large" />
 
         <div style={{ textAlign: 'center' }}>
-          <h1 style={{ fontSize: '28px', marginBottom: '12px', lineHeight: '1.2' }}>
-            Du lernst.<br />Lumo übernimmt den Rest.
+          <h1 style={{ fontSize: '28px', marginBottom: '12px', lineHeight: '1.2', textAlign: 'center' }}>
+            Hallo. Ich bin Lumo.<br />
+            <span style={{ color: 'var(--gold)' }}>Ich lerne mit dir.</span>
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '16px', lineHeight: '1.6' }}>
             Ich plane. Ich strukturiere. Ich sage dir was als nächstes kommt.

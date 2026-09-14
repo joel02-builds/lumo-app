@@ -51,8 +51,9 @@ export default function App() {
       recommendedOrder: state.recommendedOrder,
       subjectColor: state.subjectColor,
       learningStyle: state.learningStyle,
+      subjectHistory: state.subjectHistory,
     });
-  }, [state.topic, state.fileName, state.goalType, state.goalDate, state.blocks, state.recommendedOrder, state.subjectColor, state.learningStyle]);
+  }, [state.topic, state.fileName, state.goalType, state.goalDate, state.blocks, state.recommendedOrder, state.subjectColor, state.learningStyle, state.subjectHistory]);
 
   const handleMaterial = useCallback((payload) => {
     dispatch({ type: 'SET_MATERIAL', ...payload });
@@ -119,6 +120,7 @@ export default function App() {
         <WelcomeBackScreen
           blocks={state.blocks}
           recommendedOrder={state.recommendedOrder}
+          subjectHistory={state.subjectHistory}
           onStartBlock={(blockId) => dispatch({ type: 'START_BLOCK', blockId })}
           onGoToDashboard={() => dispatch({ type: 'RETURN_TO_DASHBOARD' })}
           onNewProject={handleNewProject}
@@ -189,6 +191,7 @@ export default function App() {
           blocks={state.blocks}
           goalType={state.goalType}
           learningStyle={state.learningStyle}
+          onTrackSubject={(subject) => dispatch({ type: 'TRACK_SUBJECT', payload: subject })}
           onRecordCompletion={(result) => dispatch({ type: 'BLOCK_FINISHED', blockId: currentBlock.id, ...result })}
           onSaveCards={(cards) => dispatch({ type: 'SAVE_BLOCK_CARDS', payload: { blockId: currentBlock.id, cards } })}
           onPause={() => dispatch({ type: 'RETURN_TO_DASHBOARD' })}

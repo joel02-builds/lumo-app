@@ -6,7 +6,7 @@ import HighlightedText from '../../components/HighlightedText.jsx';
 import { lumoApi } from '../../api/lumo.js';
 import { getBlockColor } from '../../utils/subjectColors.js';
 
-export default function CardLearningPhase({ block, goalType, mood, learningStyle, onDone, onExit, onAskFreely, onCardsReady }) {
+export default function CardLearningPhase({ block, goalType, mood, learningStyle, elapsedSeconds, onDone, onExit, onAskFreely, onCardsReady }) {
   const subjectColor = getBlockColor(block);
   const [cards, setCards] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -445,6 +445,15 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
             ))}
           </div>
         </div>
+        {elapsedSeconds > 0 && (
+          <span style={{
+            fontSize: '12px',
+            color: 'var(--text-secondary)',
+            marginRight: '12px',
+          }}>
+            {Math.floor(elapsedSeconds / 60)} Min
+          </span>
+        )}
         <button onClick={onExit} style={{
           background: 'none',
           border: 'none',

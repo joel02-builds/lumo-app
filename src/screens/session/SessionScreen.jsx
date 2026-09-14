@@ -29,13 +29,20 @@ const BREAK_INTERVAL_SECONDS = 20 * 60;
 
 // Owns the full flow for exactly one block. Mount with key={block.id} from
 // the parent so a new block always starts with a clean phase state.
-export default function SessionScreen({ block, blocks, goalType, learningStyle, onRecordCompletion, onSaveCards, onPause, onHeaderVisibilityChange }) {
+export default function SessionScreen({ block, blocks, goalType, learningStyle, onRecordCompletion, onSaveCards, onTrackSubject, onPause, onHeaderVisibilityChange }) {
   const [phase, setPhase] = useState(PHASES.FOCUS_RITUAL);
   const [depth, setDepth] = useState('simple');
   const [result, setResult] = useState(null);
   const [sessionCards, setSessionCards] = useState([]);
   const [sessionStartTime] = useState(() => Date.now());
   const [sessionMood, setSessionMood] = useState(null);
+
+  // Einmal pro Blocksession (dieser Screen wird mit key={block.id} neu
+  // gemountet) melden, welches Fach gerade gelernt wird.
+  useEffect(() => {
+    if (block?.subject) onTrackSubject?.(block.subject);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [block?.id]);
 
   // Pause-Empfehlung alle 20 aktiven Minuten, als Overlay statt Phasenwechsel
   // (siehe MidSessionBreakScreen), damit Chatverlauf/Antwort erhalten bleiben.
@@ -166,6 +173,7 @@ export default function SessionScreen({ block, blocks, goalType, learningStyle, 
           goalType={goalType}
           mood={sessionMood}
           learningStyle={learningStyle}
+          elapsedSeconds={elapsedSeconds}
           onDone={handleCardsDone}
           onExit={onPause}
           onAskFreely={() => setPhase(PHASES.DEPTH_CHOICE)}

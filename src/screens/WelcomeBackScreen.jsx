@@ -17,12 +17,29 @@ function getBlocksDueToday(blocks) {
   });
 }
 
-export default function WelcomeBackScreen({ blocks, recommendedOrder, onStartBlock, onGoToDashboard, onNewProject }) {
+function getLernzeitHinweis() {
+  const hour = new Date().getHours();
+  if (hour >= 6 && hour < 9) {
+    return { show: true, text: 'Morgens direkt nach dem Aufwachen ist das Gehirn noch nicht auf Touren. Falls möglich, lern heute Nachmittag.' };
+  }
+  if (hour >= 14 && hour < 18) {
+    return { show: true, text: 'Nachmittags bist du oft am fokussiertesten. Guter Zeitpunkt.' };
+  }
+  if (hour >= 22 || hour < 6) {
+    return { show: true, text: 'Spät abends lernt sich schwerer. Kurz und gezielt – dann schlafen.' };
+  }
+  return { show: false, text: '' };
+}
+
+export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHistory, onStartBlock, onGoToDashboard, onNewProject }) {
   const total = blocks.length;
   const completed = blocks.filter((b) => b.status === 'completed').length;
   const remaining = total - completed;
   const next = getRecommendedBlock(blocks, recommendedOrder);
   const allDone = total > 0 && completed === total;
+  const topSubject = subjectHistory
+    ?.slice()
+    .sort((a, b) => b.count - a.count)[0]?.subject;
 
   const [streakDays, setStreakDays] = useState(0);
 
@@ -51,9 +68,29 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, onStartBlo
 
   function getGreeting() {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Guten Morgen.';
-    if (hour < 18) return 'Willkommen zurück.';
-    return 'Guten Abend.';
+    const day = new Date().getDay();
+
+    const morningGreetings = [
+      'Guten Morgen.',
+      'Morgen. Bereit?',
+      'Guter Start in den Tag.',
+    ];
+    const afternoonGreetings = [
+      'Willkommen zurück.',
+      'Da bist du.',
+      'Schön dass du da bist.',
+      'Auf geht\'s.',
+    ];
+    const eveningGreetings = [
+      'Guten Abend.',
+      'Noch ein Block heute?',
+      'Abend. Ich bin dabei.',
+    ];
+
+    const pool = hour < 12 ? morningGreetings : hour < 18 ? afternoonGreetings : eveningGreetings;
+
+    // Deterministisch basierend auf Tag damit es nicht bei jedem Reload wechselt
+    return pool[day % pool.length];
   }
 
   return (
@@ -91,6 +128,26 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, onStartBlo
                 ? `Wir lernen seit ${streakDays} Tagen zusammen.`
                 : `${streakDays} Tage. Du machst das wirklich.`
               }
+            </p>
+          )}
+          {(() => {
+            const hinweis = getLernzeitHinweis();
+            if (!hinweis.show) return null;
+            return (
+              <p style={{
+                fontSize: '12px',
+                color: 'var(--text-secondary)',
+                fontStyle: 'italic',
+                margin: '-12px 0 0',
+                textAlign: 'center',
+              }}>
+                {hinweis.text}
+              </p>
+            );
+          })()}
+          {topSubject && completed > 2 && (
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '-12px 0 0', textAlign: 'center' }}>
+              Dein meistgelerntes Fach: {topSubject.charAt(0).toUpperCase() + topSubject.slice(1)}
             </p>
           )}
         </div>

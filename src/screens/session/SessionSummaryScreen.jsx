@@ -10,6 +10,7 @@ export default function SessionSummaryScreen({ block, evaluation, onContinue, on
   ) || [];
   const nextBlock = allBlocks?.find(b => b.status !== 'completed' && b.id !== block?.id);
   const allDone = completedCount === totalCount;
+  const allPerfect = allDone && allBlocks?.every(b => b.confidence === 'sicher');
 
   const isGood = evaluation?.status === 'sicher';
   const isUnsure = evaluation?.status === 'unsicher';
@@ -154,7 +155,25 @@ export default function SessionSummaryScreen({ block, evaluation, onContinue, on
           </div>
         )}
 
-        {allDone && (
+        {allPerfect ? (
+          <div style={{
+            width: '100%',
+            background: 'linear-gradient(135deg, rgba(212,168,67,0.15) 0%, rgba(61,158,110,0.15) 100%)',
+            border: '1px solid var(--gold)',
+            borderRadius: '16px',
+            padding: '24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ fontSize: '32px', margin: '0 0 8px' }}>✨</p>
+            <p style={{ fontSize: '18px', fontWeight: '700', color: 'var(--gold)', margin: '0 0 6px' }}>
+              Alles verstanden.
+            </p>
+            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: '0', lineHeight: '1.5' }}>
+              Nicht nur abgehakt – wirklich verstanden.<br />
+              Das ist der Unterschied.
+            </p>
+          </div>
+        ) : allDone && (
           <div style={{
             width: '100%',
             background: 'var(--green-soft)',

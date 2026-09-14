@@ -18,7 +18,7 @@ const FALLBACKS = {
 
 export default function LumoMascot({ state = 'idle', label, size = 'normal', pulseOnce }) {
   const src = MASCOT_STATES[state] || MASCOT_STATES.idle;
-  const px = size === 'small' ? 40 : 120;
+  const px = size === 'small' ? 40 : size === 'large' ? 160 : 120;
 
   const [visible, setVisible] = useState(true);
   const [currentSrc, setCurrentSrc] = useState(src);

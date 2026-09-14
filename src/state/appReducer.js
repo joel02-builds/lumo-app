@@ -24,6 +24,7 @@ export const initialState = {
   error: null,
   subjectColor: null,
   learningStyle: null,
+  subjectHistory: [],
 };
 
 // Lazy-Init für useReducer: baut den Startzustand aus einem evtl. in
@@ -41,6 +42,7 @@ export function createInitialState(savedProject) {
     recommendedOrder: savedProject.recommendedOrder || [],
     subjectColor: savedProject.subjectColor || null,
     learningStyle: savedProject.learningStyle || null,
+    subjectHistory: savedProject.subjectHistory || [],
   };
 }
 
@@ -102,6 +104,18 @@ export function appReducer(state, action) {
 
     case 'SET_LEARNING_STYLE':
       return { ...state, learningStyle: action.learningStyle };
+
+    case 'TRACK_SUBJECT': {
+      const existing = state.subjectHistory.find(s => s.subject === action.payload);
+      return {
+        ...state,
+        subjectHistory: existing
+          ? state.subjectHistory.map(s =>
+              s.subject === action.payload ? { ...s, count: s.count + 1 } : s
+            )
+          : [...state.subjectHistory, { subject: action.payload, count: 1 }],
+      };
+    }
 
     case 'SET_SUBJECT_COLOR':
       return {
