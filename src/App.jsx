@@ -11,6 +11,7 @@ import DashboardScreen from './screens/dashboard/DashboardScreen.jsx';
 import SessionScreen from './screens/session/SessionScreen.jsx';
 import WelcomeBackScreen from './screens/WelcomeBackScreen.jsx';
 import WeakSpotsScreen from './screens/WeakSpotsScreen.jsx';
+import ProjectsScreen from './screens/ProjectsScreen.jsx';
 import MaterialConfirmationScreen from './screens/MaterialConfirmationScreen.jsx';
 import ErrorBanner from './components/ErrorBanner.jsx';
 import LumoWordmark from './components/LumoWordmark.jsx';
@@ -41,7 +42,9 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (state.blocks.length === 0) return;
+    // Immer persistieren, auch wenn blocks/projects gerade leer sind (z. B.
+    // nach dem Löschen des letzten Projekts) – loadProject() entscheidet beim
+    // nächsten Start anhand des Inhalts, ob der gespeicherte Stand gültig ist.
     saveProject({
       projectName: state.topic,
       materialName: state.fileName,
@@ -52,8 +55,10 @@ export default function App() {
       subjectColor: state.subjectColor,
       learningStyle: state.learningStyle,
       subjectHistory: state.subjectHistory,
+      projects: state.projects,
+      activeProjectId: state.activeProjectId,
     });
-  }, [state.topic, state.fileName, state.goalType, state.goalDate, state.blocks, state.recommendedOrder, state.subjectColor, state.learningStyle, state.subjectHistory]);
+  }, [state.topic, state.fileName, state.goalType, state.goalDate, state.blocks, state.recommendedOrder, state.subjectColor, state.learningStyle, state.subjectHistory, state.projects, state.activeProjectId]);
 
   const handleMaterial = useCallback((payload) => {
     dispatch({ type: 'SET_MATERIAL', ...payload });
@@ -96,11 +101,35 @@ export default function App() {
     [runAnalysis]
   );
 
-  const handleNewProject = useCallback(() => {
+  // Verwirft den aktiven Arbeitsstand endgültig (localStorage + Notizen) und
+  // startet frisch im Onboarding. Gespeicherte Projekte (state.projects)
+  // bleiben davon unberührt.
+  const handleStartFreshProject = useCallback(() => {
     clearProject();
     clearAllNotes();
     dispatch({ type: 'START_NEW_PROJECT' });
   }, []);
+
+  // "Neues Projekt": das aktuelle Projekt wird zuerst gesichert, damit es
+  // nicht verloren geht. Gibt es dann (mit dem gerade gesicherten) bereits
+  // Projekte, zeigt das die Projektübersicht statt sofort zu löschen.
+  const handleNewProject = useCallback(() => {
+    if (state.blocks.length > 0) {
+      dispatch({ type: 'SAVE_CURRENT_PROJECT' });
+    }
+    if (state.projects.length > 0 || state.blocks.length > 0) {
+      dispatch({ type: 'VIEW_PROJECTS' });
+    } else {
+      handleStartFreshProject();
+    }
+  }, [state.blocks.length, state.projects.length, handleStartFreshProject]);
+
+  const handleViewProjects = useCallback(() => {
+    if (state.blocks.length > 0) {
+      dispatch({ type: 'SAVE_CURRENT_PROJECT' });
+    }
+    dispatch({ type: 'VIEW_PROJECTS' });
+  }, [state.blocks.length]);
 
   const currentBlock = state.blocks.find((b) => b.id === state.currentBlockId);
   const isWelcomeScreen = state.screen === SCREENS.ONBOARDING && state.onboardingStep === 1;
@@ -173,6 +202,16 @@ export default function App() {
           onStartBlock={(blockId) => dispatch({ type: 'START_BLOCK', blockId })}
           onNewProject={handleNewProject}
           onViewWeakSpots={() => dispatch({ type: 'VIEW_WEAK_SPOTS' })}
+          onViewProjects={handleViewProjects}
+        />
+      )}
+
+      {state.screen === SCREENS.PROJECTS && (
+        <ProjectsScreen
+          projects={state.projects}
+          onLoad={(id) => dispatch({ type: 'LOAD_PROJECT', payload: id })}
+          onNew={handleStartFreshProject}
+          onDelete={(id) => dispatch({ type: 'DELETE_PROJECT', payload: id })}
         />
       )}
 

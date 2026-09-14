@@ -6,6 +6,7 @@ export const SCREENS = {
   SESSION: 'session',
   WELCOME_BACK: 'welcome-back',
   WEAK_SPOTS: 'weak-spots',
+  PROJECTS: 'projects',
 };
 
 export const initialState = {
@@ -25,15 +26,22 @@ export const initialState = {
   subjectColor: null,
   learningStyle: null,
   subjectHistory: [],
+  projects: [],
+  activeProjectId: null,
 };
 
 // Lazy-Init für useReducer: baut den Startzustand aus einem evtl. in
 // localStorage gefundenen Projekt auf (siehe utils/projectStorage.js).
 export function createInitialState(savedProject) {
   if (!savedProject) return initialState;
+  const hasActiveBlocks = Array.isArray(savedProject.blocks) && savedProject.blocks.length > 0;
+  const projects = savedProject.projects || [];
   return {
     ...initialState,
-    screen: SCREENS.WELCOME_BACK,
+    // Ohne aktive Blöcke (z. B. nach "Neues Projekt" vor Abschluss des
+    // Onboardings) landet man bei vorhandenen gespeicherten Projekten direkt
+    // in der Übersicht statt in einem leeren "Willkommen zurück" ohne Inhalt.
+    screen: hasActiveBlocks ? SCREENS.WELCOME_BACK : projects.length > 0 ? SCREENS.PROJECTS : SCREENS.ONBOARDING,
     topic: savedProject.projectName || '',
     fileName: savedProject.materialName || '',
     goalType: savedProject.goalType || null,
@@ -43,6 +51,8 @@ export function createInitialState(savedProject) {
     subjectColor: savedProject.subjectColor || null,
     learningStyle: savedProject.learningStyle || null,
     subjectHistory: savedProject.subjectHistory || [],
+    projects,
+    activeProjectId: savedProject.activeProjectId || null,
   };
 }
 
@@ -173,8 +183,68 @@ export function appReducer(state, action) {
     case 'VIEW_WEAK_SPOTS':
       return { ...state, screen: SCREENS.WEAK_SPOTS };
 
+    case 'VIEW_PROJECTS':
+      return { ...state, screen: SCREENS.PROJECTS };
+
+    case 'SAVE_CURRENT_PROJECT': {
+      const current = {
+        id: state.activeProjectId || Date.now().toString(),
+        topic: state.topic,
+        goalType: state.goalType,
+        blocks: state.blocks,
+        recommendedOrder: state.recommendedOrder,
+        subject: state.blocks[0]?.subject || null,
+        subjectColor: state.subjectColor,
+        savedAt: new Date().toISOString(),
+      };
+      const existing = state.projects.findIndex(p => p.id === current.id);
+      const projects = existing >= 0
+        ? state.projects.map((p, i) => i === existing ? current : p)
+        : [...state.projects, current];
+      return { ...state, projects, activeProjectId: current.id };
+    }
+
+    case 'LOAD_PROJECT': {
+      const project = state.projects.find(p => p.id === action.payload);
+      if (!project) return state;
+      return {
+        ...state,
+        topic: project.topic,
+        goalType: project.goalType,
+        blocks: project.blocks,
+        recommendedOrder: project.recommendedOrder,
+        subjectColor: project.subjectColor,
+        activeProjectId: project.id,
+        currentBlockId: null,
+        screen: SCREENS.WELCOME_BACK,
+      };
+    }
+
+    case 'DELETE_PROJECT': {
+      const projects = state.projects.filter(p => p.id !== action.payload);
+      // Wird gerade das aktive Projekt gelöscht, muss auch der Arbeitsstand
+      // geleert werden – sonst "lebt" es beim nächsten Aufruf von
+      // 'Alle Projekte' (SAVE_CURRENT_PROJECT) sofort wieder auf.
+      if (state.activeProjectId === action.payload) {
+        return {
+          ...state,
+          projects,
+          blocks: [],
+          recommendedOrder: [],
+          topic: '',
+          goalType: null,
+          subjectColor: null,
+          activeProjectId: null,
+          currentBlockId: null,
+        };
+      }
+      return { ...state, projects };
+    }
+
     case 'START_NEW_PROJECT':
-      return { ...initialState };
+      // Gespeicherte Projekte (projects) bleiben über einen Neustart hinweg
+      // erhalten – nur der aktuell aktive Arbeitsstand wird zurückgesetzt.
+      return { ...initialState, projects: state.projects };
 
     default:
       return state;

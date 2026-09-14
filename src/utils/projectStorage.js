@@ -9,7 +9,10 @@ export function loadProject() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const data = JSON.parse(raw);
-    if (!data || !Array.isArray(data.blocks) || data.blocks.length === 0) return null;
+    if (!data) return null;
+    const hasActiveBlocks = Array.isArray(data.blocks) && data.blocks.length > 0;
+    const hasSavedProjects = Array.isArray(data.projects) && data.projects.length > 0;
+    if (!hasActiveBlocks && !hasSavedProjects) return null;
     return data;
   } catch {
     return null;

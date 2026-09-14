@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import LumoMascot from '../../components/LumoMascot.jsx';
 import Button from '../../components/Button.jsx';
 import { getRecommendedBlock } from '../../utils/blockProgress.js';
 import { getBlockColor } from '../../utils/subjectColors.js';
+import { exportProject, importProject } from '../../utils/projectExport.js';
 
 function statusLabel(block) {
   if (block.status === 'not-started') return 'Nicht gestartet';
@@ -58,8 +59,26 @@ function BlockDot({ block, subjectColor }) {
   );
 }
 
-export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock, onNewProject, onViewWeakSpots }) {
+export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock, onNewProject, onViewWeakSpots, onViewProjects }) {
   const [expandedBlock, setExpandedBlock] = useState(null);
+  const importRef = useRef(null);
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState('');
+
+  async function handleImport(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    setImportError('');
+    try {
+      await importProject(file);
+      window.location.reload();
+    } catch (err) {
+      setImportError(err.message);
+      setImporting(false);
+    }
+  }
+
   const total = blocks.length;
   const completed = blocks.filter((b) => b.status === 'completed').length;
   const percent = total ? Math.round((completed / total) * 100) : 0;
@@ -336,6 +355,23 @@ export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock
           </button>
         )}
 
+        {onViewProjects && (
+          <button
+            onClick={onViewProjects}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-secondary)',
+              fontSize: '13px',
+              cursor: 'pointer',
+              padding: '8px',
+              textDecoration: 'underline',
+            }}
+          >
+            Alle Projekte
+          </button>
+        )}
+
         {onNewProject && (
           <button
             onClick={onNewProject}
@@ -352,6 +388,57 @@ export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock
           >
             Neues Projekt starten
           </button>
+        )}
+
+        <div style={{
+          width: '100%',
+          borderTop: '1px solid var(--border)',
+          paddingTop: '16px',
+          marginTop: '8px',
+          display: 'flex',
+          gap: '10px',
+          justifyContent: 'center',
+        }}>
+          <button
+            onClick={exportProject}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-secondary)',
+              fontSize: '12px',
+              cursor: 'pointer',
+              padding: '4px 8px',
+            }}
+          >
+            ↓ Backup exportieren
+          </button>
+          <span style={{ color: 'var(--border)', fontSize: '12px' }}>·</span>
+          <button
+            onClick={() => importRef.current?.click()}
+            disabled={importing}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-secondary)',
+              fontSize: '12px',
+              cursor: importing ? 'not-allowed' : 'pointer',
+              padding: '4px 8px',
+            }}
+          >
+            {importing ? 'Importiere …' : '↑ Backup importieren'}
+          </button>
+          <input
+            ref={importRef}
+            type="file"
+            accept=".json"
+            style={{ display: 'none' }}
+            onChange={handleImport}
+          />
+        </div>
+        {importError && (
+          <p style={{ color: 'var(--red)', fontSize: '12px', textAlign: 'center', margin: '-4px 0 0' }}>
+            {importError}
+          </p>
         )}
       </div>
     </div>
