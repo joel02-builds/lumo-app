@@ -207,6 +207,22 @@ export default function BlockCompletePhase({ block, result, cards, onContinue, o
         )}
       </div>
 
+      {!isGood && (
+        <div style={{
+          width: '100%',
+          maxWidth: '360px',
+          background: 'rgba(212, 168, 67, 0.06)',
+          border: '1px solid rgba(212, 168, 67, 0.2)',
+          borderRadius: '12px',
+          padding: '14px 18px',
+          textAlign: 'center',
+        }}>
+          <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: '0', lineHeight: '1.5' }}>
+            Lumo empfiehlt: Mach jetzt eine kurze Pause, dann komm zum nächsten Block zurück.
+          </p>
+        </div>
+      )}
+
       {/* Buttons */}
       <div style={{
         width: '100%',
@@ -216,7 +232,7 @@ export default function BlockCompletePhase({ block, result, cards, onContinue, o
         gap: '10px',
       }}>
         <Button onClick={onContinue} style={{ width: '100%' }}>
-          {isGood ? 'Weiter lernen →' : status === 'grosse_luecken' ? 'Nochmal angehen' : 'Weiter lernen'}
+          {isGood ? 'Weiter lernen →' : 'Verstanden, weiter'}
         </Button>
         {!isGood && (
           <button onClick={onContinue} style={{
@@ -224,7 +240,7 @@ export default function BlockCompletePhase({ block, result, cards, onContinue, o
             color: 'var(--text-secondary)', fontSize: '13px',
             cursor: 'pointer', textDecoration: 'underline',
           }}>
-            Zum nächsten Block
+            Nochmal angehen
           </button>
         )}
         <button

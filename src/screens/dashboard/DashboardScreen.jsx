@@ -1,10 +1,32 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import LumoMascot from '../../components/LumoMascot.jsx';
 import Button from '../../components/Button.jsx';
 import { getRecommendedBlock } from '../../utils/blockProgress.js';
 import { getBlockColor } from '../../utils/subjectColors.js';
-import { exportProject, importProject } from '../../utils/projectExport.js';
 import { getRemainingFreeBlocks } from '../../utils/planLimits.js';
+
+function getDaysUntilExam(goalDate) {
+  if (!goalDate) return null;
+  const exam = new Date(goalDate);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diff = Math.ceil((exam - today) / (1000 * 60 * 60 * 24));
+  return diff;
+}
+
+function getStreakDays() {
+  try {
+    const raw = localStorage.getItem('lumo_streak');
+    if (!raw) return 0;
+    const streak = JSON.parse(raw);
+    const today = new Date().toDateString();
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    if (streak.lastDate === today || streak.lastDate === yesterday) {
+      return streak.days || 0;
+    }
+    return 0;
+  } catch { return 0; }
+}
 
 function statusLabel(block) {
   if (block.status === 'not-started') return 'Nicht gestartet';
@@ -60,12 +82,9 @@ function BlockDot({ block, subjectColor }) {
   );
 }
 
-export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock, onNewProject, onViewWeakSpots, onViewProjects, blocksAnalyzedTotal }) {
+export default function DashboardScreen({ blocks, recommendedOrder, goalType, goalDate, onStartBlock, onNewProject, onViewWeakSpots, onViewProjects, onSettings, blocksAnalyzedTotal }) {
   const safeBlocks = (blocks || []).filter(Boolean);
   const [expandedBlock, setExpandedBlock] = useState(null);
-  const importRef = useRef(null);
-  const [importing, setImporting] = useState(false);
-  const [importError, setImportError] = useState('');
 
   if (safeBlocks.length === 0) {
     return (
@@ -81,20 +100,6 @@ export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock
     );
   }
 
-  async function handleImport(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImporting(true);
-    setImportError('');
-    try {
-      await importProject(file);
-      window.location.reload();
-    } catch (err) {
-      setImportError(err.message);
-      setImporting(false);
-    }
-  }
-
   const total = safeBlocks.length;
   const completed = safeBlocks.filter((b) => b.status === 'completed').length;
   const percent = total ? Math.round((completed / total) * 100) : 0;
@@ -107,9 +112,44 @@ export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock
 
   return (
     <div className="screen" style={{ justifyContent: 'flex-start', paddingTop: 'clamp(20px, 8vw, 80px)' }}>
+      {onSettings && (
+        <button
+          onClick={onSettings}
+          style={{
+            position: 'absolute',
+            top: '16px',
+            right: '16px',
+            background: 'none',
+            border: 'none',
+            color: 'var(--text-secondary)',
+            fontSize: '20px',
+            cursor: 'pointer',
+            padding: '8px',
+          }}
+        >
+          ⚙
+        </button>
+      )}
       <div className="screen-content" style={{ maxWidth: '560px', gap: '20px' }}>
 
         <LumoMascot state={allDone ? 'complete' : 'idle'} label="Lumo" />
+
+        {(() => {
+          const streak = getStreakDays();
+          if (streak < 2) return null;
+          return (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '13px',
+              color: 'var(--gold)',
+              fontWeight: '600',
+            }}>
+              🔥 {streak} Tage am Stück
+            </div>
+          );
+        })()}
 
         {/* Fortschritt */}
         <div style={{ width: '100%', textAlign: 'center' }}>
@@ -149,6 +189,31 @@ export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock
             {completed} von {total} Blöcken geschafft
           </p>
         </div>
+
+        {goalType === 'exam' && (() => {
+          const days = getDaysUntilExam(goalDate);
+          if (days === null) return null;
+          const urgentColor = days <= 3 ? 'var(--red)' : days <= 7 ? 'var(--gold)' : 'var(--text-secondary)';
+          return (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              padding: '10px 16px',
+              background: 'var(--bg-card)',
+              borderRadius: '10px',
+              border: `1px solid ${urgentColor}44`,
+            }}>
+              <span style={{ fontSize: '20px', fontWeight: '800', color: urgentColor }}>
+                {days <= 0 ? '🎯' : days}
+              </span>
+              <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+                {days <= 0 ? 'Prüfungstag' : days === 1 ? 'Tag bis zur Prüfung' : `Tage bis zur Prüfung`}
+              </span>
+            </div>
+          );
+        })()}
 
         {/* Block Liste */}
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -384,7 +449,7 @@ export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock
               textDecoration: 'underline',
             }}
           >
-            Alle Projekte
+            Andere Fächer
           </button>
         )}
 
@@ -402,7 +467,7 @@ export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock
               textDecoration: 'underline',
             }}
           >
-            Neues Projekt starten
+            Neues Fach starten
           </button>
         )}
 
@@ -419,71 +484,6 @@ export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock
           </p>
         )}
 
-        <div style={{
-          width: '100%',
-          borderTop: '1px solid var(--border)',
-          paddingTop: '16px',
-          marginTop: '8px',
-          display: 'flex',
-          gap: '10px',
-          justifyContent: 'center',
-        }}>
-          <button
-            onClick={exportProject}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--text-secondary)',
-              fontSize: '12px',
-              cursor: 'pointer',
-              padding: '4px 8px',
-            }}
-          >
-            ↓ Backup exportieren
-          </button>
-          <span style={{ color: 'var(--border)', fontSize: '12px' }}>·</span>
-          <button
-            onClick={() => importRef.current?.click()}
-            disabled={importing}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--text-secondary)',
-              fontSize: '12px',
-              cursor: importing ? 'not-allowed' : 'pointer',
-              padding: '4px 8px',
-            }}
-          >
-            {importing ? 'Importiere …' : '↑ Backup importieren'}
-          </button>
-          <input
-            ref={importRef}
-            type="file"
-            accept=".json"
-            style={{ display: 'none' }}
-            onChange={handleImport}
-          />
-        </div>
-        {importError && (
-          <p style={{ color: 'var(--red)', fontSize: '12px', textAlign: 'center', margin: '-4px 0 0' }}>
-            {importError}
-          </p>
-        )}
-
-        <a
-          href="mailto:feedback@lumo-app.de?subject=Lumo Feedback"
-          style={{
-            fontSize: '12px',
-            color: 'var(--text-secondary)',
-            textDecoration: 'none',
-            padding: '4px 8px',
-            display: 'block',
-            textAlign: 'center',
-            marginTop: '4px',
-          }}
-        >
-          Feedback geben
-        </a>
       </div>
     </div>
   );

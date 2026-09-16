@@ -67,15 +67,19 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
                 padding: '14px 18px',
                 textAlign: 'center',
               }}>
-                <p style={{ fontSize: '15px', color: 'var(--text-primary)', margin: '0', lineHeight: '1.5' }}>
-                  Kein Problem. Wir machen es heute kürzer und einfacher.
-                  Du musst nur anfangen – der Rest kommt von selbst.
+                <p style={{ fontSize: '15px', color: 'var(--text-primary)', margin: '0 0 8px', fontWeight: '600' }}>
+                  Ich passe die Session an.
+                </p>
+                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0', lineHeight: '1.5' }}>
+                  ✓ Kürzere Erklärungen<br/>
+                  ✓ Einfachere Fragen<br/>
+                  ✓ Weniger Druck beim Recall
                 </p>
               </div>
             )}
             {mood === 'okay' && (
               <p style={{ fontSize: '14px', color: 'var(--text-secondary)', textAlign: 'center', margin: '0' }}>
-                Alright. Ich halte es übersichtlich heute.
+                Alright. Ich halte es heute übersichtlich – keine langen Texte.
               </p>
             )}
 

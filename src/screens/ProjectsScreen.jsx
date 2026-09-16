@@ -25,7 +25,7 @@ export default function ProjectsScreen({ projects, onLoad, onNew, onDelete }) {
               cursor: 'pointer',
             }}
           >
-            Neues Projekt starten
+            Neues Fach starten
           </button>
         </div>
       </div>
@@ -36,7 +36,7 @@ export default function ProjectsScreen({ projects, onLoad, onNew, onDelete }) {
     <div className="screen" style={{ justifyContent: 'flex-start', paddingTop: '60px' }}>
       <div className="screen-content" style={{ maxWidth: '520px', gap: '16px' }}>
         <h2 style={{ fontSize: '22px', fontWeight: '700', margin: '0' }}>
-          Meine Projekte
+          Meine Fächer
         </h2>
 
         {projects.map(p => {
@@ -119,7 +119,7 @@ export default function ProjectsScreen({ projects, onLoad, onNew, onDelete }) {
             fontWeight: '500',
           }}
         >
-          + Neues Projekt
+          + Neues Fach
         </button>
       </div>
     </div>

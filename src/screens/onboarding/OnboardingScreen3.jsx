@@ -25,9 +25,16 @@ const GOALS = [
   },
 ];
 
+const LEARNING_STYLES = [
+  { label: 'Mit Beispielen', value: 'examples', icon: '💡' },
+  { label: 'Zusammenhänge', value: 'connections', icon: '🔗' },
+  { label: 'Schritt für Schritt', value: 'stepbystep', icon: '📋' },
+];
+
 export default function OnboardingScreen3({ onConfirm, onBack }) {
   const [selectedId, setSelectedId] = useState(null);
   const [goalDate, setGoalDate] = useState('');
+  const [confirmedGoal, setConfirmedGoal] = useState(null);
 
   const selectedGoal = GOALS.find((g) => g.id === selectedId);
 
@@ -35,13 +42,52 @@ export default function OnboardingScreen3({ onConfirm, onBack }) {
     if (goal.needsDate) {
       setSelectedId(goal.id);
     } else {
-      onConfirm({ goalType: goal.id, goalDate: '' });
+      setConfirmedGoal({ goalType: goal.id, goalDate: '' });
     }
   }
 
   function confirmDate() {
     if (!goalDate) return;
-    onConfirm({ goalType: selectedId, goalDate });
+    setConfirmedGoal({ goalType: selectedId, goalDate });
+  }
+
+  if (confirmedGoal) {
+    return (
+      <div className="screen" key="learning-style">
+        <div className="screen-content">
+          <LumoMascot state="idle" label="Lumo" />
+          <p style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', textAlign: 'center', margin: '0' }}>
+            Wie lernst du am liebsten?
+          </p>
+          <div style={{ width: '100%', display: 'flex', gap: '8px' }}>
+            {LEARNING_STYLES.map(({ label, value, icon }) => (
+              <button
+                key={value}
+                onClick={() => onConfirm({ ...confirmedGoal, learningStyle: value })}
+                style={{
+                  flex: 1,
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '12px',
+                  padding: '12px 6px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                <span style={{ fontSize: '20px' }}>{icon}</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '500', textAlign: 'center' }}>{label}</span>
+              </button>
+            ))}
+          </div>
+          <button className="text-link" onClick={() => setConfirmedGoal(null)}>
+            Zurück zur Auswahl
+          </button>
+        </div>
+      </div>
+    );
   }
 
   if (selectedGoal?.needsDate) {

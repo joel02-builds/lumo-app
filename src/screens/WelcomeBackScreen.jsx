@@ -310,7 +310,7 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHis
             Alle Blöcke sehen
           </button>
           <button className="text-link" onClick={onNewProject}>
-            Neues Projekt
+            Neues Fach
           </button>
         </div>
       </div>

@@ -8,6 +8,7 @@ export const SCREENS = {
   WEAK_SPOTS: 'weak-spots',
   PROJECTS: 'projects',
   EXAM_RESULT: 'exam-result',
+  SETTINGS: 'settings',
 };
 
 export const initialState = {
@@ -196,6 +197,9 @@ export function appReducer(state, action) {
 
     case 'VIEW_PROJECTS':
       return { ...state, screen: SCREENS.PROJECTS };
+
+    case 'VIEW_SETTINGS':
+      return { ...state, screen: SCREENS.SETTINGS };
 
     case 'VIEW_EXAM_RESULT':
       return { ...state, screen: SCREENS.EXAM_RESULT };

@@ -1,10 +1,7 @@
-import { useState } from 'react';
 import LumoMascot from '../../components/LumoMascot.jsx';
 import Button from '../../components/Button.jsx';
 
 export default function OnboardingScreen1({ onNext }) {
-  const [learningStyle, setLearningStyle] = useState(null);
-
   return (
     <div className="screen">
       <div className="screen-content" style={{ gap: '24px', maxWidth: '400px' }}>
@@ -82,44 +79,9 @@ export default function OnboardingScreen1({ onNext }) {
           </p>
         </div>
 
-        {!learningStyle ? (
-          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', textAlign: 'center', margin: '0' }}>
-              Wie lernst du am liebsten?
-            </p>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {[
-                { label: 'Mit Beispielen', value: 'examples', icon: '💡' },
-                { label: 'Mit Zusammenhängen', value: 'connections', icon: '🔗' },
-                { label: 'Schritt für Schritt', value: 'stepbystep', icon: '📋' },
-              ].map(({ label, value, icon }) => (
-                <button
-                  key={value}
-                  onClick={() => setLearningStyle(value)}
-                  style={{
-                    flex: 1,
-                    background: 'var(--bg-card)',
-                    border: '1px solid var(--border)',
-                    borderRadius: '12px',
-                    padding: '12px 8px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '6px',
-                  }}
-                >
-                  <span style={{ fontSize: '20px' }}>{icon}</span>
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '500', textAlign: 'center' }}>{label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <Button onClick={() => onNext({ learningStyle })} style={{ width: '100%' }}>
-            Jetzt starten
-          </Button>
-        )}
+        <Button onClick={() => onNext()} style={{ width: '100%' }}>
+          Jetzt starten
+        </Button>
 
       </div>
     </div>

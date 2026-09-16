@@ -13,6 +13,7 @@ import WelcomeBackScreen from './screens/WelcomeBackScreen.jsx';
 import WeakSpotsScreen from './screens/WeakSpotsScreen.jsx';
 import ProjectsScreen from './screens/ProjectsScreen.jsx';
 import ExamResultScreen from './screens/ExamResultScreen.jsx';
+import SettingsScreen from './screens/SettingsScreen.jsx';
 import MaterialConfirmationScreen from './screens/MaterialConfirmationScreen.jsx';
 import ErrorBanner from './components/ErrorBanner.jsx';
 import LumoWordmark from './components/LumoWordmark.jsx';
@@ -69,8 +70,7 @@ export default function App() {
     dispatch({ type: 'SET_MATERIAL', ...payload });
   }, []);
 
-  const handleOnboardingNext = useCallback(({ learningStyle } = {}) => {
-    dispatch({ type: 'SET_LEARNING_STYLE', learningStyle });
+  const handleOnboardingNext = useCallback(() => {
     dispatch({ type: 'GO_TO_STEP2' });
   }, []);
 
@@ -102,7 +102,10 @@ export default function App() {
   );
 
   const handleGoalConfirm = useCallback(
-    ({ goalType, goalDate }) => runAnalysis(goalType, goalDate),
+    ({ goalType, goalDate, learningStyle }) => {
+      if (learningStyle) dispatch({ type: 'SET_LEARNING_STYLE', learningStyle });
+      runAnalysis(goalType, goalDate);
+    },
     [runAnalysis]
   );
 
@@ -135,6 +138,10 @@ export default function App() {
     }
     dispatch({ type: 'VIEW_PROJECTS' });
   }, [state.blocks.length]);
+
+  const handleViewSettings = useCallback(() => {
+    dispatch({ type: 'VIEW_SETTINGS' });
+  }, []);
 
   const handleExamResultDone = useCallback((result) => {
     dispatch({ type: 'SET_EXAM_RESULT', payload: result });
@@ -218,10 +225,20 @@ export default function App() {
         <DashboardScreen
           blocks={state.blocks}
           recommendedOrder={state.recommendedOrder}
+          goalType={state.goalType}
+          goalDate={state.goalDate}
           onStartBlock={(blockId) => dispatch({ type: 'START_BLOCK', blockId })}
           onNewProject={handleNewProject}
           onViewWeakSpots={() => dispatch({ type: 'VIEW_WEAK_SPOTS' })}
           onViewProjects={handleViewProjects}
+          onSettings={handleViewSettings}
+          blocksAnalyzedTotal={state.blocksAnalyzedTotal}
+        />
+      )}
+
+      {state.screen === SCREENS.SETTINGS && (
+        <SettingsScreen
+          onBack={() => dispatch({ type: 'RETURN_TO_DASHBOARD' })}
           blocksAnalyzedTotal={state.blocksAnalyzedTotal}
         />
       )}

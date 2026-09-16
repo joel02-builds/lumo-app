@@ -36,6 +36,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
   const [whyMode, setWhyMode] = useState(false);
   const [whyFeedback, setWhyFeedback] = useState('');
   const [whySending, setWhySending] = useState(false);
+  const [bridgeVisible, setBridgeVisible] = useState(true);
 
   // Karten laden
   useEffect(() => {
@@ -304,13 +305,61 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
           </p>
         </div>
 
+        {!finalFeedback && bridgeVisible && (
+          <div style={{
+            width: '100%',
+            maxWidth: '560px',
+            background: 'var(--bg-card)',
+            borderRadius: '14px',
+            padding: '16px 20px',
+          }}>
+            <p style={{
+              fontSize: '11px',
+              fontWeight: '700',
+              letterSpacing: '1.5px',
+              textTransform: 'uppercase',
+              color: 'var(--text-secondary)',
+              margin: '0 0 10px',
+            }}>
+              Was du gerade gelernt hast
+            </p>
+            {cards.filter(c => c.concept !== 'Überblick').map((card, i) => (
+              <p key={i} style={{
+                fontSize: '14px',
+                color: 'var(--text-secondary)',
+                margin: '0 0 4px',
+                paddingLeft: '12px',
+                borderLeft: '2px solid var(--border)',
+              }}>
+                {card.concept}
+              </p>
+            ))}
+            <button
+              onClick={() => setBridgeVisible(false)}
+              style={{
+                marginTop: '12px',
+                background: 'none',
+                border: 'none',
+                color: 'var(--text-secondary)',
+                fontSize: '13px',
+                cursor: 'pointer',
+                padding: '0',
+                textDecoration: 'underline',
+              }}
+            >
+              Okay, ich erklär's →
+            </button>
+          </div>
+        )}
+
         {!finalFeedback ? (
-          <div style={{ width: '100%', maxWidth: '560px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          !bridgeVisible && (
+            <div style={{ width: '100%', maxWidth: '560px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <textarea
               autoFocus
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
-              placeholder="Stell dir vor du erklärst es deinem besten Freund. Was würdest du sagen?"
+              placeholder="Fang an – auch ein Satz reicht …"
               rows={6}
               style={{
                 width: '100%',
@@ -349,6 +398,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
               {finalSending ? 'Lumo bewertet …' : 'Abschicken'}
             </button>
           </div>
+          )
         ) : (
           <div style={{ width: '100%', maxWidth: '560px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{
