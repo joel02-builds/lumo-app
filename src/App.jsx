@@ -60,8 +60,10 @@ export default function App() {
       activeProjectId: state.activeProjectId,
       examResult: state.examResult,
       examResultAskedAt: state.examResultAskedAt,
+      blocksAnalyzedTotal: state.blocksAnalyzedTotal,
+      sessionsTotal: state.sessionsTotal,
     });
-  }, [state.topic, state.fileName, state.goalType, state.goalDate, state.blocks, state.recommendedOrder, state.subjectColor, state.learningStyle, state.subjectHistory, state.projects, state.activeProjectId, state.examResult, state.examResultAskedAt]);
+  }, [state.topic, state.fileName, state.goalType, state.goalDate, state.blocks, state.recommendedOrder, state.subjectColor, state.learningStyle, state.subjectHistory, state.projects, state.activeProjectId, state.examResult, state.examResultAskedAt, state.blocksAnalyzedTotal, state.sessionsTotal]);
 
   const handleMaterial = useCallback((payload) => {
     dispatch({ type: 'SET_MATERIAL', ...payload });
@@ -140,6 +142,7 @@ export default function App() {
   }, []);
 
   const handleExamResultDismiss = useCallback(() => {
+    dispatch({ type: 'SET_EXAM_RESULT_ASKED' });
     dispatch({ type: 'RETURN_TO_DASHBOARD' });
   }, []);
 
@@ -219,6 +222,7 @@ export default function App() {
           onNewProject={handleNewProject}
           onViewWeakSpots={() => dispatch({ type: 'VIEW_WEAK_SPOTS' })}
           onViewProjects={handleViewProjects}
+          blocksAnalyzedTotal={state.blocksAnalyzedTotal}
         />
       )}
 

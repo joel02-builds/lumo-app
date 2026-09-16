@@ -31,6 +31,8 @@ export const initialState = {
   activeProjectId: null,
   examResult: null,
   examResultAskedAt: null,
+  blocksAnalyzedTotal: 0,
+  sessionsTotal: 0,
 };
 
 // Lazy-Init für useReducer: baut den Startzustand aus einem evtl. in
@@ -58,6 +60,8 @@ export function createInitialState(savedProject) {
     activeProjectId: savedProject.activeProjectId || null,
     examResult: savedProject.examResult || null,
     examResultAskedAt: savedProject.examResultAskedAt || null,
+    blocksAnalyzedTotal: savedProject.blocksAnalyzedTotal || 0,
+    sessionsTotal: savedProject.sessionsTotal || 0,
   };
 }
 
@@ -111,6 +115,7 @@ export function appReducer(state, action) {
         blocks,
         recommendedOrder,
         screen: SCREENS.MATERIAL_CONFIRMATION,
+        blocksAnalyzedTotal: (state.blocksAnalyzedTotal || 0) + blocks.length,
       };
     }
 
@@ -170,6 +175,7 @@ export function appReducer(state, action) {
               }
             : b
         ),
+        sessionsTotal: (state.sessionsTotal || 0) + 1,
       };
 
     case 'SAVE_BLOCK_CARDS':
@@ -196,6 +202,9 @@ export function appReducer(state, action) {
 
     case 'SET_EXAM_RESULT':
       return { ...state, examResult: action.payload, examResultAskedAt: new Date().toISOString() };
+
+    case 'SET_EXAM_RESULT_ASKED':
+      return { ...state, examResultAskedAt: new Date().toISOString() };
 
     case 'SAVE_CURRENT_PROJECT': {
       const current = {
@@ -262,9 +271,16 @@ export function appReducer(state, action) {
     }
 
     case 'START_NEW_PROJECT':
-      // Gespeicherte Projekte (projects) bleiben über einen Neustart hinweg
-      // erhalten – nur der aktuell aktive Arbeitsstand wird zurückgesetzt.
-      return { ...initialState, projects: state.projects };
+      // Gespeicherte Projekte (projects) sowie die Lifetime-Nutzungszähler für
+      // das künftige Freemium-Limit bleiben über einen Neustart hinweg
+      // erhalten – sonst könnte man das Limit einfach durch "Neues Projekt"
+      // umgehen. Nur der aktuell aktive Arbeitsstand wird zurückgesetzt.
+      return {
+        ...initialState,
+        projects: state.projects,
+        blocksAnalyzedTotal: state.blocksAnalyzedTotal,
+        sessionsTotal: state.sessionsTotal,
+      };
 
     default:
       return state;

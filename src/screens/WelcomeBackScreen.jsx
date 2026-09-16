@@ -22,6 +22,10 @@ function shouldAskExamResult(blocks, goalType, examResult, examResultAskedAt) {
   if (examResult) return false;
   const allDone = blocks.length > 0 && blocks.every(b => b.status === 'completed');
   if (!allDone) return false;
+  if (examResultAskedAt) {
+    const daysSince = Math.floor((new Date() - new Date(examResultAskedAt)) / (1000 * 60 * 60 * 24));
+    if (daysSince < 3) return false;
+  }
   return true;
 }
 

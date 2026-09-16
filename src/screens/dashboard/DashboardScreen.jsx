@@ -4,6 +4,7 @@ import Button from '../../components/Button.jsx';
 import { getRecommendedBlock } from '../../utils/blockProgress.js';
 import { getBlockColor } from '../../utils/subjectColors.js';
 import { exportProject, importProject } from '../../utils/projectExport.js';
+import { getRemainingFreeBlocks } from '../../utils/planLimits.js';
 
 function statusLabel(block) {
   if (block.status === 'not-started') return 'Nicht gestartet';
@@ -59,7 +60,7 @@ function BlockDot({ block, subjectColor }) {
   );
 }
 
-export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock, onNewProject, onViewWeakSpots, onViewProjects }) {
+export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock, onNewProject, onViewWeakSpots, onViewProjects, blocksAnalyzedTotal }) {
   const [expandedBlock, setExpandedBlock] = useState(null);
   const importRef = useRef(null);
   const [importing, setImporting] = useState(false);
@@ -388,6 +389,19 @@ export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock
           >
             Neues Projekt starten
           </button>
+        )}
+
+        {blocksAnalyzedTotal > 15 && (
+          <p style={{
+            fontSize: '12px',
+            color: 'var(--text-secondary)',
+            textAlign: 'center',
+            margin: '4px 0',
+          }}>
+            {getRemainingFreeBlocks(blocksAnalyzedTotal) > 0
+              ? `Noch ${getRemainingFreeBlocks(blocksAnalyzedTotal)} kostenlose Blöcke verfügbar.`
+              : 'Du hast alle kostenlosen Blöcke genutzt.'}
+          </p>
         )}
 
         <div style={{

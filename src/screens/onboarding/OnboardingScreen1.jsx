@@ -16,8 +16,8 @@ export default function OnboardingScreen1({ onNext }) {
             Hallo. Ich bin Lumo.<br />
             <span style={{ color: 'var(--gold)' }}>Ich lerne mit dir.</span>
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '16px', lineHeight: '1.6' }}>
-            Ich plane. Ich strukturiere. Ich sage dir was als nächstes kommt.
+          <p style={{ color: 'var(--text-secondary)', fontSize: '16px', lineHeight: '1.6', textAlign: 'center' }}>
+            Ich plane. Ich strukturiere. Ich sage dir was als nächstes kommt.<br />
             Du lernst – ich kümmere mich um den Rest.
           </p>
         </div>
