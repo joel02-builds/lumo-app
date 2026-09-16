@@ -116,6 +116,7 @@ export default function SessionScreen({ block, blocks, goalType, learningStyle, 
       <BlockCompletePhase
         block={block}
         result={result}
+        cards={sessionCards}
         onContinue={() => {
           onRecordCompletion(result);
           setPhase(PHASES.LERNZETTEL);
@@ -135,7 +136,8 @@ export default function SessionScreen({ block, blocks, goalType, learningStyle, 
         cards={sessionCards}
         goalType={goalType}
         subjectColor={getBlockColor(block)}
-        onDone={() => setPhase(PHASES.CONCEPT_MAP)}
+        onDone={() => setPhase(PHASES.SESSION_SUMMARY)}
+        onShowConceptMap={() => setPhase(PHASES.CONCEPT_MAP)}
       />
     );
   }

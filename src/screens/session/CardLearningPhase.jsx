@@ -79,7 +79,10 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
   const progress = cards.length > 0 ? currentIndex / cards.length : 0;
 
   function shouldShowPretest() {
-    return currentIndex > 0 && currentCard?.pretest_question && !pretestDone;
+    return currentIndex > 0 &&
+      currentCard?.pretest_question &&
+      currentCard?.concept !== 'Überblick' &&
+      !pretestDone;
   }
 
   function saveNote(text) {

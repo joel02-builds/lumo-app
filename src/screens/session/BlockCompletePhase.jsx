@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import confetti from 'canvas-confetti';
 import Button from '../../components/Button.jsx';
+import LernzettelInline from '../../components/LernzettelInline.jsx';
 
 const MESSAGES = {
   sicher: [
@@ -28,10 +29,11 @@ function randomMessage(status) {
   return list[Math.floor(Math.random() * list.length)];
 }
 
-export default function BlockCompletePhase({ block, result, onContinue, onPause }) {
+export default function BlockCompletePhase({ block, result, cards, onContinue, onPause }) {
   const status = result?.status || 'unsicher';
   const isGood = status === 'sicher';
   const firedRef = useRef(false);
+  const [showLernzettel, setShowLernzettel] = useState(false);
 
   useEffect(() => {
     if (firedRef.current) return;
@@ -180,6 +182,30 @@ export default function BlockCompletePhase({ block, result, onContinue, onPause 
           ))}
         </div>
       )}
+
+      {/* Lernzettel – aufklappbar */}
+      <div style={{ width: '100%', maxWidth: '360px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <button
+          onClick={() => setShowLernzettel(v => !v)}
+          style={{
+            width: '100%',
+            background: 'var(--bg-card)',
+            color: 'var(--text-secondary)',
+            border: '1px solid var(--border)',
+            borderRadius: '12px',
+            padding: '12px',
+            fontSize: '14px',
+            cursor: 'pointer',
+            textAlign: 'left',
+          }}
+        >
+          {showLernzettel ? '▾ Lernzettel ausblenden' : '▸ Lernzettel anzeigen'}
+        </button>
+
+        {showLernzettel && (
+          <LernzettelInline block={block} cards={cards} />
+        )}
+      </div>
 
       {/* Buttons */}
       <div style={{

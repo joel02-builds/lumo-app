@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import LumoMascot from '../../components/LumoMascot.jsx';
 import { lumoApi } from '../../api/lumo.js';
 
-export default function LernzettelScreen({ block, cards, goalType, onDone, subjectColor }) {
+export default function LernzettelScreen({ block, cards, goalType, onDone, subjectColor, onShowConceptMap }) {
   const [lernzettel, setLernzettel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -267,6 +267,24 @@ export default function LernzettelScreen({ block, cards, goalType, onDone, subje
           >
             Weiter →
           </button>
+          {onShowConceptMap && (
+            <button
+              onClick={onShowConceptMap}
+              style={{
+                width: '100%',
+                background: 'var(--bg-card)',
+                color: 'var(--text-secondary)',
+                border: '1px solid var(--border)',
+                borderRadius: '12px',
+                padding: '12px',
+                fontSize: '14px',
+                fontWeight: '500',
+                cursor: 'pointer',
+              }}
+            >
+              🗺 Zusammenhänge visualisieren
+            </button>
+          )}
         </div>
 
       </div>

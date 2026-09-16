@@ -61,6 +61,7 @@ function BlockDot({ block, subjectColor }) {
 }
 
 export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock, onNewProject, onViewWeakSpots, onViewProjects, blocksAnalyzedTotal }) {
+  const safeBlocks = (blocks || []).filter(Boolean);
   const [expandedBlock, setExpandedBlock] = useState(null);
   const importRef = useRef(null);
   const [importing, setImporting] = useState(false);
@@ -80,15 +81,15 @@ export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock
     }
   }
 
-  const total = blocks.length;
-  const completed = blocks.filter((b) => b.status === 'completed').length;
+  const total = safeBlocks.length;
+  const completed = safeBlocks.filter((b) => b.status === 'completed').length;
   const percent = total ? Math.round((completed / total) * 100) : 0;
   const allDone = total > 0 && completed === total;
-  const next = getRecommendedBlock(blocks, recommendedOrder);
-  const weakCount = blocks.filter(b =>
+  const next = getRecommendedBlock(safeBlocks, recommendedOrder);
+  const weakCount = safeBlocks.filter(b =>
     b.status === 'completed' && (b.confidence === 'unsicher' || b.confidence === 'grosse_luecken')
   ).length;
-  const projectColor = blocks[0]?.subject_color || 'var(--gold)';
+  const projectColor = safeBlocks[0]?.subject_color || 'var(--gold)';
 
   return (
     <div className="screen" style={{ justifyContent: 'flex-start', paddingTop: 'clamp(20px, 8vw, 80px)' }}>
@@ -137,7 +138,7 @@ export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock
 
         {/* Block Liste */}
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {blocks.map((b) => {
+          {safeBlocks.map((b) => {
             const isNext = next && b.id === next.id;
             const isDone = b.status === 'completed';
             const isExpanded = expandedBlock === b.id;
@@ -454,6 +455,21 @@ export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock
             {importError}
           </p>
         )}
+
+        <a
+          href="mailto:feedback@lumo-app.de?subject=Lumo Feedback"
+          style={{
+            fontSize: '12px',
+            color: 'var(--text-secondary)',
+            textDecoration: 'none',
+            padding: '4px 8px',
+            display: 'block',
+            textAlign: 'center',
+            marginTop: '4px',
+          }}
+        >
+          Feedback geben
+        </a>
       </div>
     </div>
   );
