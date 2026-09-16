@@ -67,6 +67,20 @@ export default function DashboardScreen({ blocks, recommendedOrder, onStartBlock
   const [importing, setImporting] = useState(false);
   const [importError, setImportError] = useState('');
 
+  if (safeBlocks.length === 0) {
+    return (
+      <div className="screen">
+        <div className="screen-content">
+          <LumoMascot state="idle" />
+          <p style={{ color: 'var(--text-secondary)' }}>Kein Projekt aktiv.</p>
+          <button onClick={onNewProject} style={{ background: 'var(--gold)', color: '#1a1206', border: 'none', borderRadius: '12px', padding: '14px 28px', fontSize: '16px', fontWeight: '700', cursor: 'pointer' }}>
+            Projekt starten
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   async function handleImport(e) {
     const file = e.target.files?.[0];
     if (!file) return;

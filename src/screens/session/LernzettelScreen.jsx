@@ -61,7 +61,8 @@ export default function LernzettelScreen({ block, cards, goalType, onDone, subje
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Lernzettel – ${block.title}.txt`;
+    const safeTitle = (block.title || 'Block').replace(/[^a-zA-Z0-9äöüÄÖÜß\s-]/g, '').trim();
+    a.download = `Lernzettel – ${safeTitle}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

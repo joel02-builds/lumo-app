@@ -53,10 +53,11 @@ function getLernzeitHinweis() {
 }
 
 export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHistory, goalType, examResult, examResultAskedAt, onStartBlock, onGoToDashboard, onNewProject, onAskExamResult }) {
-  const total = blocks.length;
-  const completed = blocks.filter((b) => b.status === 'completed').length;
+  const safeBlocks = (blocks || []).filter(Boolean);
+  const total = safeBlocks.length;
+  const completed = safeBlocks.filter((b) => b.status === 'completed').length;
   const remaining = total - completed;
-  const next = getRecommendedBlock(blocks, recommendedOrder);
+  const next = getRecommendedBlock(safeBlocks, recommendedOrder);
   const allDone = total > 0 && completed === total;
   const topSubject = subjectHistory
     ?.slice()
@@ -117,7 +118,7 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHis
   return (
     <div className="screen">
       <div className="screen-content" style={{ gap: '24px', maxWidth: '480px' }}>
-        <LumoMascot state={allDone ? 'complete' : getBlocksDueToday(blocks).length > 0 ? 'cheer' : 'idle'} />
+        <LumoMascot state={allDone ? 'complete' : getBlocksDueToday(safeBlocks).length > 0 ? 'cheer' : 'idle'} />
 
         <div style={{ textAlign: 'center' }}>
           <h1 style={{ fontSize: '32px', marginBottom: '8px' }}>{getGreeting()}</h1>
@@ -174,7 +175,7 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHis
         </div>
 
         {(() => {
-          const days = getDaysSinceLastLearning(blocks);
+          const days = getDaysSinceLastLearning(safeBlocks);
           if (!days || days < 7) return null;
           return (
             <div style={{
@@ -195,7 +196,7 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHis
           );
         })()}
 
-        {shouldAskExamResult(blocks, goalType, examResult, examResultAskedAt) && (
+        {shouldAskExamResult(safeBlocks, goalType, examResult, examResultAskedAt) && (
           <button
             onClick={onAskExamResult}
             style={{
@@ -218,7 +219,7 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHis
         )}
 
         {(() => {
-          const dueBlocks = getBlocksDueToday(blocks);
+          const dueBlocks = getBlocksDueToday(safeBlocks);
           if (dueBlocks.length === 0) return null;
           return (
             <div style={{

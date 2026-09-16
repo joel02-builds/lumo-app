@@ -448,11 +448,12 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
             ))}
           </div>
         </div>
-        {elapsedSeconds > 0 && (
+        {elapsedSeconds > 60 && (
           <span style={{
-            fontSize: '12px',
+            fontSize: '11px',
             color: 'var(--text-secondary)',
-            marginRight: '12px',
+            marginRight: '8px',
+            whiteSpace: 'nowrap',
           }}>
             {Math.floor(elapsedSeconds / 60)} Min
           </span>

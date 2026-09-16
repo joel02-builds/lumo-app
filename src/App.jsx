@@ -146,7 +146,7 @@ export default function App() {
     dispatch({ type: 'RETURN_TO_DASHBOARD' });
   }, []);
 
-  const currentBlock = state.blocks.find((b) => b.id === state.currentBlockId);
+  const currentBlock = state.blocks.find((b) => b?.id === state.currentBlockId);
   const isWelcomeScreen = state.screen === SCREENS.ONBOARDING && state.onboardingStep === 1;
 
   return (
