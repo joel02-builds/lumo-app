@@ -3,6 +3,7 @@ import { appReducer, createInitialState, SCREENS } from './state/appReducer.js';
 import { lumoApi } from './api/lumo.js';
 import { loadProject, saveProject, clearProject } from './utils/projectStorage.js';
 import { clearAllNotes } from './utils/notesStorage.js';
+import { startKeepAlive } from './utils/keepAlive.js';
 import OnboardingScreen1 from './screens/onboarding/OnboardingScreen1.jsx';
 import OnboardingScreen2 from './screens/onboarding/OnboardingScreen2.jsx';
 import OnboardingScreen3 from './screens/onboarding/OnboardingScreen3.jsx';
@@ -26,6 +27,11 @@ export default function App() {
   // Header (CardLearningPhase, ExplainChatPhase, CheckUnderstandingPhase), die
   // sonst mit der fixed positionierten LumoWordmark kollidieren würde.
   const [sessionHasOwnHeader, setSessionHasOwnHeader] = useState(false);
+
+  useEffect(() => {
+    const interval = startKeepAlive();
+    return () => clearInterval(interval);
+  }, []);
 
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
   useEffect(() => {
