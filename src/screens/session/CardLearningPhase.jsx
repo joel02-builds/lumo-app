@@ -4,6 +4,7 @@ import ErrorBanner from '../../components/ErrorBanner.jsx';
 import CardVisual from '../../components/CardVisual.jsx';
 import HighlightedText from '../../components/HighlightedText.jsx';
 import { lumoApi } from '../../api/lumo.js';
+import YoutubePanel from '../../components/YoutubePanel.jsx';
 import { getBlockColor } from '../../utils/subjectColors.js';
 
 export default function CardLearningPhase({ block, goalType, mood, learningStyle, elapsedSeconds, onDone, onExit, onAskFreely, onCardsReady }) {
@@ -37,6 +38,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
   const [whyFeedback, setWhyFeedback] = useState('');
   const [whySending, setWhySending] = useState(false);
   const [bridgeVisible, setBridgeVisible] = useState(true);
+  const [showYoutube, setShowYoutube] = useState(false);
 
   // Karten laden
   useEffect(() => {
@@ -181,6 +183,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
         setWhyAnswer('');
         setWhyMode(false);
         setWhyFeedback('');
+        setShowYoutube(false);
         setAnimating(false);
       } else {
         setCurrentIndex((i) => i + 1);
@@ -201,6 +204,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
         setWhyAnswer('');
         setWhyMode(false);
         setWhyFeedback('');
+        setShowYoutube(false);
         setAnimating(false);
       }
     }, 300);
@@ -814,6 +818,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                       setWhyAnswer('');
                       setWhyMode(false);
                       setWhyFeedback('');
+                      setShowYoutube(false);
                       setAnimating(false);
                     }, 300);
                   }}
@@ -910,6 +915,40 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                       {reexplaining ? 'Lumo denkt …' : 'Nein, nochmal'}
                     </button>
                   </div>
+                </div>
+              )}
+
+              {alternativeExplanation && !showYoutube && !clickedCheck && (
+                <button
+                  onClick={() => setShowYoutube(true)}
+                  style={{
+                    width: '100%',
+                    background: 'none',
+                    border: '1px solid var(--border)',
+                    borderRadius: '12px',
+                    padding: '12px',
+                    fontSize: '14px',
+                    color: 'var(--text-secondary)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    marginTop: '10px',
+                  }}
+                >
+                  <span>▶</span> Video-Erklärung auf YouTube suchen
+                </button>
+              )}
+
+              {showYoutube && (
+                <div style={{ marginTop: '10px' }}>
+                  <YoutubePanel
+                    concept={currentCard?.concept || ''}
+                    blockTitle={block.title}
+                    onClose={() => setShowYoutube(false)}
+                    subjectColor={subjectColor}
+                  />
                 </div>
               )}
             </>

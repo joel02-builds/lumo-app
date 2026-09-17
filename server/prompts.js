@@ -451,3 +451,20 @@ export const flashcardSchema = {
   required: ['flashcards'],
   additionalProperties: false,
 };
+
+export const YOUTUBE_SEARCH_SYSTEM = `${LUMO_PERSONA}
+
+Generiere eine optimale YouTube-Suchanfrage für ein Lernkonzept.
+Die Anfrage soll kurz und präzise sein (3-6 Wörter).
+Auf Deutsch. Am Ende immer 'einfach erklärt' anhängen wenn es ein komplexes Konzept ist.
+Gib nur die Suchanfrage zurück, nichts anderes.`;
+
+export const youtubeSearchSchema = {
+  type: 'object',
+  properties: {
+    query: { type: 'string' },
+    queryEnglish: { type: 'string' },
+  },
+  required: ['query', 'queryEnglish'],
+  additionalProperties: false,
+};

@@ -27,6 +27,8 @@ import {
   conceptMapSchema,
   FLASHCARD_SYSTEM,
   flashcardSchema,
+  YOUTUBE_SEARCH_SYSTEM,
+  youtubeSearchSchema,
 } from './prompts.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -325,6 +327,21 @@ app.post('/api/generate-flashcards', async (req, res) => {
       userContent: `Block: ${blockTitle}\nNoch unsichere Konzepte:\n${(uncertainConcepts || []).map((c, i) => `${i + 1}. ${c}`).join('\n')}\nKontext: ${blockContent?.slice(0, 1000) || ''}`,
       schema: flashcardSchema,
       maxTokens: 1200,
+    });
+    res.json({ data });
+  } catch (err) {
+    sendFriendlyError(res, err);
+  }
+});
+
+app.post('/api/youtube-search-query', async (req, res) => {
+  const { concept, blockTitle } = req.body || {};
+  try {
+    const data = await askLumo({
+      system: YOUTUBE_SEARCH_SYSTEM,
+      userContent: `Konzept: ${concept}\nBlock: ${blockTitle}`,
+      schema: youtubeSearchSchema,
+      maxTokens: 100,
     });
     res.json({ data });
   } catch (err) {

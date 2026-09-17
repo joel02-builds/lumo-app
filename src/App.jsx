@@ -285,8 +285,10 @@ export default function App() {
       {state.screen === SCREENS.WEAK_SPOTS && (
         <WeakSpotsScreen
           blocks={state.blocks}
+          flashcards={state.flashcards}
           onBack={() => dispatch({ type: 'RETURN_TO_DASHBOARD' })}
           onStartBlock={(blockId) => dispatch({ type: 'START_BLOCK', blockId })}
+          onViewFlashcards={handleViewFlashcards}
         />
       )}
 
