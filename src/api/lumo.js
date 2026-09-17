@@ -61,4 +61,6 @@ export const lumoApi = {
   reexplain: (payload) => post('/api/reexplain', payload),
   explainTerm: (payload) => post('/api/explain-term', payload),
   generateConceptMap: (payload) => post('/api/generate-concept-map', payload),
+  generateFlashcards: ({ blockTitle, uncertainConcepts, blockContent }) =>
+    post('/api/generate-flashcards', { blockTitle, uncertainConcepts, blockContent }),
 };

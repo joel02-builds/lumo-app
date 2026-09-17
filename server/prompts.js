@@ -415,3 +415,39 @@ export const pretestSchema = {
   required: ['question'],
   additionalProperties: false,
 };
+
+export const FLASHCARD_SYSTEM = `${LUMO_PERSONA}
+
+Erstelle Karteikarten für Konzepte die ein Nutzer noch nicht vollständig verstanden hat.
+
+Für jede Karteikarte:
+- question: Eine klare, direkte Frage die genau dieses Konzept abfragt. Keine Ja/Nein-Fragen. Immer offen.
+- answer: Die Antwort in 2-3 Sätzen. Klar, konkret, mit einem Alltagsbeispiel wenn möglich.
+- hint: Ein kurzer Hinweis der in die richtige Richtung zeigt ohne die Antwort zu verraten. Maximal 1 Satz.
+- difficulty: 'leicht' | 'mittel' | 'schwer' basierend auf Komplexität des Konzepts
+
+Die Karteikarten sollen das Konzept wirklich prüfen – nicht nur Definitionen abfragen.`;
+
+export const flashcardSchema = {
+  type: 'object',
+  properties: {
+    flashcards: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          concept: { type: 'string' },
+          question: { type: 'string' },
+          answer: { type: 'string' },
+          hint: { type: 'string' },
+          difficulty: { type: 'string', enum: ['leicht', 'mittel', 'schwer'] },
+        },
+        required: ['id', 'concept', 'question', 'answer', 'hint', 'difficulty'],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ['flashcards'],
+  additionalProperties: false,
+};

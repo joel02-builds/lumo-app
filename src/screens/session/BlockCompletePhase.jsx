@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import confetti from 'canvas-confetti';
 import Button from '../../components/Button.jsx';
 import LernzettelInline from '../../components/LernzettelInline.jsx';
+import { lumoApi } from '../../api/lumo.js';
 
 const MESSAGES = {
   sicher: [
@@ -29,11 +30,40 @@ function randomMessage(status) {
   return list[Math.floor(Math.random() * list.length)];
 }
 
-export default function BlockCompletePhase({ block, result, cards, onContinue, onPause }) {
+export default function BlockCompletePhase({ block, result, cards, onContinue, onPause, onAddFlashcards }) {
   const status = result?.status || 'unsicher';
   const isGood = status === 'sicher';
+  const hasGaps = !isGood && result?.uncertainPoints?.length > 0;
   const firedRef = useRef(false);
   const [showLernzettel, setShowLernzettel] = useState(false);
+
+  useEffect(() => {
+    if (status === 'sicher' || !result?.uncertainPoints?.length) return;
+    lumoApi.generateFlashcards({
+      blockTitle: block.title,
+      uncertainConcepts: result.uncertainPoints,
+      blockContent: block.content,
+    }).then(data => {
+      if (data?.flashcards?.length) {
+        onAddFlashcards?.(data.flashcards.map((card, i) => ({
+          ...card,
+          // Die vom Modell vergebene id ist nur innerhalb dieses einen Aufrufs
+          // eindeutig (z. B. "1", "2", …) – mit blockId namespacen, sonst würde
+          // ADD_FLASHCARDS eine gleich benannte Karte aus einem anderen Block
+          // fälschlich als Duplikat verwerfen.
+          id: `${block.id}-${card.id || i}`,
+          blockId: block.id,
+          blockTitle: block.title,
+          subject: block.subject,
+          subjectColor: block.subject_color,
+          createdAt: new Date().toISOString(),
+          status: 'new', // new | learning | mastered
+          reviewCount: 0,
+        })));
+      }
+    }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (firedRef.current) return;
@@ -181,6 +211,18 @@ export default function BlockCompletePhase({ block, result, cards, onContinue, o
             </p>
           ))}
         </div>
+      )}
+
+      {hasGaps && (
+        <p style={{
+          fontSize: '13px',
+          color: 'var(--text-secondary)',
+          fontStyle: 'italic',
+          textAlign: 'center',
+          margin: '-4px 0 0',
+        }}>
+          Lumo erstellt Karteikarten für deine Lücken.
+        </p>
       )}
 
       {/* Lernzettel – aufklappbar */}

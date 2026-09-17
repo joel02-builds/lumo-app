@@ -15,6 +15,7 @@ import WeakSpotsScreen from './screens/WeakSpotsScreen.jsx';
 import ProjectsScreen from './screens/ProjectsScreen.jsx';
 import ExamResultScreen from './screens/ExamResultScreen.jsx';
 import SettingsScreen from './screens/SettingsScreen.jsx';
+import FlashcardScreen from './screens/FlashcardScreen.jsx';
 import MaterialConfirmationScreen from './screens/MaterialConfirmationScreen.jsx';
 import ErrorBanner from './components/ErrorBanner.jsx';
 import LumoWordmark from './components/LumoWordmark.jsx';
@@ -69,8 +70,9 @@ export default function App() {
       examResultAskedAt: state.examResultAskedAt,
       blocksAnalyzedTotal: state.blocksAnalyzedTotal,
       sessionsTotal: state.sessionsTotal,
+      flashcards: state.flashcards,
     });
-  }, [state.topic, state.fileName, state.goalType, state.goalDate, state.blocks, state.recommendedOrder, state.subjectColor, state.learningStyle, state.subjectHistory, state.projects, state.activeProjectId, state.examResult, state.examResultAskedAt, state.blocksAnalyzedTotal, state.sessionsTotal]);
+  }, [state.topic, state.fileName, state.goalType, state.goalDate, state.blocks, state.recommendedOrder, state.subjectColor, state.learningStyle, state.subjectHistory, state.projects, state.activeProjectId, state.examResult, state.examResultAskedAt, state.blocksAnalyzedTotal, state.sessionsTotal, state.flashcards]);
 
   const handleMaterial = useCallback((payload) => {
     dispatch({ type: 'SET_MATERIAL', ...payload });
@@ -147,6 +149,10 @@ export default function App() {
 
   const handleViewSettings = useCallback(() => {
     dispatch({ type: 'VIEW_SETTINGS' });
+  }, []);
+
+  const handleViewFlashcards = useCallback(() => {
+    dispatch({ type: 'VIEW_FLASHCARDS' });
   }, []);
 
   const handleExamResultDone = useCallback((result) => {
@@ -239,6 +245,17 @@ export default function App() {
           onViewProjects={handleViewProjects}
           onSettings={handleViewSettings}
           blocksAnalyzedTotal={state.blocksAnalyzedTotal}
+          flashcardsCount={state.flashcards.length}
+          onViewFlashcards={handleViewFlashcards}
+        />
+      )}
+
+      {state.screen === SCREENS.FLASHCARDS && (
+        <FlashcardScreen
+          flashcards={state.flashcards}
+          onUpdateFlashcard={(id, updates) => dispatch({ type: 'UPDATE_FLASHCARD', payload: { id, updates } })}
+          onRemoveFlashcard={(id) => dispatch({ type: 'REMOVE_FLASHCARD', payload: id })}
+          onBack={() => dispatch({ type: 'RETURN_TO_DASHBOARD' })}
         />
       )}
 
@@ -281,6 +298,7 @@ export default function App() {
           goalType={state.goalType}
           learningStyle={state.learningStyle}
           onTrackSubject={(subject) => dispatch({ type: 'TRACK_SUBJECT', payload: subject })}
+          onAddFlashcards={(cards) => dispatch({ type: 'ADD_FLASHCARDS', payload: cards })}
           onRecordCompletion={(result) => dispatch({ type: 'BLOCK_FINISHED', blockId: currentBlock.id, ...result })}
           onSaveCards={(cards) => dispatch({ type: 'SAVE_BLOCK_CARDS', payload: { blockId: currentBlock.id, cards } })}
           onPause={() => dispatch({ type: 'RETURN_TO_DASHBOARD' })}

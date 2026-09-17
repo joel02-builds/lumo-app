@@ -9,6 +9,7 @@ export const SCREENS = {
   PROJECTS: 'projects',
   EXAM_RESULT: 'exam-result',
   SETTINGS: 'settings',
+  FLASHCARDS: 'flashcards',
 };
 
 export const initialState = {
@@ -34,6 +35,7 @@ export const initialState = {
   examResultAskedAt: null,
   blocksAnalyzedTotal: 0,
   sessionsTotal: 0,
+  flashcards: [], // Alle generierten Karteikarten über alle Blöcke
 };
 
 // Lazy-Init für useReducer: baut den Startzustand aus einem evtl. in
@@ -63,6 +65,7 @@ export function createInitialState(savedProject) {
     examResultAskedAt: savedProject.examResultAskedAt || null,
     blocksAnalyzedTotal: savedProject.blocksAnalyzedTotal || 0,
     sessionsTotal: savedProject.sessionsTotal || 0,
+    flashcards: savedProject.flashcards || [],
   };
 }
 
@@ -201,6 +204,34 @@ export function appReducer(state, action) {
     case 'VIEW_SETTINGS':
       return { ...state, screen: SCREENS.SETTINGS };
 
+    case 'ADD_FLASHCARDS': {
+      const newCards = action.payload.filter(
+        newCard => !state.flashcards.find(existing => existing.id === newCard.id)
+      );
+      return { ...state, flashcards: [...state.flashcards, ...newCards] };
+    }
+
+    case 'UPDATE_FLASHCARD': {
+      return {
+        ...state,
+        flashcards: state.flashcards.map(card =>
+          card.id === action.payload.id
+            ? { ...card, ...action.payload.updates, lastReviewed: new Date().toISOString() }
+            : card
+        ),
+      };
+    }
+
+    case 'REMOVE_FLASHCARD': {
+      return {
+        ...state,
+        flashcards: state.flashcards.filter(card => card.id !== action.payload),
+      };
+    }
+
+    case 'VIEW_FLASHCARDS':
+      return { ...state, screen: SCREENS.FLASHCARDS };
+
     case 'VIEW_EXAM_RESULT':
       return { ...state, screen: SCREENS.EXAM_RESULT };
 
@@ -275,15 +306,16 @@ export function appReducer(state, action) {
     }
 
     case 'START_NEW_PROJECT':
-      // Gespeicherte Projekte (projects) sowie die Lifetime-Nutzungszähler für
-      // das künftige Freemium-Limit bleiben über einen Neustart hinweg
-      // erhalten – sonst könnte man das Limit einfach durch "Neues Projekt"
-      // umgehen. Nur der aktuell aktive Arbeitsstand wird zurückgesetzt.
+      // Gespeicherte Projekte (projects), die Lifetime-Nutzungszähler für das
+      // künftige Freemium-Limit und die Karteikarten (fach-/projektübergreifend
+      // zum Wiederholen gedacht) bleiben über einen Neustart hinweg erhalten.
+      // Nur der aktuell aktive Arbeitsstand wird zurückgesetzt.
       return {
         ...initialState,
         projects: state.projects,
         blocksAnalyzedTotal: state.blocksAnalyzedTotal,
         sessionsTotal: state.sessionsTotal,
+        flashcards: state.flashcards,
       };
 
     default:

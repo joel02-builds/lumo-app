@@ -82,7 +82,7 @@ function BlockDot({ block, subjectColor }) {
   );
 }
 
-export default function DashboardScreen({ blocks, recommendedOrder, goalType, goalDate, onStartBlock, onNewProject, onViewWeakSpots, onViewProjects, onSettings, blocksAnalyzedTotal }) {
+export default function DashboardScreen({ blocks, recommendedOrder, goalType, goalDate, onStartBlock, onNewProject, onViewWeakSpots, onViewProjects, onSettings, blocksAnalyzedTotal, flashcardsCount, onViewFlashcards }) {
   const safeBlocks = (blocks || []).filter(Boolean);
   const [expandedBlock, setExpandedBlock] = useState(null);
 
@@ -417,6 +417,35 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
           }}>
             Alle Blöcke geschafft. Starkes Lernen.
           </p>
+        )}
+
+        {flashcardsCount > 0 && (
+          <button
+            onClick={onViewFlashcards}
+            style={{
+              width: '100%',
+              background: 'var(--bg-card)',
+              border: `1px solid ${flashcardsCount > 5 ? 'var(--red)' : 'var(--border)'}`,
+              borderRadius: '14px',
+              padding: '14px 18px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '14px',
+              textAlign: 'left',
+            }}
+          >
+            <span style={{ fontSize: '24px' }}>🃏</span>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', margin: '0 0 2px' }}>
+                Karteikarten wiederholen
+              </p>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0' }}>
+                {flashcardsCount} {flashcardsCount === 1 ? 'Karte' : 'Karten'} warten auf dich
+              </p>
+            </div>
+            <span style={{ color: 'var(--text-secondary)', fontSize: '16px' }}>→</span>
+          </button>
         )}
 
         {onViewWeakSpots && (
