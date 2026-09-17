@@ -26,9 +26,10 @@ const GOALS = [
 ];
 
 const LEARNING_STYLES = [
-  { label: 'Mit Beispielen', value: 'examples', icon: '💡', sub: 'Konkrete Alltagsbeispiele' },
+  { label: 'Mit Beispielen', value: 'examples', icon: '💡', sub: 'Konkrete Fälle zuerst' },
   { label: 'Zusammenhänge', value: 'connections', icon: '🔗', sub: 'Wie alles zusammenhängt' },
   { label: 'Schritt für Schritt', value: 'stepbystep', icon: '📋', sub: 'Klare Reihenfolge' },
+  { label: 'Mit Vergleichen', value: 'analogies', icon: '🌉', sub: 'Einfache Analogien' },
 ];
 
 export default function OnboardingScreen3({ onConfirm, onBack }) {
@@ -68,17 +69,21 @@ export default function OnboardingScreen3({ onConfirm, onBack }) {
           }}>
             Lumo erklärt dann genau so wie es für dich am besten passt.
           </p>
-          <div style={{ width: '100%', display: 'flex', gap: '8px' }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '8px',
+            width: '100%',
+          }}>
             {LEARNING_STYLES.map(({ label, value, icon, sub }) => (
               <button
                 key={value}
                 onClick={() => onConfirm({ ...confirmedGoal, learningStyle: value })}
                 style={{
-                  flex: 1,
                   background: 'var(--bg-card)',
                   border: '1px solid var(--border)',
                   borderRadius: '14px',
-                  padding: '16px 8px',
+                  padding: '16px 10px',
                   cursor: 'pointer',
                   display: 'flex',
                   flexDirection: 'column',
@@ -90,8 +95,8 @@ export default function OnboardingScreen3({ onConfirm, onBack }) {
                 onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
               >
                 <span style={{ fontSize: '24px' }}>{icon}</span>
-                <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>{label}</span>
-                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', textAlign: 'center' }}>{sub}</span>
+                <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', textAlign: 'center' }}>{label}</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', textAlign: 'center', lineHeight: '1.3' }}>{sub}</span>
               </button>
             ))}
           </div>

@@ -196,6 +196,8 @@ export function getCardSystem(goalType, mood, learningStyle) {
     ? '\nDer Nutzer lernt am besten durch Zusammenhänge: Erkläre wie jedes Konzept mit anderen zusammenhängt.'
     : learningStyle === 'stepbystep'
     ? '\nDer Nutzer lernt am besten Schritt für Schritt: Erkläre in klaren, sequenziellen Schritten.'
+    : learningStyle === 'analogies'
+    ? '\nDer Nutzer lernt am besten mit Vergleichen und Analogien: Erkläre jedes Konzept mit einem einfachen Vergleich aus dem Alltag. Beispiel: "Das ist wie..." oder "Stell dir vor...". Erst die Analogie, dann das Konzept.'
     : '';
   return CARD_SYSTEM + strictness + moodContext + styleContext;
 }
