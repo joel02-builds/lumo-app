@@ -421,8 +421,8 @@ export const FLASHCARD_SYSTEM = `${LUMO_PERSONA}
 Erstelle Karteikarten für Konzepte die ein Nutzer noch nicht vollständig verstanden hat.
 
 Für jede Karteikarte:
-- question: Eine klare, direkte Frage die genau dieses Konzept abfragt. Keine Ja/Nein-Fragen. Immer offen.
-- answer: Die Antwort in 2-3 Sätzen. Klar, konkret, mit einem Alltagsbeispiel wenn möglich.
+- question: Eine klare, direkte Frage in einem Satz. Offen, nicht Ja/Nein.
+- answer: Die Antwort in MAXIMAL einem Satz. Direkt und präzise. Kein 'Das bedeutet...' als Einleitung.
 - hint: Ein kurzer Hinweis der in die richtige Richtung zeigt ohne die Antwort zu verraten. Maximal 1 Satz.
 - difficulty: 'leicht' | 'mittel' | 'schwer' basierend auf Komplexität des Konzepts
 

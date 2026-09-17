@@ -334,16 +334,66 @@ app.post('/api/generate-flashcards', async (req, res) => {
   }
 });
 
-app.post('/api/youtube-search-query', async (req, res) => {
+app.post('/api/youtube-videos', async (req, res) => {
   const { concept, blockTitle } = req.body || {};
-  try {
-    const data = await askLumo({
-      system: YOUTUBE_SEARCH_SYSTEM,
-      userContent: `Konzept: ${concept}\nBlock: ${blockTitle}`,
-      schema: youtubeSearchSchema,
-      maxTokens: 100,
+  const apiKey = process.env.YOUTUBE_API_KEY;
+
+  if (!apiKey) {
+    // Fallback ohne API Key: direkte Suche
+    const query = encodeURIComponent(`${concept} ${blockTitle} einfach erklärt`);
+    return res.json({
+      data: {
+        fallback: true,
+        searchUrl: `https://www.youtube.com/results?search_query=${query}`,
+        query: `${concept} einfach erklärt`,
+      }
     });
-    res.json({ data });
+  }
+
+  try {
+    // Zuerst Lumo nach optimaler Suchanfrage fragen
+    let searchQuery = `${concept} einfach erklärt`;
+    try {
+      const queryData = await askLumo({
+        system: YOUTUBE_SEARCH_SYSTEM,
+        userContent: `Konzept: ${concept}\nBlock: ${blockTitle}`,
+        schema: youtubeSearchSchema,
+        maxTokens: 100,
+      });
+      searchQuery = queryData.query;
+    } catch {}
+
+    // YouTube Data API v3
+    const ytUrl = `https://www.googleapis.com/youtube/v3/search?` +
+      `part=snippet&q=${encodeURIComponent(searchQuery)}&` +
+      `type=video&maxResults=3&` +
+      `videoEmbeddable=true&` +
+      `relevanceLanguage=de&` +
+      `key=${apiKey}`;
+
+    const response = await fetch(ytUrl);
+    const ytData = await response.json();
+
+    if (!response.ok || !ytData.items?.length) {
+      const query = encodeURIComponent(searchQuery);
+      return res.json({
+        data: {
+          fallback: true,
+          searchUrl: `https://www.youtube.com/results?search_query=${query}`,
+          query: searchQuery,
+        }
+      });
+    }
+
+    const videos = ytData.items.map(item => ({
+      videoId: item.id.videoId,
+      title: item.snippet.title,
+      channel: item.snippet.channelTitle,
+      thumbnail: item.snippet.thumbnails?.medium?.url,
+      description: item.snippet.description?.slice(0, 100),
+    }));
+
+    res.json({ data: { videos, query: searchQuery, fallback: false } });
   } catch (err) {
     sendFriendlyError(res, err);
   }

@@ -63,6 +63,6 @@ export const lumoApi = {
   generateConceptMap: (payload) => post('/api/generate-concept-map', payload),
   generateFlashcards: ({ blockTitle, uncertainConcepts, blockContent }) =>
     post('/api/generate-flashcards', { blockTitle, uncertainConcepts, blockContent }),
-  getYoutubeSearchQuery: ({ concept, blockTitle }) =>
-    post('/api/youtube-search-query', { concept, blockTitle }),
+  getYoutubeVideos: ({ concept, blockTitle }) =>
+    post('/api/youtube-videos', { concept, blockTitle }),
 };
