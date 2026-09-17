@@ -962,39 +962,6 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                 </div>
               )}
 
-              {alternativeExplanation && !showYoutube && !clickedCheck && (
-                <button
-                  onClick={() => setShowYoutube(true)}
-                  style={{
-                    width: '100%',
-                    background: 'none',
-                    border: '1px solid var(--border)',
-                    borderRadius: '12px',
-                    padding: '12px',
-                    fontSize: '14px',
-                    color: 'var(--text-secondary)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    marginTop: '10px',
-                  }}
-                >
-                  <span>▶</span> Video-Erklärung auf YouTube suchen
-                </button>
-              )}
-
-              {showYoutube && (
-                <div style={{ marginTop: '10px' }}>
-                  <YoutubePanel
-                    concept={currentCard?.concept || ''}
-                    blockTitle={block.title}
-                    onClose={() => setShowYoutube(false)}
-                    subjectColor={subjectColor}
-                  />
-                </div>
-              )}
             </>
           )}
 
@@ -1330,6 +1297,38 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
           >
             Ich möchte lieber frei nachfragen
           </button>
+        )}
+
+        {phase === 'reading' && !showYoutube && (
+          <button
+            onClick={() => setShowYoutube(true)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-secondary)',
+              fontSize: '13px',
+              cursor: 'pointer',
+              padding: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              textDecoration: 'underline',
+            }}
+          >
+            <span style={{ fontSize: '12px' }}>▶</span>
+            Video-Erklärung ansehen
+          </button>
+        )}
+
+        {phase === 'reading' && showYoutube && (
+          <div style={{ width: '100%', maxWidth: 'min(640px, 100%)' }}>
+            <YoutubePanel
+              concept={currentCard?.concept || ''}
+              blockTitle={block.title}
+              onClose={() => setShowYoutube(false)}
+              subjectColor={subjectColor}
+            />
+          </div>
         )}
       </div>
 
