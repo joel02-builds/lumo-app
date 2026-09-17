@@ -26,9 +26,9 @@ const GOALS = [
 ];
 
 const LEARNING_STYLES = [
-  { label: 'Mit Beispielen', value: 'examples', icon: '💡' },
-  { label: 'Zusammenhänge', value: 'connections', icon: '🔗' },
-  { label: 'Schritt für Schritt', value: 'stepbystep', icon: '📋' },
+  { label: 'Mit Beispielen', value: 'examples', icon: '💡', sub: 'Konkrete Alltagsbeispiele' },
+  { label: 'Zusammenhänge', value: 'connections', icon: '🔗', sub: 'Wie alles zusammenhängt' },
+  { label: 'Schritt für Schritt', value: 'stepbystep', icon: '📋', sub: 'Klare Reihenfolge' },
 ];
 
 export default function OnboardingScreen3({ onConfirm, onBack }) {
@@ -59,8 +59,17 @@ export default function OnboardingScreen3({ onConfirm, onBack }) {
           <p style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', textAlign: 'center', margin: '0' }}>
             Wie lernst du am liebsten?
           </p>
+          <p style={{
+            fontSize: '14px',
+            color: 'var(--text-secondary)',
+            textAlign: 'center',
+            margin: '-4px 0 4px',
+            lineHeight: '1.5',
+          }}>
+            Lumo erklärt dann genau so wie es für dich am besten passt.
+          </p>
           <div style={{ width: '100%', display: 'flex', gap: '8px' }}>
-            {LEARNING_STYLES.map(({ label, value, icon }) => (
+            {LEARNING_STYLES.map(({ label, value, icon, sub }) => (
               <button
                 key={value}
                 onClick={() => onConfirm({ ...confirmedGoal, learningStyle: value })}
@@ -68,22 +77,26 @@ export default function OnboardingScreen3({ onConfirm, onBack }) {
                   flex: 1,
                   background: 'var(--bg-card)',
                   border: '1px solid var(--border)',
-                  borderRadius: '12px',
-                  padding: '12px 6px',
+                  borderRadius: '14px',
+                  padding: '16px 8px',
                   cursor: 'pointer',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  gap: '6px',
+                  gap: '8px',
+                  transition: 'all 0.15s ease',
                 }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--gold)'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
               >
-                <span style={{ fontSize: '20px' }}>{icon}</span>
-                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '500', textAlign: 'center' }}>{label}</span>
+                <span style={{ fontSize: '24px' }}>{icon}</span>
+                <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>{label}</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', textAlign: 'center' }}>{sub}</span>
               </button>
             ))}
           </div>
           <button className="text-link" onClick={() => setConfirmedGoal(null)}>
-            Zurück zur Auswahl
+            ← Zurück
           </button>
         </div>
       </div>
