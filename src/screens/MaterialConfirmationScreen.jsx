@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import LumoMascot from '../components/LumoMascot.jsx';
 import Button from '../components/Button.jsx';
 import { SUBJECT_COLORS, getSubjectColor } from '../utils/subjectColors.js';
@@ -20,7 +20,12 @@ const SUBJECT_LABELS = {
 export default function AnalysisResultScreen({ blocks, totalBlocks, recommendedOrder, onStart, onReanalyze, subject }) {
   const subjectColor = getSubjectColor(subject);
   const [selectedColor, setSelectedColor] = useState(null);
+  const [editMode, setEditMode] = useState(false);
+  const [editedBlocks, setEditedBlocks] = useState(blocks);
   const activeColor = selectedColor || subjectColor;
+
+  useEffect(() => { setEditedBlocks(blocks); }, [blocks]);
+
   const totalMinutes = blocks.reduce((sum, b) => sum + (b.estimatedMinutes || 0), 0);
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
@@ -93,55 +98,143 @@ export default function AnalysisResultScreen({ blocks, totalBlocks, recommendedO
           </p>
         </div>
 
-        <div style={{
-          width: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '8px',
-        }}>
-          {blocks.map((b, i) => (
-            <div key={b.id} style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '12px 16px',
-              background: 'var(--bg-card)',
-              borderRadius: '12px',
-              border: '1px solid var(--border)',
-              borderLeft: i === 0 ? `3px solid ${activeColor}` : '1px solid var(--border)',
-            }}>
-              <div style={{
-                width: '24px',
-                height: '24px',
-                borderRadius: '50%',
-                background: i === 0 ? activeColor : 'var(--bg-card-bright)',
-                color: i === 0 ? '#1a1206' : 'var(--text-secondary)',
+        <button
+          onClick={() => setEditMode(!editMode)}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--text-secondary)',
+            fontSize: '13px',
+            cursor: 'pointer',
+            textDecoration: 'underline',
+            padding: '0',
+            marginTop: '-8px',
+          }}
+        >
+          {editMode ? 'Fertig' : 'Blöcke anpassen'}
+        </button>
+
+        {editMode ? (
+          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {editedBlocks.map((b, i) => (
+              <div key={b.id} style={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '12px',
-                fontWeight: '700',
-                flexShrink: 0,
+                gap: '8px',
+                background: 'var(--bg-card)',
+                borderRadius: '12px',
+                padding: '10px 12px',
+                border: '1px solid var(--border)',
               }}>
-                {i + 1}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <button
+                    onClick={() => {
+                      if (i === 0) return;
+                      const newBlocks = [...editedBlocks];
+                      [newBlocks[i-1], newBlocks[i]] = [newBlocks[i], newBlocks[i-1]];
+                      setEditedBlocks(newBlocks);
+                    }}
+                    disabled={i === 0}
+                    style={{
+                      background: 'none', border: 'none',
+                      color: i === 0 ? 'var(--border)' : 'var(--text-secondary)',
+                      cursor: i === 0 ? 'default' : 'pointer',
+                      fontSize: '12px', padding: '0',
+                    }}
+                  >▲</button>
+                  <button
+                    onClick={() => {
+                      if (i === editedBlocks.length - 1) return;
+                      const newBlocks = [...editedBlocks];
+                      [newBlocks[i], newBlocks[i+1]] = [newBlocks[i+1], newBlocks[i]];
+                      setEditedBlocks(newBlocks);
+                    }}
+                    disabled={i === editedBlocks.length - 1}
+                    style={{
+                      background: 'none', border: 'none',
+                      color: i === editedBlocks.length - 1 ? 'var(--border)' : 'var(--text-secondary)',
+                      cursor: i === editedBlocks.length - 1 ? 'default' : 'pointer',
+                      fontSize: '12px', padding: '0',
+                    }}
+                  >▼</button>
+                </div>
+                <input
+                  value={b.title}
+                  onChange={(e) => {
+                    const newBlocks = editedBlocks.map((block, bi) =>
+                      bi === i ? { ...block, title: e.target.value } : block
+                    );
+                    setEditedBlocks(newBlocks);
+                  }}
+                  style={{
+                    flex: 1,
+                    background: 'var(--bg-elevated)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '8px',
+                    color: 'var(--text-primary)',
+                    fontFamily: 'inherit',
+                    fontSize: '14px',
+                    padding: '6px 10px',
+                    outline: 'none',
+                  }}
+                />
+                <span style={{ fontSize: '12px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                  {b.estimatedMinutes} Min
+                </span>
               </div>
-              <div style={{ flex: 1 }}>
+            ))}
+          </div>
+        ) : (
+          <div style={{
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+          }}>
+            {editedBlocks.map((b, i) => (
+              <div key={b.id} style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '12px 16px',
+                background: 'var(--bg-card)',
+                borderRadius: '12px',
+                border: '1px solid var(--border)',
+                borderLeft: i === 0 ? `3px solid ${activeColor}` : '1px solid var(--border)',
+              }}>
                 <div style={{
-                  fontSize: '15px',
-                  fontWeight: i === 0 ? '600' : '400',
-                  color: 'var(--text-primary)',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: i === 0 ? activeColor : 'var(--bg-card-bright)',
+                  color: i === 0 ? '#1a1206' : 'var(--text-secondary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  flexShrink: 0,
                 }}>
-                  {b.title}
+                  {i + 1}
                 </div>
-                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                  {b.estimatedMinutes} Min. · {b.difficulty}
+                <div style={{ flex: 1 }}>
+                  <div style={{
+                    fontSize: '15px',
+                    fontWeight: i === 0 ? '600' : '400',
+                    color: 'var(--text-primary)',
+                  }}>
+                    {b.title}
+                  </div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                    {b.estimatedMinutes} Min. · {b.difficulty}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
-        <Button onClick={() => onStart({ subject, color: selectedColor || subjectColor })} style={{ width: '100%' }}>
+        <Button onClick={() => onStart({ subject, color: selectedColor || subjectColor, blocks: editedBlocks })} style={{ width: '100%' }}>
           Jetzt starten
         </Button>
 

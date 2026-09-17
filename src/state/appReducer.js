@@ -126,6 +126,13 @@ export function appReducer(state, action) {
     case 'CONFIRM_MATERIAL':
       return { ...state, screen: SCREENS.DASHBOARD };
 
+    case 'UPDATE_BLOCKS_ORDER':
+      return {
+        ...state,
+        blocks: action.payload,
+        recommendedOrder: action.payload.map((b) => b.id),
+      };
+
     case 'SET_LEARNING_STYLE':
       return { ...state, learningStyle: action.learningStyle };
 

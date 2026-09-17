@@ -39,6 +39,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
   const [whySending, setWhySending] = useState(false);
   const [bridgeVisible, setBridgeVisible] = useState(true);
   const [showYoutube, setShowYoutube] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
 
   // Karten laden
   useEffect(() => {
@@ -162,8 +163,27 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
     }
   }
 
+  function handleSpeak(text) {
+    if (!window.speechSynthesis) return;
+    if (speaking) {
+      window.speechSynthesis.cancel();
+      setSpeaking(false);
+      return;
+    }
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'de-DE';
+    utterance.rate = 0.9;
+    utterance.onend = () => setSpeaking(false);
+    utterance.onerror = () => setSpeaking(false);
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+    setSpeaking(true);
+  }
+
   function handleNext() {
     setAnimating(true);
+    window.speechSynthesis?.cancel();
+    setSpeaking(false);
     setTimeout(() => {
       if (isLast) {
         setPhase('final-recall');
@@ -553,7 +573,29 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
           transition: 'all 0.3s ease',
           opacity: animating ? 0 : 1,
           transform: animating ? 'translateY(8px)' : 'translateY(0)',
+          position: 'relative',
         }}>
+
+          {phase === 'reading' && !shouldShowPretest() && typeof window !== 'undefined' && window.speechSynthesis && (
+            <button
+              onClick={() => handleSpeak(alternativeExplanation || currentCard?.explanation || '')}
+              aria-label={speaking ? 'Vorlesen stoppen' : 'Vorlesen'}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'none',
+                border: 'none',
+                color: subjectColor,
+                fontSize: '20px',
+                cursor: 'pointer',
+                padding: '4px',
+                lineHeight: 1,
+              }}
+            >
+              {speaking ? '⏹' : '🔊'}
+            </button>
+          )}
 
           {/* Konzept-Label */}
           <div style={{
@@ -802,6 +844,8 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                 <button
                   onClick={() => {
                     setAnimating(true);
+                    window.speechSynthesis?.cancel();
+                    setSpeaking(false);
                     setTimeout(() => {
                       setCurrentIndex(1);
                       setPhase('reading');

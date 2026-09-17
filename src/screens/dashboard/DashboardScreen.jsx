@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import LumoMascot from '../../components/LumoMascot.jsx';
 import Button from '../../components/Button.jsx';
 import { getRecommendedBlock } from '../../utils/blockProgress.js';
 import { getBlockColor } from '../../utils/subjectColors.js';
 import { getRemainingFreeBlocks } from '../../utils/planLimits.js';
+import { lumoApi } from '../../api/lumo.js';
 
 function getDaysUntilExam(goalDate) {
   if (!goalDate) return null;
@@ -85,6 +86,19 @@ function BlockDot({ block, subjectColor }) {
 export default function DashboardScreen({ blocks, recommendedOrder, goalType, goalDate, onStartBlock, onNewProject, onViewWeakSpots, onViewProjects, onSettings, blocksAnalyzedTotal, flashcardsCount, onViewFlashcards }) {
   const safeBlocks = (blocks || []).filter(Boolean);
   const [expandedBlock, setExpandedBlock] = useState(null);
+  const next = getRecommendedBlock(safeBlocks, recommendedOrder || []);
+
+  // Lädt die Karten des nächsten Blocks schon im Hintergrund, damit der
+  // Request/Cache beim tatsächlichen Klick bereits warm ist.
+  useEffect(() => {
+    if (!next) return;
+    lumoApi.generateCards({
+      blockTitle: next.title,
+      blockContent: next.content,
+      difficulty: next.difficulty,
+      goalType,
+    }).catch(() => {});
+  }, [next?.id]);
 
   if (safeBlocks.length === 0) {
     return (
@@ -104,7 +118,6 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
   const completed = safeBlocks.filter((b) => b.status === 'completed').length;
   const percent = total ? Math.round((completed / total) * 100) : 0;
   const allDone = total > 0 && completed === total;
-  const next = getRecommendedBlock(safeBlocks, recommendedOrder);
   const weakCount = safeBlocks.filter(b =>
     b.status === 'completed' && (b.confidence === 'unsicher' || b.confidence === 'grosse_luecken')
   ).length;

@@ -82,9 +82,12 @@ export default function App() {
     dispatch({ type: 'GO_TO_STEP2' });
   }, []);
 
-  const handleStart = useCallback(({ subject, color } = {}) => {
+  const handleStart = useCallback(({ subject, color, blocks } = {}) => {
     if (color) {
       dispatch({ type: 'SET_SUBJECT_COLOR', payload: color });
+    }
+    if (blocks) {
+      dispatch({ type: 'UPDATE_BLOCKS_ORDER', payload: blocks });
     }
     dispatch({ type: 'CONFIRM_MATERIAL' });
   }, []);
