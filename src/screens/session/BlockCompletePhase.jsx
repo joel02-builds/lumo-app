@@ -160,21 +160,25 @@ export default function BlockCompletePhase({ block, result, cards, onContinue, o
         </p>
       </div>
 
-      {/* Status Badge */}
+      {/* Status Badge – niemals rot, Abschluss ist kein Fehler */}
       <div style={{
         display: 'inline-flex',
         alignItems: 'center',
         gap: '8px',
-        background: isGood ? 'rgba(212,168,67,0.12)' : 'rgba(224,123,84,0.12)',
-        border: `1px solid ${isGood ? 'var(--gold)' : 'var(--red)'}`,
+        background: isGood
+          ? 'rgba(212,168,67,0.12)'
+          : status === 'grosse_luecken'
+            ? 'rgba(138,155,174,0.10)'
+            : 'rgba(212,168,67,0.08)',
+        border: `1px solid ${isGood ? 'var(--gold)' : 'rgba(138,155,174,0.3)'}`,
         borderRadius: '20px',
         padding: '8px 18px',
         fontSize: '13px',
         fontWeight: '700',
-        color: isGood ? 'var(--gold)' : 'var(--red)',
+        color: isGood ? 'var(--gold)' : 'var(--text-secondary)',
         letterSpacing: '0.5px',
       }}>
-        {isGood ? '✓ Verstanden' : status === 'grosse_luecken' ? '○ Große Lücken' : '◐ Noch unsicher'}
+        {isGood ? '✓ Verstanden' : status === 'grosse_luecken' ? '○ Noch am Anfang' : '◐ Fast da'}
       </div>
 
       {/* Lücken-Info wenn nicht sicher */}

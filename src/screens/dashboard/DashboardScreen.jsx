@@ -149,17 +149,21 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
 
         {(() => {
           const streak = getStreakDays();
-          if (streak < 2) return null;
+          if (streak < 1) return null;
           return (
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
-              fontSize: '13px',
+              gap: '8px',
+              background: 'rgba(212,168,67,0.10)',
+              border: '1px solid rgba(212,168,67,0.25)',
+              borderRadius: '20px',
+              padding: '8px 16px',
+              fontSize: '14px',
               color: 'var(--gold)',
-              fontWeight: '600',
+              fontWeight: '700',
             }}>
-              🔥 {streak} Tage am Stück
+              🔥 {streak} {streak === 1 ? 'Tag' : 'Tage'} am Stück
             </div>
           );
         })()}
@@ -203,26 +207,29 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
           </p>
         </div>
 
-        {goalType === 'exam' && (() => {
+        {(() => {
           const days = getDaysUntilExam(goalDate);
           if (days === null) return null;
           const urgentColor = days <= 3 ? 'var(--red)' : days <= 7 ? 'var(--gold)' : 'var(--text-secondary)';
+          const urgentBg = days <= 3 ? 'rgba(224,123,84,0.10)' : days <= 7 ? 'rgba(212,168,67,0.10)' : 'var(--bg-card)';
+          const label = goalType === 'exam' ? 'Prüfung' : goalType === 'homework' ? 'Abgabe' : 'Termin';
           return (
             <div style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '8px',
-              padding: '10px 16px',
-              background: 'var(--bg-card)',
-              borderRadius: '10px',
-              border: `1px solid ${urgentColor}44`,
+              gap: '12px',
+              padding: '12px 20px',
+              background: urgentBg,
+              borderRadius: '14px',
+              border: `1px solid ${urgentColor}55`,
+              width: '100%',
             }}>
-              <span style={{ fontSize: '20px', fontWeight: '800', color: urgentColor }}>
+              <span style={{ fontSize: '28px', fontWeight: '800', color: urgentColor, lineHeight: '1' }}>
                 {days <= 0 ? '🎯' : days}
               </span>
-              <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
-                {days <= 0 ? 'Prüfungstag' : days === 1 ? 'Tag bis zur Prüfung' : `Tage bis zur Prüfung`}
+              <span style={{ fontSize: '15px', color: days <= 7 ? urgentColor : 'var(--text-secondary)', fontWeight: days <= 7 ? '600' : '400' }}>
+                {days <= 0 ? `${label}stag – du schaffst das` : days === 1 ? `Tag bis zur ${label}` : `Tage bis zur ${label}`}
               </span>
             </div>
           );
