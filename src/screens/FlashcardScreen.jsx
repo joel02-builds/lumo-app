@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import LumoMascot from '../components/LumoMascot.jsx';
 import { getSubjectColor } from '../utils/subjectColors.js';
-import { calculateNextReview, getDueCards } from '../utils/sm2.js';
+import { calculateNextReview, getDueCards, buildInterleavedQueue } from '../utils/sm2.js';
 
 const DIFFICULTY_COLORS = {
   leicht: '#3D9E6E',
@@ -210,7 +210,7 @@ function FlashCard({ card, onRate, onRemove, subjectColor }) {
 
 export default function FlashcardScreen({ flashcards, onUpdateFlashcard, onRemoveFlashcard, onBack }) {
   const [filter, setFilter] = useState('due');
-  const [sortBy, setSortBy] = useState('subject');
+  const [sortBy, setSortBy] = useState('interleaved');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [sessionDone, setSessionDone] = useState(false);
   const [ratedCount, setRatedCount] = useState(0);
@@ -224,7 +224,10 @@ export default function FlashcardScreen({ flashcards, onUpdateFlashcard, onRemov
       : filter === 'mastered' ? flashcards.filter(c => c.status === 'mastered')
       : flashcards.filter(c => c.status === filter);
 
-    if (sortBy === 'subject') {
+    if (sortBy === 'interleaved') {
+      // Graduated Interleaving: Round-Robin über Subjects, schwer zuerst
+      cards = buildInterleavedQueue(cards);
+    } else if (sortBy === 'subject') {
       cards = [...cards].sort((a, b) => (a.subject || '').localeCompare(b.subject || ''));
     } else if (sortBy === 'difficulty') {
       const order = { schwer: 0, mittel: 1, leicht: 2 };
@@ -463,31 +466,45 @@ export default function FlashcardScreen({ flashcards, onUpdateFlashcard, onRemov
         )}
 
         {/* Sort */}
-        <div style={{ display: 'flex', gap: '6px', alignItems: 'center', width: '100%' }}>
-          <span style={{ fontSize: '12px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>Sortieren:</span>
-          {[
-            { id: 'due', label: 'Fälligkeitsdatum' },
-            { id: 'subject', label: 'Fach' },
-            { id: 'difficulty', label: 'Schwierigkeit' },
-          ].map(s => (
-            <button
-              key={s.id}
-              onClick={() => setSortBy(s.id)}
-              style={{
-                background: sortBy === s.id ? 'var(--gold)' : 'var(--bg-card)',
-                color: sortBy === s.id ? '#1a1206' : 'var(--text-secondary)',
-                border: sortBy === s.id ? 'none' : '1px solid var(--border)',
-                borderRadius: '8px',
-                padding: '5px 10px',
-                fontSize: '12px',
-                fontWeight: sortBy === s.id ? '700' : '400',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {s.label}
-            </button>
-          ))}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>Reihenfolge:</span>
+            {[
+              { id: 'interleaved', label: 'Gemischt ✦' },
+              { id: 'due', label: 'Fällig zuerst' },
+              { id: 'subject', label: 'Nach Fach' },
+              { id: 'difficulty', label: 'Schwierigkeit' },
+            ].map(s => (
+              <button
+                key={s.id}
+                onClick={() => setSortBy(s.id)}
+                style={{
+                  background: sortBy === s.id ? 'var(--gold)' : 'var(--bg-card)',
+                  color: sortBy === s.id ? '#1a1206' : 'var(--text-secondary)',
+                  border: sortBy === s.id ? 'none' : '1px solid var(--border)',
+                  borderRadius: '8px',
+                  padding: '5px 10px',
+                  fontSize: '12px',
+                  fontWeight: sortBy === s.id ? '700' : '400',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+          {sortBy === 'interleaved' && (
+            <p style={{
+              fontSize: '11px',
+              color: 'var(--text-secondary)',
+              margin: '0',
+              paddingLeft: '2px',
+              opacity: 0.75,
+            }}>
+              Themen werden gemischt – das stärkt das Gedächtnis stärker als ein Thema nach dem anderen.
+            </p>
+          )}
         </div>
 
         {/* Progress */}
