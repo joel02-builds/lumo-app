@@ -16,8 +16,13 @@ const DIFFICULTY_COLORS = {
   schwer: '#E07B54',
 };
 
+// ADHS-Design: var(--red) NIEMALS für Bewertungs-Optionen.
+// "Keine Ahnung" ist ein normaler Lernmoment — kein Versagen.
+// Rot bei Lernschwierigkeiten triggert emotionale Dysregulation genau dann,
+// wenn der Nutzer ohnehin Schwierigkeiten hat (Barkley 2015: ADHS + Frustration).
+// → Amber statt Rot: semantische Warnung ohne Alarm-Wirkung.
 const QUALITY_OPTIONS = [
-  { value: 0, label: 'Keine Ahnung', color: 'var(--red)',   bg: 'var(--red-soft)' },
+  { value: 0, label: 'Keine Ahnung', color: 'var(--amber)', bg: 'var(--amber-soft)' },
   { value: 1, label: 'Schwer',       color: 'var(--amber)', bg: 'var(--amber-soft)' },
   { value: 2, label: 'Mittel',       color: 'var(--gold)',  bg: 'var(--gold-soft)' },
   { value: 3, label: 'Leicht',       color: 'var(--green)', bg: 'var(--green-soft)' },
@@ -254,7 +259,9 @@ function FlashCard({ card, onRate, onRemove, subjectColor }) {
             {retentionPct < 100 && (
               <div style={{
                 fontSize: '11px',
-                color: retentionPct < 50 ? 'var(--red)' : retentionPct < 80 ? 'var(--amber)' : 'var(--green)',
+                // ADHS: var(--red) NIE für Lernstatus — Amber als Frühwarnung ist ausreichend.
+                // Retention <50% = noch lernend, kein Fehler → Amber, nicht Rot.
+                color: retentionPct < 50 ? 'var(--amber)' : retentionPct < 80 ? 'var(--amber)' : 'var(--green)',
                 fontWeight: '600',
               }}>
                 {retentionPct}%
