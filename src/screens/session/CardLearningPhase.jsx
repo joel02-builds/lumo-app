@@ -7,7 +7,7 @@ import { lumoApi } from '../../api/lumo.js';
 import YoutubePanel from '../../components/YoutubePanel.jsx';
 import { getBlockColor } from '../../utils/subjectColors.js';
 
-export default function CardLearningPhase({ block, goalType, mood, learningStyle, elapsedSeconds, onDone, onExit, onAskFreely, onCardsReady }) {
+export default function CardLearningPhase({ block, goalType, mood, learningStyle, elapsedSeconds, onDone, onExit, onAskFreely, onCardsReady, onCardProgress }) {
   const subjectColor = getBlockColor(block);
   const [cards, setCards] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -122,6 +122,13 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
   const currentCard = cards[currentIndex];
   const isLast = currentIndex === cards.length - 1;
   const progress = cards.length > 0 ? currentIndex / cards.length : 0;
+
+  // Karten-Fortschritt nach oben melden (für den SessionTimer)
+  useEffect(() => {
+    if (cards.length > 0) {
+      onCardProgress?.(currentIndex, cards.length);
+    }
+  }, [currentIndex, cards.length]);
 
   function shouldShowPretest() {
     return currentIndex > 0 &&
@@ -574,16 +581,22 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
             ))}
           </div>
         </div>
-        {elapsedSeconds > 60 && (
-          <span style={{
-            fontSize: '11px',
-            color: 'var(--text-secondary)',
-            marginRight: '8px',
-            whiteSpace: 'nowrap',
-          }}>
-            {Math.floor(elapsedSeconds / 60)} Min
-          </span>
-        )}
+        {/* Milestone-Bestätigung – gibt Orientierung ohne Druck */}
+        {(() => {
+          if (cards.length < 3) return null;
+          const ratio = currentIndex / (cards.length - 1);
+          if (ratio >= 0.45 && ratio <= 0.6) return (
+            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', whiteSpace: 'nowrap', opacity: 0.7 }}>
+              Halbzeit ✓
+            </span>
+          );
+          if (ratio > 0.8) return (
+            <span style={{ fontSize: '11px', color: 'var(--gold)', whiteSpace: 'nowrap', opacity: 0.85, fontWeight: '600' }}>
+              Fast fertig
+            </span>
+          );
+          return null;
+        })()}
         <button onClick={onExit} style={{
           background: 'none',
           border: 'none',

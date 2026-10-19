@@ -36,6 +36,7 @@ export default function SessionScreen({ block, blocks, goalType, sprintMode, lea
   const [sessionCards, setSessionCards] = useState([]);
   const [sessionStartTime] = useState(() => Date.now());
   const [sessionMood, setSessionMood] = useState(null);
+  const [cardProgress, setCardProgress] = useState({ current: 0, total: 0 });
 
   // Einmal pro Blocksession (dieser Screen wird mit key={block.id} neu
   // gemountet) melden, welches Fach gerade gelernt wird.
@@ -171,7 +172,14 @@ export default function SessionScreen({ block, blocks, goalType, sprintMode, lea
 
   return (
     <>
-      {timerActive && <SessionTimer seconds={elapsedSeconds} />}
+      {timerActive && (
+        <SessionTimer
+          seconds={elapsedSeconds}
+          totalCards={cardProgress.total}
+          completedCards={cardProgress.current}
+          estimatedMin={block?.estimatedMinutes}
+        />
+      )}
 
       {phase === PHASES.CARDS && (
         <CardLearningPhase
@@ -186,7 +194,9 @@ export default function SessionScreen({ block, blocks, goalType, sprintMode, lea
           onCardsReady={(cards) => {
             setSessionCards(cards);
             onSaveCards?.(cards);
+            setCardProgress({ current: 0, total: cards.length });
           }}
+          onCardProgress={(current, total) => setCardProgress({ current, total })}
         />
       )}
 
