@@ -195,26 +195,53 @@ Deine Aufgabe:
 9. Füge für komplexere Konzepte (nicht für Überblick, nicht für einfache Definitionen) eine optionale why_question hinzu: Eine 'Warum'- oder 'Wie kommt es dass'-Frage die zum tieferen Nachdenken anregt. Maximal 1 Satz. Nur wenn wirklich sinnvoll – lieber weglassen als eine schlechte Frage stellen.`;
 
 export function getCardSystem(goalType, mood, learningStyle) {
-  const strictness = goalType === 'exam'
-    ? '\nDer Nutzer lernt für eine Prüfung: Stelle striktere Fragen, betone was klausurrelevant ist.'
-    : goalType === 'understand'
-    ? '\nDer Nutzer lernt ohne Druck: Stelle einladende Fragen, keine strengen Prüfungsfragen.'
-    : '';
-  const moodContext = mood === 'bad'
-    ? '\nDer Nutzer fühlt sich heute nicht gut: Erkläre besonders einfach und kurz. Maximal 2 Sätze pro Erklärung. Stelle nur eine sehr einfache Frage.'
+  // Mood bestimmt Karten-Anzahl, Erklärungstiefe, Ton und Fragen-Schwierigkeit
+  const moodOverride = mood === 'bad'
+    ? `
+
+WICHTIG – Der Nutzer fühlt sich heute nicht gut. Passe alles an:
+- Erstelle nur 2-3 Karten (nicht 4-5) – wähle die absoluten Kernkonzepte
+- Jede Erklärung: maximal 2 kurze Sätze. Verwende Alltagssprache, keine Fachbegriffe ohne Erklärung
+- Nutze wo möglich eine einfache Analogie statt abstrakter Beschreibung
+- Die Frage pro Karte: so einfach wie möglich – Wiedergabe, kein Transfer, keine Mehrschrittigkeit
+- Kein pretest für diese Session – setze pretest_question auf null
+- Keine why_question – setze why_question auf null
+- Ton: fürsorglich, kein Druck, ermutigend. "Du schaffst das." – kein akademischer Stil.`
     : mood === 'okay'
-    ? '\nDer Nutzer ist heute nicht ganz fit: Halte Erklärungen übersichtlich.'
+    ? `
+
+HINWEIS – Der Nutzer ist heute nicht ganz auf der Höhe:
+- Erstelle 3-4 Karten – kein Maximum ausreizen
+- Erklärungen: klar und strukturiert, maximal 3 Sätze, keine langen Schachtelsätze
+- Fragen: Verständnis-Wiedergabe, kein komplexer Transfer
+- why_question nur wenn wirklich naheliegend – im Zweifel weglassen
+- Ton: ruhig, steady, keine Überforderung`
+    : `
+
+HINWEIS – Der Nutzer ist heute fit und motiviert:
+- Erstelle 4-5 Karten – nutze die volle Tiefe des Materials
+- Erklärungen dürfen komplex sein wenn der Inhalt es verlangt
+- Fragen: fordernd, darf Transferdenken verlangen, darf mehrschrittig sein
+- why_question aktiv nutzen wo sinnvoll – regt echtes Nachdenken an
+- Ton: motivierend, direkt, auf Augenhöhe`;
+
+  const strictness = goalType === 'exam'
+    ? '\nPrüfungsmodus: Betone was klausurrelevant ist, stelle strenge Wiedergabe- und Anwendungsfragen.'
+    : goalType === 'understand'
+    ? '\nVerstehensmodus: Stelle einladende, neugierige Fragen – keine Prüfungsatmosphäre.'
     : '';
+
   const styleContext = learningStyle === 'examples'
-    ? '\nDer Nutzer lernt am besten mit konkreten Beispielen: Nutze für jede Erklärung mindestens ein Alltagsbeispiel.'
+    ? '\nLernstil Beispiele: Nutze für jede Erklärung mindestens ein konkretes Alltagsbeispiel.'
     : learningStyle === 'connections'
-    ? '\nDer Nutzer lernt am besten durch Zusammenhänge: Erkläre wie jedes Konzept mit anderen zusammenhängt.'
+    ? '\nLernstil Zusammenhänge: Erkläre wie jedes Konzept mit anderen im Block zusammenhängt.'
     : learningStyle === 'stepbystep'
-    ? '\nDer Nutzer lernt am besten Schritt für Schritt: Erkläre in klaren, sequenziellen Schritten.'
+    ? '\nLernstil Schritt für Schritt: Erkläre in klaren, nummerierten Schritten.'
     : learningStyle === 'analogies'
-    ? '\nDer Nutzer lernt am besten mit Vergleichen und Analogien: Erkläre jedes Konzept mit einem einfachen Vergleich aus dem Alltag. Beispiel: "Das ist wie..." oder "Stell dir vor...". Erst die Analogie, dann das Konzept.'
+    ? '\nLernstil Analogien: Erkläre jedes Konzept mit einem Vergleich aus dem Alltag – erst die Analogie, dann das Konzept.'
     : '';
-  return CARD_SYSTEM + strictness + moodContext + styleContext;
+
+  return CARD_SYSTEM + moodOverride + strictness + styleContext;
 }
 
 export const cardSchema = {

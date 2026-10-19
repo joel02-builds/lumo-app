@@ -45,14 +45,34 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
   const [showRewardBurst, setShowRewardBurst] = useState(false);
 
   // Micro-Reward Pool – variable-ratio für dopaminerge Verstärkung
-  const REWARD_MESSAGES = [
-    'Das saß.',
-    'Genau so.',
-    'Gut gedacht.',
-    'Klasse.',
-    'Du hast es.',
-    'Sauber.',
-  ];
+  // Mood-adaptiv: Ton passt sich dem emotionalen Zustand an
+  const REWARD_MESSAGES_BY_MOOD = {
+    bad: [
+      'Du hast es.',
+      'Gut.',
+      'Das war richtig.',
+      'Schön.',
+      'Ja, genau.',
+      'Weiter so.',
+    ],
+    okay: [
+      'Das saß.',
+      'Genau so.',
+      'Gut gedacht.',
+      'Richtig.',
+      'Du hast es.',
+      'Sauber.',
+    ],
+    good: [
+      'Das saß. 🎯',
+      'Genau so!',
+      'Stark.',
+      'Ja! Genau das.',
+      'Du hast es drauf.',
+      'Sauber gedacht.',
+    ],
+  };
+  const REWARD_MESSAGES = REWARD_MESSAGES_BY_MOOD[mood] || REWARD_MESSAGES_BY_MOOD.okay;
 
   // Menü schließen bei Klick außerhalb
   useEffect(() => {
@@ -1083,13 +1103,17 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                 color: 'var(--text-secondary)',
                 margin: '0 0 12px',
               }}>
-                Lumo hört zu. Kein Zurückschauen.
+                {mood === 'bad'
+                  ? 'Kein Druck – schreib einfach was du weißt.'
+                  : mood === 'okay'
+                  ? 'Schreib was dir einfällt – auch ein Satz reicht.'
+                  : 'Lumo hört zu. Kein Zurückschauen.'}
               </p>
               <textarea
                 autoFocus
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
-                placeholder="Fang einfach an – auch ein Satz reicht …"
+                placeholder={mood === 'bad' ? 'Schreib einfach was du weißt …' : 'Fang einfach an – auch ein Satz reicht …'}
                 rows={4}
                 style={{
                   width: '100%',
@@ -1236,7 +1260,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                 gap: '12px',
                 alignItems: 'flex-start',
               }}>
-                <LumoMascot state={isGoodAnswer ? 'cheer' : 'learning'} label="" size="small" />
+                <LumoMascot state={isGoodAnswer ? 'cheer' : (mood === 'bad' ? 'idle' : 'learning')} label="" size="small" />
                 <p style={{
                   fontSize: '16px',
                   color: isGoodAnswer ? 'var(--green)' : 'var(--text-primary)',
@@ -1394,7 +1418,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                       cursor: 'pointer',
                     }}
                   >
-                    Nochmal versuchen
+                    {mood === 'bad' ? 'Nochmal – ich versuch\'s' : 'Nochmal versuchen'}
                   </button>
                   <button
                     onClick={handleNext}
@@ -1408,7 +1432,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                       textDecoration: 'underline',
                     }}
                   >
-                    Trotzdem weiter
+                    {mood === 'bad' ? 'Weiter – ist okay' : 'Trotzdem weiter'}
                   </button>
                 </div>
               )}
