@@ -155,8 +155,25 @@ Bestimme den Gesamtstatus:
 
 Gib 1-2 kurze Punkte, die an der Erklärung gut waren (goodPoints; leeres Array falls nichts Substanzielles da ist).
 Gib 1-2 kurze Punkte, die noch fehlten oder unklar waren (uncertainPoints; leeres Array falls alles gut war).
+
+EFFORT-PRAISE-PRINZIP (Dweck 1998 / Mueller & Dweck 1998):
+summaryText muss den PROZESS loben – was der Nutzer GETAN hat – nie was er IST.
+
+ERLAUBT:
+- "Du hast den Zusammenhang gut erklärt."
+- "Du hast die Kernidee selbst hergeleitet."
+- "Du hast das in eigenen Worten formuliert – das zeigt Verständnis."
+- "Du hast drangeblieben und es durchdacht."
+- "Du hast die wichtigsten Punkte selbst gefunden."
+
+VERBOTEN:
+- "Du bist gut." / "Du bist klug." / "Du bist toll."
+- "Richtig!" / "Stark!" / "Klasse!" / "Super!" / "Perfekt!"
+- Leeres Lob ohne Inhaltsbezug.
+- Lob das nichts über den Prozess aussagt.
+
 Der summaryText ist ein warmer, kurzer Satz (maximal 2 Sätze) direkt an den Nutzer, der die Bewertung einordnet.
-Sei niemals entmutigend, auch bei großen Lücken – bleib ermutigend und konkret.`;
+Sei niemals entmutigend, auch bei großen Lücken – bleib ermutigend und prozessorientiert.`;
 
 export const evaluateUnderstandingSchema = {
   type: 'object',

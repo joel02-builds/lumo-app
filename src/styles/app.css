@@ -204,7 +204,8 @@
   padding: 0;
 }
 .upload-chip button:hover {
-  color: var(--red);
+  color: var(--text-primary);
+  opacity: 0.7;
 }
 
 .field-error {
@@ -459,8 +460,10 @@
 .block-item--unsicher {
   border-left: 4px solid var(--yellow);
 }
+/* Lernlücken: gold statt rot – ADHS-Designprinzip: rot triggert emotionale Dysregulation.
+   Gold signalisiert "noch nicht fertig" ohne Stressreaktion. */
 .block-item--gaps {
-  border-left: 4px solid var(--red);
+  border-left: 4px solid var(--gold);
 }
 
 .block-dot {
@@ -478,17 +481,20 @@
 .dot-yellow {
   background: var(--yellow);
 }
+/* dot-red → dot-gap: Gold statt GitHub-Actions-Rot.
+   Lernlücken sind kein Fehler – sie sind der nächste Schritt.
+   ADHS-Designprinzip: var(--red) NIEMALS für Normalzustände. */
 .dot-red {
-  background: var(--red);
-  animation: dot-pulse-red 1.6s ease-in-out infinite;
+  background: var(--gold);
+  animation: dot-pulse-gold 1.6s ease-in-out infinite;
 }
-@keyframes dot-pulse-red {
+@keyframes dot-pulse-gold {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(248, 81, 73, 0.55);
+    box-shadow: 0 0 0 0 rgba(212, 168, 67, 0.55);
   }
   50% {
-    box-shadow: 0 0 0 6px rgba(248, 81, 73, 0);
+    box-shadow: 0 0 0 6px rgba(212, 168, 67, 0);
   }
 }
 .dot-check {
@@ -678,9 +684,11 @@
   background: var(--yellow-soft);
   color: var(--yellow);
 }
+/* grosse_luecken: gold statt rot – gleiche Begründung wie block-item--gaps.
+   Lücken zeigen wo man weiterlernen kann – kein Alarm, kein Fehler. */
 .verdict-block--grosse_luecken {
-  background: var(--red-soft);
-  color: var(--red);
+  background: rgba(212, 168, 67, 0.12);
+  color: var(--gold);
 }
 
 .summary-block {
@@ -731,10 +739,13 @@
 }
 
 /* ---------- Error banner ---------- */
+/* error-banner: echte Fehlermeldungen (Netzwerk, API) – hier ist rot okay,
+   aber wir nutzen den --red token (E07B54 = wärmer/orange) statt GitHub-Rot.
+   border nutzt jetzt den Token konsistent. */
 .error-banner {
   width: 100%;
   background: var(--red-soft);
-  border: 1px solid rgba(248, 81, 73, 0.35);
+  border: 1px solid rgba(224, 123, 84, 0.35);
   border-radius: 14px;
   padding: 18px 20px;
   display: flex;

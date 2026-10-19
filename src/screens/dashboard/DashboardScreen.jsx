@@ -130,6 +130,7 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
       {onSettings && (
         <button
           onClick={onSettings}
+          aria-label="Einstellungen"
           style={{
             position: 'absolute',
             top: '16px',
@@ -137,12 +138,17 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
             background: 'none',
             border: 'none',
             color: 'var(--text-secondary)',
-            fontSize: '20px',
             cursor: 'pointer',
             padding: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
-          ⚙
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </svg>
         </button>
       )}
       <div className="screen-content" style={{ maxWidth: '560px', gap: '20px' }}>
@@ -212,8 +218,11 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
         {(() => {
           const days = getDaysUntilExam(goalDate);
           if (days === null) return null;
-          const urgentColor = days <= 3 ? 'var(--red)' : days <= 7 ? 'var(--gold)' : 'var(--text-secondary)';
-          const urgentBg = days <= 3 ? 'rgba(224,123,84,0.10)' : days <= 7 ? 'rgba(212,168,67,0.10)' : 'var(--bg-card)';
+          // ADHS-Designprinzip: var(--red) NIEMALS für Normalzustände.
+          // Countdown ist Kontext, kein Alarm – intensiveres Gold statt Rot.
+          // 3 Tage: sattes Gold + stärker; 7 Tage: normales Gold; danach: dezent.
+          const urgentColor = days <= 3 ? '#F5A623' : days <= 7 ? 'var(--gold)' : 'var(--text-secondary)';
+          const urgentBg = days <= 3 ? 'rgba(245,166,35,0.15)' : days <= 7 ? 'rgba(212,168,67,0.10)' : 'var(--bg-card)';
           const label = goalType === 'exam' ? 'Prüfung' : goalType === 'homework' ? 'Abgabe' : 'Termin';
           return (
             <div style={{

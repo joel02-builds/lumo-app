@@ -24,7 +24,7 @@ export default function YoutubePanel({ concept, blockTitle, onClose, subjectColo
       width: '100%',
       background: 'var(--bg-card)',
       borderRadius: '16px',
-      border: '1px solid rgba(255,0,0,0.2)',
+      border: '1px solid var(--border)',
       borderTop: '3px solid #FF0000',
       padding: '16px',
       display: 'flex',

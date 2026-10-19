@@ -73,9 +73,9 @@ export default function OnboardingScreen1({ onNext }) {
             fontSize: '12px',
             color: 'var(--text-secondary)',
             margin: '6px 0 0',
-            fontWeight: '600',
+            opacity: 0.7,
           }}>
-            – Beta-Nutzerin, Kognitionswissenschaft
+            Feedback aus der Beta
           </p>
         </div>
 
