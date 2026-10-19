@@ -5,8 +5,9 @@ const GRADES = [
   { label: 'Sehr gut', value: 'sehr_gut', emoji: '🏆', color: '#3D9E6E' },
   { label: 'Gut', value: 'gut', emoji: '✨', color: '#D4A843' },
   { label: 'Befriedigend', value: 'befriedigend', emoji: '👍', color: '#D4A843' },
-  { label: 'Ausreichend', value: 'ausreichend', emoji: '📚', color: '#E07B54' },
-  { label: 'Nicht bestanden', value: 'nicht_bestanden', emoji: '💪', color: '#E07B54' },
+  // Absichtlich kein Rot – Prüfungsergebnis ist kein Fehler (ADHS-Designprinzip: emotionale Dysregulation)
+  { label: 'Ausreichend', value: 'ausreichend', emoji: '📚', color: '#8A9BAE' },
+  { label: 'Nicht bestanden', value: 'nicht_bestanden', emoji: '💪', color: '#8A9BAE' },
 ];
 
 export default function ExamResultScreen({ project, onDone, onDismiss }) {

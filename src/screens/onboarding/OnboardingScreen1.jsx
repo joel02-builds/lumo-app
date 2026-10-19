@@ -75,7 +75,7 @@ export default function OnboardingScreen1({ onNext }) {
             margin: '6px 0 0',
             fontWeight: '600',
           }}>
-            – Beta-Nutzer, Psychologie-Studentin
+            – Beta-Nutzerin, Kognitionswissenschaft
           </p>
         </div>
 

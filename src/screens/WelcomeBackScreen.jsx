@@ -73,15 +73,19 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHis
       const yesterday = new Date(Date.now() - 86400000).toDateString();
 
       if (streak.lastDate === today) {
+        // Bereits heute gelernt – Streak unverändert
         setStreakDays(streak.days);
       } else if (streak.lastDate === yesterday) {
+        // Gestern gelernt – Streak weiterführen
         const newStreak = { days: streak.days + 1, lastDate: today };
         localStorage.setItem('lumo_streak', JSON.stringify(newStreak));
         setStreakDays(newStreak.days);
       } else {
-        const newStreak = { days: 1, lastDate: today };
+        // Länger nicht gelernt – Streak bricht ab, neu bei 1 heute
+        // (zeige 0 bis der Nutzer heute wirklich lernt – passiert nach dem ersten Block)
+        const newStreak = { days: 0, lastDate: null };
         localStorage.setItem('lumo_streak', JSON.stringify(newStreak));
-        setStreakDays(1);
+        setStreakDays(0);
       }
     } catch {
       setStreakDays(1);
