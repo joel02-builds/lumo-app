@@ -40,6 +40,18 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
   const [bridgeVisible, setBridgeVisible] = useState(true);
   const [showYoutube, setShowYoutube] = useState(false);
   const [speaking, setSpeaking] = useState(false);
+  const [rewardMessage, setRewardMessage] = useState('');
+  const [showRewardBurst, setShowRewardBurst] = useState(false);
+
+  // Micro-Reward Pool – variable-ratio für dopaminerge Verstärkung
+  const REWARD_MESSAGES = [
+    'Das saß.',
+    'Genau so.',
+    'Gut gedacht.',
+    'Klasse.',
+    'Du hast es.',
+    'Sauber.',
+  ];
 
   // Karten laden
   useEffect(() => {
@@ -132,15 +144,26 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
       });
       setFeedback(result.feedback);
       setIsGoodAnswer(result.isGood);
+      if (result.isGood) {
+        setRewardMessage(REWARD_MESSAGES[Math.floor(Math.random() * REWARD_MESSAGES.length)]);
+        setShowRewardBurst(true);
+        setTimeout(() => setShowRewardBurst(false), 600);
+      }
       setPhase('feedback');
     } catch (err) {
       // Fallback auf lokale Bewertung wenn API fehlt
       const words = answer.trim().split(/\s+/).length;
-      setFeedback(words >= 8
+      const isGood = words >= 8;
+      setFeedback(isGood
         ? 'Das klingt richtig.'
         : 'Beschreib es etwas ausführlicher.'
       );
-      setIsGoodAnswer(words >= 8);
+      setIsGoodAnswer(isGood);
+      if (isGood) {
+        setRewardMessage(REWARD_MESSAGES[Math.floor(Math.random() * REWARD_MESSAGES.length)]);
+        setShowRewardBurst(true);
+        setTimeout(() => setShowRewardBurst(false), 600);
+      }
       setPhase('feedback');
     } finally {
       setSending(false);
@@ -1063,12 +1086,50 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
           {/* Feedback-Phase */}
           {phase === 'feedback' && (
             <>
+              {/* Micro-Reward Burst – nur bei richtiger Antwort */}
+              {isGoodAnswer && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  marginBottom: '16px',
+                }}>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    background: showRewardBurst
+                      ? 'rgba(61, 158, 110, 0.35)'
+                      : 'rgba(61, 158, 110, 0.15)',
+                    border: '2px solid var(--green)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '20px',
+                    flexShrink: 0,
+                    transform: showRewardBurst ? 'scale(1.2)' : 'scale(1)',
+                    transition: 'transform 0.25s ease, background 0.25s ease',
+                  }}>
+                    ✓
+                  </div>
+                  <p style={{
+                    fontSize: '20px',
+                    fontWeight: '700',
+                    color: 'var(--green)',
+                    margin: '0',
+                    letterSpacing: '-0.3px',
+                  }}>
+                    {rewardMessage}
+                  </p>
+                </div>
+              )}
+
               <div style={{
                 background: 'var(--bg-elevated)',
                 borderRadius: '12px',
                 padding: '16px 18px',
                 marginBottom: '16px',
-                borderLeft: '3px solid var(--gold)',
+                borderLeft: isGoodAnswer ? '3px solid var(--green)' : '3px solid var(--gold)',
               }}>
                 <p style={{
                   fontSize: '14px',
@@ -1089,7 +1150,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
               </div>
 
               <div style={{
-                background: 'rgba(212, 168, 67, 0.08)',
+                background: isGoodAnswer ? 'rgba(61, 158, 110, 0.06)' : 'rgba(212, 168, 67, 0.08)',
                 borderRadius: '12px',
                 padding: '16px 18px',
                 marginBottom: '20px',
@@ -1097,7 +1158,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                 gap: '12px',
                 alignItems: 'flex-start',
               }}>
-                <LumoMascot state="cheer" label="" size="small" />
+                <LumoMascot state={isGoodAnswer ? 'cheer' : 'learning'} label="" size="small" />
                 <p style={{
                   fontSize: '16px',
                   color: isGoodAnswer ? 'var(--green)' : 'var(--text-primary)',
