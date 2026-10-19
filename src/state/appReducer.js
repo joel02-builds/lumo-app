@@ -167,6 +167,8 @@ export function appReducer(state, action) {
     }
 
     case 'CONFIRM_MATERIAL':
+      // Onboarding abgeschlossen → InstallBanner kann auf iOS jetzt erscheinen
+      try { localStorage.setItem('lumo_onboarding_done', '1'); } catch {}
       return { ...state, screen: SCREENS.DASHBOARD };
 
     case 'UPDATE_BLOCKS_ORDER':

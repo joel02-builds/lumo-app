@@ -51,7 +51,7 @@ function countWords(text) {
   return trimmed ? trimmed.split(/\s+/).filter(Boolean).length : 0;
 }
 
-export default function OnboardingScreen1({ onNext }) {
+export default function OnboardingScreen1({ onNext, onShowLegal }) {
   const [topic, setTopic] = useState('');
   const [fileName, setFileName] = useState('');
   const [materialText, setMaterialText] = useState('');
@@ -353,6 +353,34 @@ export default function OnboardingScreen1({ onNext }) {
             }}>
               „Ich hab endlich aufgehört Lernmaterial nur durchzulesen." — Beta-Feedback
             </p>
+
+            {/* Legal footer – DSGVO-konform, dezent */}
+            {onShowLegal && (
+              <p style={{
+                fontSize: '11px',
+                color: 'var(--text-secondary)',
+                textAlign: 'center',
+                margin: '0',
+                opacity: 0.45,
+              }}>
+                <button
+                  type="button"
+                  onClick={onShowLegal}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'inherit',
+                    fontSize: 'inherit',
+                    cursor: 'pointer',
+                    padding: '0',
+                    textDecoration: 'underline',
+                    textUnderlineOffset: '2px',
+                  }}
+                >
+                  Impressum & Datenschutz
+                </button>
+              </p>
+            )}
           </div>
         )}
       </div>

@@ -1,7 +1,7 @@
 import { exportProject, importProject, exportProgressReport } from '../utils/projectExport.js';
 import { useRef, useState } from 'react';
 
-export default function SettingsScreen({ onBack, blocksAnalyzedTotal }) {
+export default function SettingsScreen({ onBack, blocksAnalyzedTotal, onShowLegal }) {
   const importRef = useRef(null);
   const [importing, setImporting] = useState(false);
   const [message, setMessage] = useState('');
@@ -104,6 +104,27 @@ export default function SettingsScreen({ onBack, blocksAnalyzedTotal }) {
           <p style={{ fontSize: '12px', color: 'var(--text-secondary)', textAlign: 'center', margin: '8px 0 0' }}>
             {blocksAnalyzedTotal} Blöcke insgesamt gelernt
           </p>
+        )}
+
+        {/* Legal link — DSGVO-konform, immer erreichbar */}
+        {onShowLegal && (
+          <button
+            onClick={onShowLegal}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-secondary)',
+              fontSize: '12px',
+              cursor: 'pointer',
+              padding: '4px 0',
+              opacity: 0.5,
+              textDecoration: 'underline',
+              textUnderlineOffset: '2px',
+              alignSelf: 'center',
+            }}
+          >
+            Impressum & Datenschutz
+          </button>
         )}
 
       </div>

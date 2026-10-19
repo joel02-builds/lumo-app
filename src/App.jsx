@@ -31,6 +31,7 @@ import LumoWordmark from './components/LumoWordmark.jsx';
 import OfflineBanner from './components/OfflineBanner.jsx';
 import InstallBanner from './components/InstallBanner.jsx';
 import BetaFeedbackButton from './components/BetaFeedbackButton.jsx';
+import LegalScreen from './screens/LegalScreen.jsx';
 
 export default function App() {
   const [state, dispatch] = useReducer(appReducer, null, () => createInitialState(loadProject()));
@@ -39,6 +40,9 @@ export default function App() {
   // Header (CardLearningPhase, ExplainChatPhase, CheckUnderstandingPhase), die
   // sonst mit der fixed positionierten LumoWordmark kollidieren würde.
   const [sessionHasOwnHeader, setSessionHasOwnHeader] = useState(false);
+
+  // Impressum/Datenschutz — overlay über allem anderen, kein eigener Screen-State nötig
+  const [showLegal, setShowLegal] = useState(false);
 
   // Storage-Status für Warning Banner
   const [storageLayer, setStorageLayer] = useState(null); // null = noch nicht geprüft
@@ -261,6 +265,11 @@ export default function App() {
 
   return (
     <>
+      {/* LegalScreen überlagert alles — via showLegal aus jedem Screen erreichbar */}
+      {showLegal && <LegalScreen onBack={() => setShowLegal(false)} />}
+
+      {!showLegal && (
+        <>
       {!isOnline && <OfflineBanner />}
       {storageLayer === 'localStorage' && <StorageWarningBanner />}
       <InstallBanner />
@@ -292,7 +301,7 @@ export default function App() {
 
       {/* Kombinierter Welcome + Material Screen (früher Screen 1 + 2 getrennt) */}
       {isWelcomeScreen && (
-        <OnboardingScreen1 onNext={handleMaterial} />
+        <OnboardingScreen1 onNext={handleMaterial} onShowLegal={() => setShowLegal(true)} />
       )}
 
       {state.screen === SCREENS.ONBOARDING && state.onboardingStep === 3 && (
@@ -357,6 +366,7 @@ export default function App() {
         <SettingsScreen
           onBack={() => dispatch({ type: 'RETURN_TO_DASHBOARD' })}
           blocksAnalyzedTotal={state.blocksAnalyzedTotal}
+          onShowLegal={() => setShowLegal(true)}
         />
       )}
 
@@ -401,6 +411,8 @@ export default function App() {
           onPause={() => dispatch({ type: 'RETURN_TO_DASHBOARD' })}
           onHeaderVisibilityChange={setSessionHasOwnHeader}
         />
+      )}
+        </>
       )}
     </>
   );
