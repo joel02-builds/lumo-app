@@ -2,6 +2,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import Anthropic from '@anthropic-ai/sdk';
 import {
   getAnalyzeSystem,
@@ -79,6 +80,43 @@ const CLAUDE_TIMEOUT_MS = 28000; // knapp unter dem 30s-Timeout des Frontends
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '35mb' }));
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Rate Limiting – schützt vor Missbrauch und unkontrollierten API-Kosten
+//
+// Warum wichtig: Ohne Rate-Limiting könnte jeder, der die URL kennt,
+// beliebig viele Anthropic-API-Calls auslösen. Bei einem Beta-Rollout mit
+// Studierenden kann das schnell teuer werden.
+//
+// Strategie: Zwei Stufen
+// 1. Globales Limit: max. 200 Requests/15min pro IP — verhindert Scripting
+// 2. Analyse-Limit: max. 10 Analysen/Stunde — das teuerste Endpoint
+//
+// In Production aktiviert; lokal deaktiviert damit Dev-Reload nicht blockiert.
+// ─────────────────────────────────────────────────────────────────────────────
+if (isProd) {
+  // Globales API-Limit
+  const globalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 Minuten
+    max: 200,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Zu viele Anfragen. Bitte warte kurz und versuche es dann nochmal.' },
+    skip: (req) => req.path === '/api/health', // Health-Check nie limitieren
+  });
+  app.use('/api/', globalLimiter);
+
+  // Strengeres Limit für Analyse (teuerster Call: ~4000 Token input)
+  const analyzeLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 Stunde
+    max: 10, // 10 Analysen/Stunde pro IP – reicht für normalen Gebrauch
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Du hast heute schon viel analysiert! Warte eine Stunde bevor du weitermachst.' },
+  });
+  app.use('/api/analyze', analyzeLimiter);
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 const client = new Anthropic({ timeout: CLAUDE_TIMEOUT_MS }); // liest ANTHROPIC_API_KEY aus der Umgebung
 
