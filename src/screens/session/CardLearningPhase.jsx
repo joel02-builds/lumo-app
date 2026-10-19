@@ -40,6 +40,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
   const [bridgeVisible, setBridgeVisible] = useState(true);
   const [showYoutube, setShowYoutube] = useState(false);
   const [speaking, setSpeaking] = useState(false);
+  const [showCardMenu, setShowCardMenu] = useState(false);
   const [rewardMessage, setRewardMessage] = useState('');
   const [showRewardBurst, setShowRewardBurst] = useState(false);
 
@@ -52,6 +53,14 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
     'Du hast es.',
     'Sauber.',
   ];
+
+  // Menü schließen bei Klick außerhalb
+  useEffect(() => {
+    if (!showCardMenu) return;
+    function handleClickOutside() { setShowCardMenu(false); }
+    document.addEventListener('click', handleClickOutside, { capture: true, once: true });
+    return () => document.removeEventListener('click', handleClickOutside, { capture: true });
+  }, [showCardMenu]);
 
   // Karten laden
   useEffect(() => {
@@ -599,25 +608,112 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
           position: 'relative',
         }}>
 
-          {phase === 'reading' && !shouldShowPretest() && typeof window !== 'undefined' && window.speechSynthesis && (
-            <button
-              onClick={() => handleSpeak(alternativeExplanation || currentCard?.explanation || '')}
-              aria-label={speaking ? 'Vorlesen stoppen' : 'Vorlesen'}
-              style={{
-                position: 'absolute',
-                top: '16px',
-                right: '16px',
-                background: 'none',
-                border: 'none',
-                color: subjectColor,
-                fontSize: '20px',
-                cursor: 'pointer',
-                padding: '4px',
-                lineHeight: 1,
-              }}
-            >
-              {speaking ? '⏹' : '🔊'}
-            </button>
+          {phase === 'reading' && !shouldShowPretest() && (
+            <div style={{ position: 'absolute', top: '12px', right: '12px' }}>
+              <button
+                onClick={() => setShowCardMenu((v) => !v)}
+                aria-label="Mehr Optionen"
+                style={{
+                  background: showCardMenu ? 'var(--bg-elevated)' : 'none',
+                  border: showCardMenu ? '1px solid var(--border)' : 'none',
+                  borderRadius: '8px',
+                  color: 'var(--text-secondary)',
+                  fontSize: '18px',
+                  cursor: 'pointer',
+                  padding: '4px 8px',
+                  lineHeight: 1,
+                  letterSpacing: '2px',
+                }}
+              >
+                ···
+              </button>
+              {showCardMenu && (
+                <div style={{
+                  position: 'absolute',
+                  top: '36px',
+                  right: '0',
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '12px',
+                  padding: '6px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '2px',
+                  minWidth: '160px',
+                  zIndex: 10,
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                }}>
+                  {typeof window !== 'undefined' && window.speechSynthesis && (
+                    <button
+                      onClick={() => {
+                        handleSpeak(alternativeExplanation || currentCard?.explanation || '');
+                        setShowCardMenu(false);
+                      }}
+                      style={{
+                        background: speaking ? 'rgba(212,168,67,0.1)' : 'none',
+                        border: 'none',
+                        borderRadius: '8px',
+                        color: speaking ? 'var(--gold)' : 'var(--text-primary)',
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        padding: '10px 14px',
+                        textAlign: 'left',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                      }}
+                    >
+                      <span>{speaking ? '⏹' : '🔊'}</span>
+                      {speaking ? 'Stoppen' : 'Vorlesen'}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      setNoteOpen((v) => !v);
+                      setShowCardMenu(false);
+                    }}
+                    style={{
+                      background: noteText ? 'rgba(212,168,67,0.1)' : 'none',
+                      border: 'none',
+                      borderRadius: '8px',
+                      color: noteText ? 'var(--gold)' : 'var(--text-primary)',
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                      padding: '10px 14px',
+                      textAlign: 'left',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                    }}
+                  >
+                    <span>📝</span>
+                    {noteText ? 'Notiz bearbeiten' : 'Notiz hinzufügen'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowYoutube(true);
+                      setShowCardMenu(false);
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      borderRadius: '8px',
+                      color: 'var(--text-primary)',
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                      padding: '10px 14px',
+                      textAlign: 'left',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                    }}
+                  >
+                    <span>▶</span>
+                    Video-Erklärung
+                  </button>
+                </div>
+              )}
+            </div>
           )}
 
           {/* Konzept-Label */}
@@ -805,45 +901,27 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
             </div>
           )}
 
-          {phase === 'reading' && !shouldShowPretest() && (
+          {phase === 'reading' && !shouldShowPretest() && noteOpen && (
             <div style={{ width: '100%', marginBottom: '16px' }}>
-              <button
-                onClick={() => setNoteOpen(!noteOpen)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: noteText ? 'var(--gold)' : 'var(--text-secondary)',
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                  padding: '4px 0',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
+              <textarea
+                value={noteText}
+                onChange={(e) => {
+                  setNoteText(e.target.value);
+                  saveNote(e.target.value);
                 }}
-              >
-                <span>{noteOpen ? '▾' : '▸'}</span>
-                {noteText ? 'Notiz bearbeiten' : '+ Notiz zu dieser Karte'}
-              </button>
-              {noteOpen && (
-                <textarea
-                  value={noteText}
-                  onChange={(e) => {
-                    setNoteText(e.target.value);
-                    saveNote(e.target.value);
-                  }}
-                  placeholder="Schreib dir etwas auf …"
-                  rows={3}
-                  style={{
-                    width: '100%',
-                    marginTop: '6px',
-                    fontSize: '14px',
-                    borderRadius: '8px',
-                    resize: 'none',
-                    background: 'var(--bg-elevated)',
-                    border: '1px solid var(--border)',
-                  }}
-                />
-              )}
+                placeholder="Schreib dir etwas auf …"
+                rows={3}
+                autoFocus
+                style={{
+                  width: '100%',
+                  fontSize: '14px',
+                  borderRadius: '8px',
+                  resize: 'none',
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--border)',
+                  boxSizing: 'border-box',
+                }}
+              />
             </div>
           )}
 
@@ -1357,27 +1435,6 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
             style={{ background: 'none', border: 'none', cursor: 'pointer' }}
           >
             Ich möchte lieber frei nachfragen
-          </button>
-        )}
-
-        {phase === 'reading' && !showYoutube && (
-          <button
-            onClick={() => setShowYoutube(true)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--text-secondary)',
-              fontSize: '13px',
-              cursor: 'pointer',
-              padding: '4px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              textDecoration: 'underline',
-            }}
-          >
-            <span style={{ fontSize: '12px' }}>▶</span>
-            Video-Erklärung ansehen
           </button>
         )}
 
