@@ -209,8 +209,14 @@
 }
 
 .field-error {
-  color: var(--red);
+  /* No-Red Principle: var(--amber) statt var(--red) — ADHS-Nutzende reagieren
+     auf roten Text mit emotionaler Dysregulation, besonders beim ersten Kontakt
+     (Onboarding). Fehler sind Information, keine Strafe. */
+  color: var(--amber);
   font-size: 15px;
+  padding: 6px 10px;
+  background: var(--amber-soft);
+  border-radius: 8px;
 }
 .field-notice {
   color: var(--gold);

@@ -14,7 +14,7 @@ import { clearAllNotes } from './utils/notesStorage.js';
 import { startKeepAlive } from './utils/keepAlive.js';
 import StorageWarningBanner from './components/StorageWarningBanner.jsx';
 import OnboardingScreen1 from './screens/onboarding/OnboardingScreen1.jsx';
-import OnboardingScreen2 from './screens/onboarding/OnboardingScreen2.jsx';
+// OnboardingScreen2 wurde in OnboardingScreen1 zusammengeführt (Welcome + Material in einem Schritt)
 import OnboardingScreen3 from './screens/onboarding/OnboardingScreen3.jsx';
 import AnalyzingScreen from './screens/AnalyzingScreen.jsx';
 import DashboardScreen from './screens/dashboard/DashboardScreen.jsx';
