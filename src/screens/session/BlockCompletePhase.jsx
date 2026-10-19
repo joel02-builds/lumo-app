@@ -278,17 +278,8 @@ export default function BlockCompletePhase({ block, result, cards, onContinue, o
         gap: '10px',
       }}>
         <Button onClick={onContinue} style={{ width: '100%' }}>
-          {isGood ? 'Weiter lernen →' : 'Verstanden, weiter'}
+          {isGood ? 'Weiter lernen →' : 'Verstanden, weiter →'}
         </Button>
-        {!isGood && (
-          <button onClick={onContinue} style={{
-            background: 'none', border: 'none',
-            color: 'var(--text-secondary)', fontSize: '13px',
-            cursor: 'pointer', textDecoration: 'underline',
-          }}>
-            Nochmal angehen
-          </button>
-        )}
         <button
           onClick={onPause}
           style={{

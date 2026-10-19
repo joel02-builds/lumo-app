@@ -46,7 +46,7 @@ export default function BetaFeedbackButton() {
         aria-label="Feedback geben"
         style={{
           position: 'fixed',
-          bottom: '24px',
+          bottom: '84px',
           right: '20px',
           zIndex: 900,
           width: '44px',

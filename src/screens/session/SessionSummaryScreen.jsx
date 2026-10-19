@@ -239,7 +239,7 @@ export default function SessionSummaryScreen({ block, evaluation, onContinue, on
                 cursor: 'pointer',
               }}
             >
-              Weiter lernen
+              Nächsten Block starten →
             </button>
           )}
           <button
