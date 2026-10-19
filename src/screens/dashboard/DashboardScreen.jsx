@@ -57,10 +57,12 @@ function BlockDot({ block, subjectColor }) {
     );
   }
   if (block.status === 'completed') {
+    // grosse_luecken: neutral grau — kein Fehler, nur frühe Phase
     return (
       <div style={{
         width: '10px', height: '10px', borderRadius: '50%',
-        background: 'var(--red)', flexShrink: 0,
+        background: 'var(--text-secondary)', flexShrink: 0,
+        opacity: 0.5,
       }} />
     );
   }
@@ -370,7 +372,7 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
                           fontWeight: '700',
                           letterSpacing: '1px',
                           textTransform: 'uppercase',
-                          color: 'var(--red)',
+                          color: 'var(--gold)',
                           margin: '0 0 8px',
                         }}>
                           Noch wiederholen
@@ -381,7 +383,7 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
                               fontSize: '13px',
                               color: 'var(--text-secondary)',
                               paddingLeft: '12px',
-                              borderLeft: '2px solid var(--red)',
+                              borderLeft: '2px solid var(--gold)',
                               lineHeight: '1.4',
                             }}>
                               {point}
@@ -397,10 +399,10 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
                       style={{
                         width: '100%',
                         background: isDone && (b.confidence === 'unsicher' || b.confidence === 'grosse_luecken')
-                          ? 'var(--red)'
+                          ? 'var(--gold)'
                           : isNext ? color : 'var(--bg-card-bright)',
                         color: isDone && (b.confidence === 'unsicher' || b.confidence === 'grosse_luecken')
-                          ? 'white'
+                          ? '#1a1206'
                           : isNext ? '#1a1206' : 'var(--text-primary)',
                         border: isDone && (b.confidence === 'unsicher' || b.confidence === 'grosse_luecken')
                           ? 'none'
@@ -445,7 +447,7 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
             style={{
               width: '100%',
               background: 'var(--bg-card)',
-              border: `1px solid ${flashcardsCount > 5 ? 'var(--red)' : 'var(--border)'}`,
+              border: `1px solid ${flashcardsCount > 5 ? 'var(--gold)' : 'var(--border)'}`,
               borderRadius: '14px',
               padding: '14px 18px',
               cursor: 'pointer',
@@ -474,7 +476,7 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
             style={{
               background: 'none',
               border: 'none',
-              color: weakCount > 0 ? 'var(--red)' : 'var(--text-secondary)',
+              color: weakCount > 0 ? 'var(--gold)' : 'var(--text-secondary)',
               fontSize: '13px',
               cursor: 'pointer',
               padding: '8px',

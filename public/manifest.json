@@ -7,8 +7,24 @@
   "background_color": "#0F1920",
   "theme_color": "#D4A843",
   "orientation": "portrait",
+  "categories": ["education", "productivity"],
   "icons": [
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/icon-512.png", "sizes": "192x192", "type": "image/png" }
-  ]
+    {
+      "src": "/icon-512.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": []
 }

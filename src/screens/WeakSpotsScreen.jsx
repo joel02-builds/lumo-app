@@ -99,7 +99,7 @@ export default function WeakSpotsScreen({ blocks, flashcards, onBack, onStartBlo
         }}>
           <MasteryRing
             percent={masteryPercent}
-            color={masteryPercent >= 80 ? 'var(--green)' : masteryPercent >= 50 ? 'var(--gold)' : 'var(--red)'}
+            color={masteryPercent >= 80 ? 'var(--green)' : 'var(--gold)'}
             size={80}
           />
           <div style={{ flex: 1 }}>
@@ -110,7 +110,7 @@ export default function WeakSpotsScreen({ blocks, flashcards, onBack, onStartBlo
               <span style={{ fontSize: '13px', color: 'var(--green)' }}>
                 ✓ {strongBlocks.length} verstanden
               </span>
-              <span style={{ fontSize: '13px', color: 'var(--red)' }}>
+              <span style={{ fontSize: '13px', color: 'var(--gold)' }}>
                 ○ {weakBlocks.length} wiederholen
               </span>
               <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
@@ -191,7 +191,7 @@ export default function WeakSpotsScreen({ blocks, flashcards, onBack, onStartBlo
                   background: 'var(--bg-card)',
                   borderRadius: '14px',
                   padding: '14px 16px',
-                  borderLeft: `4px solid ${isStrong ? 'var(--green)' : isWeak ? 'var(--red)' : color}`,
+                  borderLeft: `4px solid ${isStrong ? 'var(--green)' : isWeak ? 'var(--gold)' : color}`,
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
@@ -203,7 +203,7 @@ export default function WeakSpotsScreen({ blocks, flashcards, onBack, onStartBlo
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                       <span style={{
                         fontSize: '12px',
-                        color: isStrong ? 'var(--green)' : isWeak ? 'var(--red)' : 'var(--text-secondary)',
+                        color: isStrong ? 'var(--green)' : isWeak ? 'var(--gold)' : 'var(--text-secondary)',
                         fontWeight: '500',
                       }}>
                         {isStrong ? '✓ Verstanden' : isWeak ? '○ Wiederholen' : b.status === 'completed' ? '✓ Abgeschlossen' : '— Offen'}
@@ -227,14 +227,14 @@ export default function WeakSpotsScreen({ blocks, flashcards, onBack, onStartBlo
                     )}
                   </div>
                   {pct !== null && (
-                    <MasteryRing percent={pct} color={isStrong ? 'var(--green)' : isWeak ? 'var(--red)' : color} size={48} />
+                    <MasteryRing percent={pct} color={isStrong ? 'var(--green)' : isWeak ? 'var(--gold)' : color} size={48} />
                   )}
                   {isWeak && (
                     <button
                       onClick={() => onStartBlock(b.id)}
                       style={{
-                        background: 'var(--red)',
-                        color: 'white',
+                        background: 'var(--gold)',
+                        color: '#1a1206',
                         border: 'none',
                         borderRadius: '8px',
                         padding: '8px 12px',
@@ -268,8 +268,8 @@ export default function WeakSpotsScreen({ blocks, flashcards, onBack, onStartBlo
                 width: '100%',
                 background: 'var(--bg-card)',
                 borderRadius: '14px',
-                border: '1px solid rgba(224,123,84,0.3)',
-                borderLeft: '4px solid var(--red)',
+                border: '1px solid rgba(212,168,67,0.25)',
+                borderLeft: '4px solid var(--gold)',
                 padding: '16px 18px',
                 display: 'flex',
                 flexDirection: 'column',
@@ -293,7 +293,7 @@ export default function WeakSpotsScreen({ blocks, flashcards, onBack, onStartBlo
                         fontSize: '13px',
                         color: 'var(--text-secondary)',
                         paddingLeft: '10px',
-                        borderLeft: '2px solid var(--red)',
+                        borderLeft: '2px solid rgba(212,168,67,0.4)',
                         lineHeight: '1.4',
                       }}>
                         {point}
@@ -305,8 +305,8 @@ export default function WeakSpotsScreen({ blocks, flashcards, onBack, onStartBlo
                   onClick={() => onStartBlock(b.id)}
                   style={{
                     width: '100%',
-                    background: 'var(--red)',
-                    color: 'white',
+                    background: 'var(--gold)',
+                    color: '#1a1206',
                     border: 'none',
                     borderRadius: '10px',
                     padding: '11px',

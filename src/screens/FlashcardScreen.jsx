@@ -396,7 +396,7 @@ export default function FlashcardScreen({ flashcards, onUpdateFlashcard, onRemov
           paddingBottom: '2px',
         }}>
           {[
-            { label: 'Fällig', value: dueCards.length, color: 'var(--red)', id: 'due' },
+            { label: 'Fällig', value: dueCards.length, color: 'var(--gold)', id: 'due' },
             { label: 'Alle', value: flashcards.filter(c => c.status !== 'mastered').length, color: 'var(--text-secondary)', id: 'all' },
             { label: 'Gemeistert', value: flashcards.filter(c => c.status === 'mastered').length, color: 'var(--green)', id: 'mastered' },
           ].map(stat => (

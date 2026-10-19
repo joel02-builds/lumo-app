@@ -20,6 +20,8 @@ import MaterialConfirmationScreen from './screens/MaterialConfirmationScreen.jsx
 import ErrorBanner from './components/ErrorBanner.jsx';
 import LumoWordmark from './components/LumoWordmark.jsx';
 import OfflineBanner from './components/OfflineBanner.jsx';
+import InstallBanner from './components/InstallBanner.jsx';
+import BetaFeedbackButton from './components/BetaFeedbackButton.jsx';
 
 export default function App() {
   const [state, dispatch] = useReducer(appReducer, null, () => createInitialState(loadProject()));
@@ -174,6 +176,8 @@ export default function App() {
   return (
     <>
       {!isOnline && <OfflineBanner />}
+      <InstallBanner />
+      <BetaFeedbackButton />
 
       {!isWelcomeScreen && (
         <LumoWordmark

@@ -426,8 +426,8 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
         ) : (
           <div style={{ width: '100%', maxWidth: '560px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{
-              background: finalFeedback.isGood ? 'var(--green-soft)' : 'var(--red-soft)',
-              border: `1px solid ${finalFeedback.isGood ? 'var(--green)' : 'var(--red)'}`,
+              background: finalFeedback.isGood ? 'var(--green-soft)' : 'rgba(212,168,67,0.08)',
+              border: `1px solid ${finalFeedback.isGood ? 'var(--green)' : 'rgba(212,168,67,0.3)'}`,
               borderRadius: '16px',
               padding: '20px 24px',
             }}>
@@ -1100,7 +1100,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                 <LumoMascot state="cheer" label="" size="small" />
                 <p style={{
                   fontSize: '16px',
-                  color: isGoodAnswer ? 'var(--green)' : 'var(--red)',
+                  color: isGoodAnswer ? 'var(--green)' : 'var(--text-primary)',
                   margin: '0',
                   lineHeight: '1.5',
                   fontWeight: '500',
