@@ -38,6 +38,23 @@ function getDaysSinceLastLearning(blocks) {
   return Math.floor((new Date() - lastCompleted) / (1000 * 60 * 60 * 24));
 }
 
+// Abwesenheits-Adaption: Gibt zurück ob und wie lange der Nutzer weg war
+function getAbsenceInfo(blocks) {
+  const days = getDaysSinceLastLearning(blocks);
+  if (!days || days < 2) return null; // unter 2 Tage = normal, keine Adaption nötig
+  return {
+    days,
+    isLong: days >= 7,  // "lange" Abwesenheit = intensivere Nachricht
+    message: days === 2
+      ? 'Du warst 2 Tage weg.'
+      : days < 7
+      ? `Du warst ${days} Tage weg.`
+      : days < 14
+      ? `Du warst ${days} Tage weg.`
+      : `Du warst ${days} Tage nicht hier.`,
+  };
+}
+
 function getLernzeitHinweis() {
   const hour = new Date().getHours();
   if (hour >= 6 && hour < 9) {
@@ -62,6 +79,9 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHis
   const topSubject = subjectHistory
     ?.slice()
     .sort((a, b) => b.count - a.count)[0]?.subject;
+
+  // Abwesenheits-Adaption
+  const absenceInfo = !allDone ? getAbsenceInfo(safeBlocks) : null;
 
   const [streakDays, setStreakDays] = useState(0);
 
@@ -129,6 +149,11 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHis
           {allDone ? (
             <p style={{ color: 'var(--gold)', fontWeight: '600', fontSize: '18px' }}>
               Du hast alle {total} Blöcke geschafft. Starkes Lernen.
+            </p>
+          ) : absenceInfo ? (
+            // Bei Abwesenheit: sanfter Wiedereinstieg, kein Block-Zähler-Druck
+            <p style={{ color: 'var(--text-secondary)', fontSize: '17px', lineHeight: '1.5' }}>
+              Schön dass du wieder da bist.
             </p>
           ) : (
             <p style={{ color: 'var(--text-secondary)', fontSize: '17px', lineHeight: '1.5' }}>
@@ -214,27 +239,41 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHis
           );
         })()}
 
-        {(() => {
-          const days = getDaysSinceLastLearning(safeBlocks);
-          if (!days || days < 7) return null;
-          return (
-            <div style={{
-              width: '100%',
-              background: 'rgba(212, 168, 67, 0.08)',
-              border: '1px solid rgba(212, 168, 67, 0.2)',
-              borderRadius: '14px',
-              padding: '16px 18px',
-              textAlign: 'center',
+        {/* Abwesenheits-Adaption: Lumo passt Plan an, kein Shame */}
+        {absenceInfo && (
+          <div style={{
+            width: '100%',
+            background: absenceInfo.isLong
+              ? 'rgba(61, 158, 110, 0.07)'
+              : 'rgba(212, 168, 67, 0.07)',
+            border: `1px solid ${absenceInfo.isLong ? 'rgba(61, 158, 110, 0.25)' : 'rgba(212, 168, 67, 0.25)'}`,
+            borderRadius: '16px',
+            padding: '18px 20px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '6px',
+          }}>
+            <p style={{
+              fontSize: '15px',
+              fontWeight: '700',
+              color: 'var(--text-primary)',
+              margin: '0',
+              lineHeight: '1.4',
             }}>
-              <p style={{ fontSize: '15px', color: 'var(--text-primary)', margin: '0 0 4px', fontWeight: '600' }}>
-                {days} Tage. Willkommen zurück.
-              </p>
-              <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: '0', lineHeight: '1.5' }}>
-                Ich bin noch hier. Fangen wir da an wo du aufgehört hast.
-              </p>
-            </div>
-          );
-        })()}
+              {absenceInfo.message} Ich habe deinen Plan angepasst.
+            </p>
+            <p style={{
+              fontSize: '13px',
+              color: 'var(--text-secondary)',
+              margin: '0',
+              lineHeight: '1.5',
+            }}>
+              {absenceInfo.isLong
+                ? 'Kein Stress. Ein Block reicht heute – ich zeige dir den wichtigsten.'
+                : 'Fang einfach an. Ich zeige dir wo es weitergeht.'}
+            </p>
+          </div>
+        )}
 
         {shouldAskExamResult(safeBlocks, goalType, examResult, examResultAskedAt) && (
           <button
@@ -259,6 +298,9 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHis
         )}
 
         {(() => {
+          // Bei Abwesenheit (>1 Tag) keinen Due-Pile zeigen – kein Shame,
+          // Lumo wählt stattdessen einen Block (im "Ich empfehle"-Block unten).
+          if (absenceInfo) return null;
           const dueBlocks = getBlocksDueToday(safeBlocks);
           if (dueBlocks.length === 0) return null;
           return (
@@ -308,8 +350,10 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHis
         {next && !allDone && (
           <div style={{
             width: '100%',
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border)',
+            background: absenceInfo ? 'var(--bg-card-bright)' : 'var(--bg-card)',
+            border: absenceInfo
+              ? '1px solid rgba(212, 168, 67, 0.4)'
+              : '1px solid var(--border)',
             borderRadius: '16px',
             padding: '20px 24px',
             textAlign: 'left',
@@ -322,22 +366,33 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHis
               color: 'var(--gold)',
               marginBottom: '6px',
             }}>
-              Ich empfehle
+              {absenceInfo ? 'Lumo hat gewählt' : 'Ich empfehle'}
             </p>
             <p style={{
               fontSize: '18px',
               fontWeight: '600',
               color: 'var(--text-primary)',
               lineHeight: '1.3',
+              marginBottom: absenceInfo ? '8px' : '0',
             }}>
               {next.title}
             </p>
+            {absenceInfo && (
+              <p style={{
+                fontSize: '13px',
+                color: 'var(--text-secondary)',
+                margin: '0',
+                lineHeight: '1.4',
+              }}>
+                Das ist heute das Wichtigste. Alles andere kommt danach.
+              </p>
+            )}
           </div>
         )}
 
         {next && !allDone ? (
           <Button onClick={() => onStartBlock(next.id)} style={{ width: '100%' }}>
-            Weiter lernen
+            {absenceInfo ? 'Jetzt starten →' : 'Weiter lernen'}
           </Button>
         ) : allDone ? (
           <Button onClick={onNewProject} style={{ width: '100%' }}>
