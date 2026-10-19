@@ -1,7 +1,14 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import LumoMascot from '../components/LumoMascot.jsx';
 import { getSubjectColor } from '../utils/subjectColors.js';
-import { calculateNextReview, getDueCards, buildInterleavedQueue } from '../utils/sm2.js';
+import {
+  calculateNextReview,
+  getDueCards,
+  buildInterleavedQueue,
+  getRetentionPercent,
+  needsMigration,
+  migrateSM2ToFSRS,
+} from '../utils/fsrs.js';
 
 const DIFFICULTY_COLORS = {
   leicht: '#3D9E6E',
@@ -10,16 +17,92 @@ const DIFFICULTY_COLORS = {
 };
 
 const QUALITY_OPTIONS = [
-  { value: 0, label: 'Keine Ahnung', color: '#E07B54', bg: 'rgba(224,123,84,0.1)' },
-  { value: 1, label: 'Schwer', color: '#E07B54', bg: 'rgba(224,123,84,0.1)' },
-  { value: 2, label: 'Mittel', color: '#D4A843', bg: 'rgba(212,168,67,0.1)' },
-  { value: 3, label: 'Leicht', color: '#3D9E6E', bg: 'rgba(61,158,110,0.1)' },
+  { value: 0, label: 'Keine Ahnung', color: 'var(--red)',   bg: 'var(--red-soft)' },
+  { value: 1, label: 'Schwer',       color: 'var(--amber)', bg: 'var(--amber-soft)' },
+  { value: 2, label: 'Mittel',       color: 'var(--gold)',  bg: 'var(--gold-soft)' },
+  { value: 3, label: 'Leicht',       color: 'var(--green)', bg: 'var(--green-soft)' },
 ];
+
+/**
+ * Berechnet Intervall-Vorschauen für die Bewertungs-Buttons.
+ * Zeigt dem Nutzer: "Wieder in 1 Tag", "In 3 Tagen", etc.
+ */
+function getIntervalPreview(card, quality) {
+  try {
+    const result = calculateNextReview(card, quality);
+    const days = result.interval || 1;
+    if (days === 0) return 'Gleich';
+    if (days < 1) return `${Math.round(days * 24)}h`;
+    if (days === 1) return '1 Tag';
+    if (days < 30) return `${Math.round(days)} Tage`;
+    if (days < 365) return `${Math.round(days / 30)} Wochen`;
+    return `${Math.round(days / 365)} J.`;
+  } catch {
+    return null;
+  }
+}
+
+// ─── TTS Hook: Web Speech API ─────────────────────────────────────────────────
+// Evidenz: Dual Coding Theory (Paivio, 1971) – auditive + visuelle Verarbeitung
+// aktiviert verschiedene Gedächtniskanäle, stärkt Enkodierung.
+// ADHS-spezifisch: TTS hilft Nutzern, die visuell-motorisch abgelenkt werden.
+// Implementierung: Web Speech API (kein Server, kein Key, funktioniert offline).
+
+function useTTS() {
+  const [speaking, setSpeaking] = useState(false);
+  const utteranceRef = useRef(null);
+
+  const speak = useCallback((text) => {
+    if (!('speechSynthesis' in window)) return;
+
+    // Laufende Ausgabe stoppen
+    window.speechSynthesis.cancel();
+
+    if (speaking) {
+      setSpeaking(false);
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'de-DE';
+    utterance.rate = 0.95;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+
+    // Bevorzugt deutsche Stimme wenn verfügbar
+    const voices = window.speechSynthesis.getVoices();
+    const germanVoice = voices.find(v => v.lang.startsWith('de'));
+    if (germanVoice) utterance.voice = germanVoice;
+
+    utterance.onstart = () => setSpeaking(true);
+    utterance.onend = () => setSpeaking(false);
+    utterance.onerror = () => setSpeaking(false);
+
+    utteranceRef.current = utterance;
+    window.speechSynthesis.speak(utterance);
+  }, [speaking]);
+
+  const stop = useCallback(() => {
+    window.speechSynthesis.cancel();
+    setSpeaking(false);
+  }, []);
+
+  // Cleanup bei Unmount
+  useEffect(() => () => { window.speechSynthesis.cancel(); }, []);
+
+  const isSupported = 'speechSynthesis' in window;
+
+  return { speak, stop, speaking, isSupported };
+}
 
 function FlashCard({ card, onRate, onRemove, subjectColor }) {
   const [flipped, setFlipped] = useState(false);
   const [showHint, setShowHint] = useState(false);
+  const { speak, speaking, isSupported: ttsSupported } = useTTS();
   const color = card.subjectColor || subjectColor || getSubjectColor(card.subject);
+
+  // FSRS Retention Prozentsatz anzeigen
+  const retentionPct = getRetentionPercent(card);
 
   const daysUntilReview = card.nextReview
     ? Math.max(0, Math.ceil((new Date(card.nextReview) - new Date()) / (1000 * 60 * 60 * 24)))
@@ -82,16 +165,44 @@ function FlashCard({ card, onRate, onRemove, subjectColor }) {
               {card.difficulty}
             </span>
           </div>
-          <button
-            onClick={(e) => { e.stopPropagation(); onRemove(card.id); }}
-            style={{
-              background: 'none', border: 'none',
-              color: 'var(--text-secondary)', cursor: 'pointer',
-              fontSize: '14px', padding: '2px', flexShrink: 0,
-            }}
-          >
-            ✕
-          </button>
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            {/* TTS: Vorlesen-Button */}
+            {ttsSupported && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const text = flipped
+                    ? `Antwort: ${card.answer}`
+                    : `Frage: ${card.question}`;
+                  speak(text);
+                }}
+                title={speaking ? 'Stopp' : 'Vorlesen'}
+                style={{
+                  background: speaking ? 'rgba(212,168,67,0.15)' : 'none',
+                  border: speaking ? '1px solid var(--gold)' : 'none',
+                  borderRadius: '8px',
+                  color: speaking ? 'var(--gold)' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  padding: '3px 6px',
+                  flexShrink: 0,
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {speaking ? '⏹' : '🔊'}
+              </button>
+            )}
+            <button
+              onClick={(e) => { e.stopPropagation(); onRemove(card.id); }}
+              style={{
+                background: 'none', border: 'none',
+                color: 'var(--text-secondary)', cursor: 'pointer',
+                fontSize: '14px', padding: '2px', flexShrink: 0,
+              }}
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
         {/* Konzept */}
@@ -129,16 +240,29 @@ function FlashCard({ card, onRate, onRemove, subjectColor }) {
           </p>
         )}
 
-        {/* Review-Info */}
-        {card.repetitions > 0 && !flipped && (
+        {/* FSRS Review-Info */}
+        {!flipped && (card.fsrs || card.repetitions > 0) && (
           <div style={{
             position: 'absolute',
             bottom: '12px',
             right: '16px',
-            fontSize: '11px',
-            color: 'var(--text-secondary)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
           }}>
-            {daysUntilReview === 0 ? 'Heute fällig' : `In ${daysUntilReview} Tagen`}
+            {/* Retention-Indikator */}
+            {retentionPct < 100 && (
+              <div style={{
+                fontSize: '11px',
+                color: retentionPct < 50 ? 'var(--red)' : retentionPct < 80 ? 'var(--amber)' : 'var(--green)',
+                fontWeight: '600',
+              }}>
+                {retentionPct}%
+              </div>
+            )}
+            <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+              {daysUntilReview === 0 ? 'Heute fällig' : `In ${daysUntilReview} Tagen`}
+            </div>
           </div>
         )}
       </div>
@@ -172,7 +296,7 @@ function FlashCard({ card, onRate, onRemove, subjectColor }) {
         </div>
       )}
 
-      {/* SM-2 Bewertung nach Aufdecken */}
+      {/* FSRS-6 Bewertung nach Aufdecken */}
       {flipped && (
         <div style={{
           display: 'grid',
@@ -180,30 +304,130 @@ function FlashCard({ card, onRate, onRemove, subjectColor }) {
           gap: '8px',
           marginTop: '12px',
         }}>
-          {QUALITY_OPTIONS.map(opt => (
-            <button
-              key={opt.value}
-              onClick={() => {
-                const updates = calculateNextReview(card, opt.value);
-                onRate(card.id, updates);
-              }}
-              style={{
-                background: opt.bg,
-                color: opt.color,
-                border: `1px solid ${opt.color}44`,
-                borderRadius: '12px',
-                padding: '12px',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              {opt.label}
-            </button>
-          ))}
+          {QUALITY_OPTIONS.map(opt => {
+            const preview = getIntervalPreview(card, opt.value);
+            return (
+              <button
+                key={opt.value}
+                onClick={() => {
+                  const updates = calculateNextReview(card, opt.value);
+                  onRate(card.id, updates);
+                }}
+                style={{
+                  background: opt.bg,
+                  color: opt.color,
+                  border: `1px solid ${opt.color}44`,
+                  borderRadius: '12px',
+                  padding: '10px 12px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '3px',
+                }}
+              >
+                <span>{opt.label}</span>
+                {preview && (
+                  <span style={{
+                    fontSize: '11px',
+                    fontWeight: '400',
+                    opacity: 0.75,
+                  }}>
+                    {preview}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Subject-Change-Transition-Card ─────────────────────────────────────────
+// Erscheint zwischen Karten verschiedener Fächer (Interleaving-Cue).
+// Evidenz: Kornell & Bjork (2008) – Interleaving verbessert Transfer, aber
+// überraschende Themenwechsel können desorientieren → sanfte Übergangskarte.
+
+function SubjectTransitionCard({ fromSubject, toSubject, subjectColor, onContinue }) {
+  return (
+    <div style={{
+      width: '100%',
+      maxWidth: '400px',
+      margin: '0 auto',
+      background: 'var(--bg-card)',
+      border: `2px solid ${subjectColor || 'var(--gold)'}`,
+      borderRadius: '20px',
+      padding: '28px 24px',
+      textAlign: 'center',
+      animation: 'fadeIn 0.3s ease',
+    }}>
+      <div style={{
+        width: '44px',
+        height: '44px',
+        borderRadius: '50%',
+        background: subjectColor ? `${subjectColor}22` : 'var(--gold-soft)',
+        border: `2px solid ${subjectColor || 'var(--gold)'}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        margin: '0 auto 16px',
+        fontSize: '20px',
+      }}>
+        🔀
+      </div>
+
+      <p style={{
+        fontSize: '11px',
+        fontWeight: '700',
+        letterSpacing: '1.4px',
+        textTransform: 'uppercase',
+        color: subjectColor || 'var(--gold)',
+        margin: '0 0 8px',
+      }}>
+        Themenwechsel
+      </p>
+
+      <h2 style={{ fontSize: '18px', margin: '0 0 6px', lineHeight: '1.3' }}>
+        Weiter mit: {toSubject}
+      </h2>
+
+      {fromSubject && (
+        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 20px' }}>
+          Vorher: {fromSubject}
+        </p>
+      )}
+
+      <p style={{
+        fontSize: '13px',
+        color: 'var(--text-secondary)',
+        lineHeight: '1.5',
+        margin: '0 0 20px',
+        fontStyle: 'italic',
+      }}>
+        Zwischen verschiedenen Themen zu wechseln stärkt das Langzeitgedächtnis.
+      </p>
+
+      <button
+        onClick={onContinue}
+        style={{
+          background: subjectColor || 'var(--gold)',
+          color: subjectColor ? '#fff' : '#1a1206',
+          border: 'none',
+          borderRadius: '12px',
+          padding: '12px 28px',
+          fontSize: '15px',
+          fontWeight: '700',
+          cursor: 'pointer',
+          width: '100%',
+        }}
+      >
+        Weiter →
+      </button>
     </div>
   );
 }
@@ -215,6 +439,23 @@ export default function FlashcardScreen({ flashcards, onUpdateFlashcard, onRemov
   const [sessionDone, setSessionDone] = useState(false);
   const [ratedCount, setRatedCount] = useState(0);
   const [queueIds, setQueueIds] = useState([]);
+  // Interleaving Transition: zeigt Übergangs-Karte bei Fach-Wechsel
+  const [subjectTransition, setSubjectTransition] = useState(null); // {from, to, color} | null
+
+  // SM-2 → FSRS Migration beim ersten Laden
+  // Karten die noch kein `fsrs`-Feld haben werden einmalig migriert
+  useEffect(() => {
+    const toMigrate = flashcards.filter(needsMigration);
+    if (toMigrate.length === 0) return;
+    toMigrate.forEach(card => {
+      const migrated = migrateSM2ToFSRS(card);
+      onUpdateFlashcard(card.id, {
+        fsrs: migrated.fsrs,
+        _algorithm: 'fsrs6',
+        _migratedFromSM2: true,
+      });
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const dueCards = useMemo(() => getDueCards(flashcards), [flashcards]);
 
@@ -264,7 +505,32 @@ export default function FlashcardScreen({ flashcards, onUpdateFlashcard, onRemov
     if (currentIndex >= activeQueue.length - 1) {
       setSessionDone(true);
     } else {
-      setCurrentIndex(i => i + 1);
+      const nextCard = activeQueue[currentIndex + 1];
+      const hasSubjectChange =
+        nextCard?.subject &&
+        currentCard?.subject &&
+        nextCard.subject !== currentCard.subject;
+
+      if (hasSubjectChange) {
+        // Interleaving Transition: kurze Orientierungskarte vor Themenwechsel
+        // Evidenz: Kornell & Bjork (2008) – unerwartete Themenwechsel können
+        // kognitive Überlastung erzeugen; sanfte Transition reduziert Friction
+        setSubjectTransition({
+          from: currentCard.subject,
+          to: nextCard.subject,
+          nextIndex: currentIndex + 1,
+          color: getSubjectColor(nextCard.subject),
+        });
+      } else {
+        setCurrentIndex(i => i + 1);
+      }
+    }
+  }
+
+  function dismissTransition() {
+    if (subjectTransition !== null) {
+      setCurrentIndex(subjectTransition.nextIndex);
+      setSubjectTransition(null);
     }
   }
 
@@ -320,10 +586,26 @@ export default function FlashcardScreen({ flashcards, onUpdateFlashcard, onRemov
   if (sessionDone) {
     const masteredCount = flashcards.filter(c => c.status === 'mastered').length;
     const goodRate = Math.round((ratedCount / Math.max(1, total)) * 100);
+
+    // WeakSpots: Karten, die als "Keine Ahnung" oder "Schwer" bewertet wurden
+    // Diese werden gezielt als eigenständige Übungsrunde angeboten
+    // Evidenz: Testing Effect (Roediger & Karpicke, 2006) – sofortige Wiederholung
+    // schwacher Items stärkt Konsolidierung besonders effektiv
+    const weakCards = flashcards.filter(c => {
+      const r = c.fsrs?.r ?? c.repetitions ?? 0;
+      return r === 0 || c._lastQuality === 0 || c._lastQuality === 1;
+    });
+    // Zuverlässiger: Karten mit sehr niedrigem Retention-Wert
+    const struggleCards = flashcards.filter(c => {
+      const ret = getRetentionPercent(c);
+      return ret < 60;
+    });
+    const hasWeakCards = struggleCards.length > 0;
+
     return (
       <div className="screen">
         <div className="screen-content" style={{ gap: '24px', maxWidth: '400px' }}>
-          <LumoMascot state={goodRate >= 70 ? 'cheer' : 'learning'} />
+          <LumoMascot state={goodRate >= 70 ? 'first-complete' : 'learning'} label="Lumo" />
           <div style={{ textAlign: 'center' }}>
             <h1 style={{ fontSize: '26px', marginBottom: '8px' }}>
               {goodRate >= 70 ? 'Starke Session.' : 'Session beendet.'}
@@ -338,15 +620,69 @@ export default function FlashcardScreen({ flashcards, onUpdateFlashcard, onRemov
                 : 'Alle Karten sind auf dem neuesten Stand. 🎉'}
             </p>
           </div>
+
+          {/* WeakSpots CTA — prominent, wenn Karten mit niedrigem Retention vorhanden */}
+          {hasWeakCards && (
+            <div style={{
+              width: '100%',
+              background: 'var(--bg-card)',
+              borderRadius: '16px',
+              border: '1px solid var(--amber)',
+              padding: '16px',
+              animation: 'fadeIn 0.4s ease 0.2s both',
+            }}>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', marginBottom: '12px' }}>
+                <span style={{ fontSize: '20px', flexShrink: 0 }}>⚡</span>
+                <div>
+                  <p style={{
+                    fontSize: '14px',
+                    fontWeight: '700',
+                    color: 'var(--amber)',
+                    margin: '0 0 4px',
+                  }}>
+                    {struggleCards.length} Karte{struggleCards.length !== 1 ? 'n' : ''} mit niedrigem Retention
+                  </p>
+                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0', lineHeight: '1.4' }}>
+                    Jetzt sofort nochmal üben stärkt die Erinnerung am meisten.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  // Nur schwache Karten als neue Session
+                  setQueueIds(struggleCards.map(c => c.id));
+                  setCurrentIndex(0);
+                  setSessionDone(false);
+                  setRatedCount(0);
+                }}
+                style={{
+                  width: '100%',
+                  background: 'var(--amber)',
+                  color: '#1a1206',
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '12px',
+                  fontSize: '14px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                }}
+              >
+                Jetzt wiederholen →
+              </button>
+            </div>
+          )}
+
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {dueCards.length > 0 && (
               <button onClick={startNewSession} style={{
-                width: '100%', background: 'var(--gold)',
-                color: '#1a1206', border: 'none',
+                width: '100%',
+                background: hasWeakCards ? 'var(--bg-card)' : 'var(--gold)',
+                color: hasWeakCards ? 'var(--gold)' : '#1a1206',
+                border: hasWeakCards ? '1px solid var(--gold)' : 'none',
                 borderRadius: '12px', padding: '14px',
                 fontSize: '16px', fontWeight: '700', cursor: 'pointer',
               }}>
-                Weiter üben
+                {hasWeakCards ? 'Alle Karten nochmal' : 'Weiter üben'}
               </button>
             )}
             <button onClick={onBack} style={{
@@ -523,8 +859,18 @@ export default function FlashcardScreen({ flashcards, onUpdateFlashcard, onRemov
           </span>
         </div>
 
+        {/* Interleaving Transition Card — zeigt Themenwechsel an */}
+        {subjectTransition && (
+          <SubjectTransitionCard
+            fromSubject={subjectTransition.from}
+            toSubject={subjectTransition.to}
+            subjectColor={subjectTransition.color}
+            onContinue={dismissTransition}
+          />
+        )}
+
         {/* Karte */}
-        {currentCard ? (
+        {!subjectTransition && currentCard ? (
           <FlashCard
             key={currentCard.id}
             card={currentCard}
@@ -536,7 +882,7 @@ export default function FlashcardScreen({ flashcards, onUpdateFlashcard, onRemov
               }
             }}
           />
-        ) : (
+        ) : !subjectTransition ? (
           <div style={{ textAlign: 'center', padding: '40px 0' }}>
             <LumoMascot state="cheer" />
             <p style={{ color: 'var(--green)', fontWeight: '600', fontSize: '16px', marginTop: '16px' }}>
@@ -552,7 +898,7 @@ export default function FlashcardScreen({ flashcards, onUpdateFlashcard, onRemov
               Nochmal durchgehen
             </button>
           </div>
-        )}
+        ) : null}
 
       </div>
     </div>

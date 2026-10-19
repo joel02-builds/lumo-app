@@ -1,4 +1,4 @@
-import { exportProject, importProject } from '../utils/projectExport.js';
+import { exportProject, importProject, exportProgressReport } from '../utils/projectExport.js';
 import { useRef, useState } from 'react';
 
 export default function SettingsScreen({ onBack, blocksAnalyzedTotal }) {
@@ -22,8 +22,21 @@ export default function SettingsScreen({ onBack, blocksAnalyzedTotal }) {
 
   const SETTINGS_ITEMS = [
     {
+      label: 'Fortschritt teilen',
+      sub: 'Exportiere eine lesbare Zusammenfassung deines Lernstands.',
+      action: () => {
+        const result = exportProgressReport();
+        if (result.success) {
+          setMessage(result.shared ? 'Fortschritt geteilt.' : 'Fortschritt gespeichert.');
+        } else {
+          setMessage(result.reason || 'Export fehlgeschlagen.');
+        }
+      },
+      icon: '↗',
+    },
+    {
       label: 'Backup exportieren',
-      sub: 'Speichere deinen Lernfortschritt als Datei.',
+      sub: 'Speichere alle Daten als Sicherungsdatei (JSON).',
       action: () => { exportProject(); setMessage('Backup gespeichert.'); },
       icon: '↓',
     },

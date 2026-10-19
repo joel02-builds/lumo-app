@@ -14,6 +14,10 @@
   --yellow-soft: rgba(212, 168, 67, 0.12);
   --red: #E07B54;
   --red-soft: rgba(224, 123, 84, 0.15);
+  /* --amber: Warnsignal (z. B. Storage-Warning, Schwellenwerte) —
+     deutlich wahrnehmbar aber kein Notfall-Rot (ADHS-Trigger-safe) */
+  --amber: #C47A2B;
+  --amber-soft: rgba(196, 122, 43, 0.12);
   --border: rgba(255, 255, 255, 0.07);
   --input-bg: #162028;
   --input-border: rgba(212, 168, 67, 0.2);
@@ -133,6 +137,18 @@ input::placeholder {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Lumo Intro-Moment: fadeIn für "Ich bin Lumo" Text */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Lumo Formular: slideDown wenn Felder nach Intro erscheinen */
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes lumo-breathe {

@@ -1,3 +1,24 @@
+/**
+ * OnboardingScreen3 — Ziel-Auswahl
+ *
+ * Änderungen vs. vorher:
+ * ─────────────────────────────────────────────────────────────────────────
+ * 1. Lernstil-Picker ENTFERNT — wird später im Dashboard/Einstellungen angeboten
+ *    nach der ersten Session, wenn der Nutzer bereits Kontext hat.
+ *    Evidenz: Learning-Style-Picker im Onboarding erhöht Drop-Off,
+ *    weil er nicht für sofortigen Wert steht und die Entscheidung unklar ist.
+ *    (Pashler et al., 2008: Lernstile als Konzept schwach belegt)
+ *
+ * 2. Nach Ziel + Datum-Bestätigung → direkt onConfirm (keine weitere Stufe)
+ * 3. Back-Button geht zurück zu Onboarding Screen 1 (nicht mehr Step 2)
+ *
+ * Flows:
+ * ─────────────────────────────────────────────────────────────────────────
+ *   [Ziel auswählen]
+ *     → "Einfach verstehen" → onConfirm direkt
+ *     → "Prüfung" / "Hausarbeit" → Datum-Picker → [Sprint-Check] → onConfirm
+ */
+
 import { useState } from 'react';
 import LumoMascot from '../../components/LumoMascot.jsx';
 import Button from '../../components/Button.jsx';
@@ -25,13 +46,6 @@ const GOALS = [
   },
 ];
 
-const LEARNING_STYLES = [
-  { label: 'Mit Beispielen', value: 'examples', icon: '💡', sub: 'Konkrete Fälle zuerst' },
-  { label: 'Zusammenhänge', value: 'connections', icon: '🔗', sub: 'Wie alles zusammenhängt' },
-  { label: 'Schritt für Schritt', value: 'stepbystep', icon: '📋', sub: 'Klare Reihenfolge' },
-  { label: 'Mit Vergleichen', value: 'analogies', icon: '🌉', sub: 'Einfache Analogien' },
-];
-
 function getDaysUntilDate(dateStr) {
   if (!dateStr) return null;
   const now = new Date();
@@ -44,7 +58,6 @@ function getDaysUntilDate(dateStr) {
 export default function OnboardingScreen3({ onConfirm, onBack }) {
   const [selectedId, setSelectedId] = useState(null);
   const [goalDate, setGoalDate] = useState('');
-  const [confirmedGoal, setConfirmedGoal] = useState(null);
   const [showSprintInterstitial, setShowSprintInterstitial] = useState(false);
   const [pendingSprintGoal, setPendingSprintGoal] = useState(null);
 
@@ -54,23 +67,25 @@ export default function OnboardingScreen3({ onConfirm, onBack }) {
     if (goal.needsDate) {
       setSelectedId(goal.id);
     } else {
-      setConfirmedGoal({ goalType: goal.id, goalDate: '', sprintMode: false });
+      // Direkter Abschluss ohne weiteren Schritt
+      onConfirm({ goalType: goal.id, goalDate: '', sprintMode: false, learningStyle: null });
     }
   }
 
   function confirmDate() {
     if (!goalDate) return;
-    // Sprint-Modus: Prüfung in ≤3 Tagen → Interstitial zeigen
     const days = getDaysUntilDate(goalDate);
+    // Sprint-Modus: Prüfung in ≤3 Tagen → Interstitial zeigen
     if (selectedId === 'exam' && days !== null && days <= 3) {
       setPendingSprintGoal({ goalType: selectedId, goalDate, daysUntilExam: days });
       setShowSprintInterstitial(true);
     } else {
-      setConfirmedGoal({ goalType: selectedId, goalDate, sprintMode: false });
+      // Direkter Abschluss ohne Lernstil-Schritt
+      onConfirm({ goalType: selectedId, goalDate, sprintMode: false, learningStyle: null });
     }
   }
 
-  // Sprint-Modus Interstitial: erscheint wenn Prüfung ≤3 Tage
+  // Sprint-Modus Interstitial: erscheint wenn Prüfung ≤3 Tage entfernt
   if (showSprintInterstitial && pendingSprintGoal) {
     const { daysUntilExam } = pendingSprintGoal;
     const dayWord = daysUntilExam === 0 ? 'heute' : daysUntilExam === 1 ? 'morgen' : `in ${daysUntilExam} Tagen`;
@@ -123,7 +138,7 @@ export default function OnboardingScreen3({ onConfirm, onBack }) {
           </div>
 
           <button
-            onClick={() => setConfirmedGoal({ ...pendingSprintGoal, sprintMode: true })}
+            onClick={() => onConfirm({ ...pendingSprintGoal, sprintMode: true, learningStyle: null })}
             style={{
               width: '100%',
               background: 'var(--gold)',
@@ -142,7 +157,7 @@ export default function OnboardingScreen3({ onConfirm, onBack }) {
           <button
             onClick={() => {
               setShowSprintInterstitial(false);
-              setConfirmedGoal({ ...pendingSprintGoal, sprintMode: false });
+              onConfirm({ ...pendingSprintGoal, sprintMode: false, learningStyle: null });
             }}
             style={{
               background: 'none',
@@ -160,62 +175,7 @@ export default function OnboardingScreen3({ onConfirm, onBack }) {
     );
   }
 
-  if (confirmedGoal) {
-    return (
-      <div className="screen" key="learning-style">
-        <div className="screen-content">
-          <LumoMascot state="idle" label="Lumo" />
-          <p style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', textAlign: 'center', margin: '0' }}>
-            Wie lernst du am liebsten?
-          </p>
-          <p style={{
-            fontSize: '14px',
-            color: 'var(--text-secondary)',
-            textAlign: 'center',
-            margin: '-4px 0 4px',
-            lineHeight: '1.5',
-          }}>
-            Lumo erklärt dann genau so wie es für dich am besten passt.
-          </p>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '8px',
-            width: '100%',
-          }}>
-            {LEARNING_STYLES.map(({ label, value, icon, sub }) => (
-              <button
-                key={value}
-                onClick={() => onConfirm({ goalType: confirmedGoal.goalType, goalDate: confirmedGoal.goalDate, sprintMode: confirmedGoal.sprintMode || false, learningStyle: value })}
-                style={{
-                  background: 'var(--bg-card)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '14px',
-                  padding: '16px 10px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '8px',
-                  transition: 'all 0.15s ease',
-                }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--gold)'}
-                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
-              >
-                <span style={{ fontSize: '24px' }}>{icon}</span>
-                <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', textAlign: 'center' }}>{label}</span>
-                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', textAlign: 'center', lineHeight: '1.3' }}>{sub}</span>
-              </button>
-            ))}
-          </div>
-          <button className="text-link" onClick={() => setConfirmedGoal(null)}>
-            ← Zurück
-          </button>
-        </div>
-      </div>
-    );
-  }
-
+  // Datum-Picker für Prüfung / Hausarbeit
   if (selectedGoal?.needsDate) {
     return (
       <div className="screen" key="goal-date">
@@ -242,7 +202,7 @@ export default function OnboardingScreen3({ onConfirm, onBack }) {
             onChange={(e) => setGoalDate(e.target.value)}
           />
           <Button onClick={confirmDate} disabled={!goalDate}>
-            Weiter
+            Los geht's →
           </Button>
           <button className="text-link" onClick={() => setSelectedId(null)}>
             Zurück zur Auswahl
@@ -252,6 +212,7 @@ export default function OnboardingScreen3({ onConfirm, onBack }) {
     );
   }
 
+  // Ziel-Auswahl (Hauptansicht)
   return (
     <div className="screen" key="goal-list">
       <button className="back-link" onClick={onBack}>

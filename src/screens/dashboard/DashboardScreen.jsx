@@ -3,7 +3,7 @@ import LumoMascot from '../../components/LumoMascot.jsx';
 import Button from '../../components/Button.jsx';
 import { getRecommendedBlock } from '../../utils/blockProgress.js';
 import { getBlockColor } from '../../utils/subjectColors.js';
-import { getRemainingFreeBlocks } from '../../utils/planLimits.js';
+import { getRemainingFreeBlocks, isFreeLimitReached, isApproachingLimit } from '../../utils/planLimits.js';
 import { lumoApi } from '../../api/lumo.js';
 
 function getDaysUntilExam(goalDate) {
@@ -176,42 +176,95 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
           );
         })()}
 
-        {/* Fortschritt */}
+        {/* Fortschritt
+            ADHS-Design:
+            ─────────────────────────────────────────────────────────────────────
+            – Balken immer sichtbar (auch bei 0%): leeres Interface = kein Start
+            – Milestone-Labels bei 25/50/75/100%: Effort-Praise (Dweck 1998)
+            – Segment-Markierungen: visueller Anker für nächsten Schritt
+            – Kein "du hast noch X übrig" → "du hast X geschafft" framing
+        */}
         <div style={{ width: '100%', textAlign: 'center' }}>
+          {/* Prozentanzeige */}
           <div style={{
             fontSize: '48px',
             fontWeight: '800',
             color: percent === 100 ? 'var(--green)' : 'var(--gold)',
             lineHeight: '1',
-            marginBottom: '8px',
+            marginBottom: '12px',
           }}>
             {percent}%
           </div>
-          {percent > 0 && (
-            <div style={{
-              height: '10px',
+
+          {/* Progress Bar — immer sichtbar */}
+          <div
+            role="progressbar"
+            aria-valuenow={percent}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`${completed} von ${total} Blöcken abgeschlossen`}
+            style={{
+              height: '12px',
               background: 'var(--bg-card)',
-              borderRadius: '6px',
+              borderRadius: '8px',
               overflow: 'hidden',
-              margin: '0 0 8px',
-            }}>
+              margin: '0 0 6px',
+              position: 'relative',
+              border: '1px solid var(--border)',
+            }}
+          >
+            {/* Füllbalken */}
+            {percent > 0 && (
               <div style={{
                 height: '100%',
                 width: `${percent}%`,
-                background: percent === 100 ? 'var(--green)' : projectColor,
-                borderRadius: '6px',
-                boxShadow: `0 0 8px ${percent === 100 ? 'var(--green)' : projectColor}`,
-                transition: 'width 0.6s ease',
+                background: percent === 100
+                  ? 'var(--green)'
+                  : `linear-gradient(90deg, ${projectColor}cc, ${projectColor})`,
+                borderRadius: '8px',
+                boxShadow: percent > 0 ? `0 0 10px ${percent === 100 ? 'var(--green)' : projectColor}66` : 'none',
+                transition: 'width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)',
               }} />
-            </div>
-          )}
-          {percent === 0 && (
-            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: '8px 0 0' }}>
-              Bereit loszulegen.
-            </p>
-          )}
-          <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
-            {completed} von {total} Blöcken geschafft
+            )}
+            {/* Milestone-Markierungen bei 25 / 50 / 75% */}
+            {[25, 50, 75].map((milestone) => (
+              <div
+                key={milestone}
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  top: '2px',
+                  bottom: '2px',
+                  left: `${milestone}%`,
+                  width: '1px',
+                  background: 'var(--bg)',
+                  opacity: percent >= milestone ? 0.3 : 0.15,
+                  pointerEvents: 'none',
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Status-Label — Effort-Praise statt nur Zahlen */}
+          <p style={{
+            fontSize: '14px',
+            color: percent === 100 ? 'var(--green)' : 'var(--text-secondary)',
+            margin: '8px 0 0',
+            fontWeight: percent >= 50 ? '600' : '400',
+          }}>
+            {percent === 100
+              ? `Alle ${total} Blöcke durchgearbeitet. Stark.`
+              : percent >= 75
+              ? `${completed} von ${total} – du bist fast durch.`
+              : percent >= 50
+              ? `${completed} von ${total} – über die Hälfte geschafft.`
+              : percent >= 25
+              ? `${completed} von ${total} – guter Start.`
+              : percent > 0
+              ? `${completed} von ${total} Blöcken geschafft.`
+              : total > 0
+              ? `Bereit – ${total} ${total === 1 ? 'Block' : 'Blöcke'} warten.`
+              : 'Bereit loszulegen.'}
           </p>
         </div>
 
@@ -555,17 +608,52 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
           </button>
         )}
 
-        {blocksAnalyzedTotal > 15 && (
-          <p style={{
-            fontSize: '12px',
-            color: 'var(--text-secondary)',
-            textAlign: 'center',
-            margin: '4px 0',
-          }}>
-            {getRemainingFreeBlocks(blocksAnalyzedTotal) > 0
-              ? `Noch ${getRemainingFreeBlocks(blocksAnalyzedTotal)} kostenlose Blöcke verfügbar.`
-              : 'Du hast alle kostenlosen Blöcke genutzt.'}
-          </p>
+        {/* Free-Tier-Warnung:
+            – isApproachingLimit: ≤ 3 Blöcke übrig → Amber-Banner (Frühwarnung)
+            – isFreeLimitReached:  0 Blöcke übrig  → Amber-Banner, stärkerer Text
+            ADHS-Design:
+            – Kein Rot (emotionale Dysregulation vermeiden)
+            – Amber = semantische Warnung, nicht Alarm
+            – Frühwarnung bei 3 Blöcken, damit User sich vorbereiten kann
+            – Klarer CTA ohne Druck */}
+        {(isApproachingLimit(blocksAnalyzedTotal) || isFreeLimitReached(blocksAnalyzedTotal)) && (
+          <div
+            role="status"
+            aria-live="polite"
+            style={{
+              border: '1.5px solid var(--amber)',
+              borderRadius: '14px',
+              padding: '14px 16px',
+              background: 'rgba(196, 122, 43, 0.08)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+              margin: '4px 0',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '18px' }}>⚠️</span>
+              <span style={{
+                fontSize: '14px',
+                fontWeight: '700',
+                color: 'var(--amber)',
+              }}>
+                {isFreeLimitReached(blocksAnalyzedTotal)
+                  ? 'Kostenlose Blöcke aufgebraucht'
+                  : `Noch ${getRemainingFreeBlocks(blocksAnalyzedTotal)} kostenlose ${getRemainingFreeBlocks(blocksAnalyzedTotal) === 1 ? 'Block' : 'Blöcke'}`}
+              </span>
+            </div>
+            <p style={{
+              fontSize: '13px',
+              color: 'var(--text-secondary)',
+              margin: '0',
+              lineHeight: '1.5',
+            }}>
+              {isFreeLimitReached(blocksAnalyzedTotal)
+                ? 'Du hast alle 20 kostenlosen Blöcke genutzt. Upgrade für unbegrenztes Lernen.'
+                : `Du hast ${blocksAnalyzedTotal} von 20 kostenlosen Blöcken genutzt. Danach ist ein Upgrade nötig.`}
+            </p>
+          </div>
         )}
 
       </div>

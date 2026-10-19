@@ -1,9 +1,18 @@
-import { useCallback, useEffect, useReducer, useState } from 'react';
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { appReducer, createInitialState, SCREENS } from './state/appReducer.js';
 import { lumoApi } from './api/lumo.js';
-import { loadProject, saveProject, clearProject } from './utils/projectStorage.js';
+import {
+  loadProject,
+  saveProject,
+  clearProject,
+  loadProjectAsync,
+  saveProjectAsync,
+  requestPersistentStorage,
+  getStorageStatus,
+} from './utils/projectStorage.js';
 import { clearAllNotes } from './utils/notesStorage.js';
 import { startKeepAlive } from './utils/keepAlive.js';
+import StorageWarningBanner from './components/StorageWarningBanner.jsx';
 import OnboardingScreen1 from './screens/onboarding/OnboardingScreen1.jsx';
 import OnboardingScreen2 from './screens/onboarding/OnboardingScreen2.jsx';
 import OnboardingScreen3 from './screens/onboarding/OnboardingScreen3.jsx';
@@ -31,6 +40,49 @@ export default function App() {
   // sonst mit der fixed positionierten LumoWordmark kollidieren würde.
   const [sessionHasOwnHeader, setSessionHasOwnHeader] = useState(false);
 
+  // Storage-Status für Warning Banner
+  const [storageLayer, setStorageLayer] = useState(null); // null = noch nicht geprüft
+  const idbHydrated = useRef(false);
+
+  // Beim ersten Render:
+  // 1. requestPersistentStorage — einmalig, erhöht Schutz vor Browser-Eviction
+  // 2. loadProjectAsync — IDB-Daten laden und State ggf. aktualisieren
+  // 3. getStorageStatus — Layer für Warning Banner ermitteln
+  useEffect(() => {
+    let cancelled = false;
+
+    async function initStorage() {
+      // Persist-Anfrage (nur einmal pro Gerät, intern gecacht)
+      await requestPersistentStorage();
+
+      // IDB-Hydration: Wenn IDB Daten enthält die neuer/vollständiger sind,
+      // State übernehmen. Da useReducer mit loadProject() (sync localStorage)
+      // initialisiert wurde, ist dieser Step ein Upgrade, kein Ersteinstieg.
+      if (!idbHydrated.current) {
+        idbHydrated.current = true;
+        try {
+          const idbData = await loadProjectAsync();
+          if (!cancelled && idbData) {
+            dispatch({ type: 'HYDRATE_FROM_STORAGE', payload: idbData });
+          }
+        } catch {
+          // IDB nicht verfügbar — localStorage-Init reicht
+        }
+      }
+
+      // Storage-Status für Warning Banner
+      try {
+        const status = await getStorageStatus();
+        if (!cancelled) setStorageLayer(status.layer);
+      } catch {
+        if (!cancelled) setStorageLayer('localStorage');
+      }
+    }
+
+    initStorage();
+    return () => { cancelled = true; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     const interval = startKeepAlive();
     return () => clearInterval(interval);
@@ -56,7 +108,7 @@ export default function App() {
     // Immer persistieren, auch wenn blocks/projects gerade leer sind (z. B.
     // nach dem Löschen des letzten Projekts) – loadProject() entscheidet beim
     // nächsten Start anhand des Inhalts, ob der gespeicherte Stand gültig ist.
-    saveProject({
+    const snapshot = {
       projectName: state.topic,
       materialName: state.fileName,
       goalType: state.goalType,
@@ -74,15 +126,22 @@ export default function App() {
       blocksAnalyzedTotal: state.blocksAnalyzedTotal,
       sessionsTotal: state.sessionsTotal,
       flashcards: state.flashcards,
+    };
+
+    // Sync: sofortiger localStorage-Write (UI blockiert nie)
+    saveProject(snapshot);
+
+    // Async: IDB-Write im Hintergrund (primärer Layer)
+    saveProjectAsync(snapshot).catch(() => {
+      // IDB-Fehler sind nicht kritisch – localStorage ist der Fallback
     });
   }, [state.topic, state.fileName, state.goalType, state.goalDate, state.sprintMode, state.blocks, state.recommendedOrder, state.subjectColor, state.learningStyle, state.subjectHistory, state.projects, state.activeProjectId, state.examResult, state.examResultAskedAt, state.blocksAnalyzedTotal, state.sessionsTotal, state.flashcards]);
 
+  // Kombinierter Handler für den neuen Screen 1+2:
+  // Material-Payload kommt direkt aus OnboardingScreen1 und setzt
+  // onboardingStep → 3 (überspringt den alten Screen 2).
   const handleMaterial = useCallback((payload) => {
     dispatch({ type: 'SET_MATERIAL', ...payload });
-  }, []);
-
-  const handleOnboardingNext = useCallback(() => {
-    dispatch({ type: 'GO_TO_STEP2' });
   }, []);
 
   const handleStart = useCallback(({ subject, color, blocks } = {}) => {
@@ -203,6 +262,7 @@ export default function App() {
   return (
     <>
       {!isOnline && <OfflineBanner />}
+      {storageLayer === 'localStorage' && <StorageWarningBanner />}
       <InstallBanner />
       <BetaFeedbackButton />
 
@@ -230,12 +290,9 @@ export default function App() {
         />
       )}
 
+      {/* Kombinierter Welcome + Material Screen (früher Screen 1 + 2 getrennt) */}
       {isWelcomeScreen && (
-        <OnboardingScreen1 onNext={handleOnboardingNext} />
-      )}
-
-      {state.screen === SCREENS.ONBOARDING && state.onboardingStep === 2 && (
-        <OnboardingScreen2 onNext={handleMaterial} onBack={() => dispatch({ type: 'BACK_TO_STEP1' })} />
+        <OnboardingScreen1 onNext={handleMaterial} />
       )}
 
       {state.screen === SCREENS.ONBOARDING && state.onboardingStep === 3 && (

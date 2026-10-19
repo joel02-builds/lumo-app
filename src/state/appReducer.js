@@ -73,6 +73,45 @@ export function createInitialState(savedProject) {
 
 export function appReducer(state, action) {
   switch (action.type) {
+    // IDB-Hydration: Nach dem ersten async IDB-Load wird der State aktualisiert.
+    // Nur wenn die IDB-Daten tatsächlich Lernstände enthalten, wird der State
+    // überschrieben – sonst kein Effekt (Onboarding-Nutzer nicht gestört).
+    case 'HYDRATE_FROM_STORAGE': {
+      const p = action.payload;
+      const hasBlocks = Array.isArray(p.blocks) && p.blocks.length > 0;
+      const hasProjects = Array.isArray(p.projects) && p.projects.length > 0;
+      if (!hasBlocks && !hasProjects) return state;
+
+      // Nur hydratisieren wenn der State noch im Initialzustand ist oder
+      // wenn die IDB-Daten mehr Blöcke enthalten (neuerer Stand).
+      const idbBlockCount = p.blocks?.length || 0;
+      const currentBlockCount = state.blocks?.length || 0;
+      const isOnboarding = state.screen === 'onboarding' && state.onboardingStep === 1;
+      if (!isOnboarding && idbBlockCount <= currentBlockCount) return state;
+
+      return {
+        ...state,
+        screen: hasBlocks ? 'welcome-back' : hasProjects ? 'projects' : state.screen,
+        topic: p.projectName || state.topic,
+        fileName: p.materialName || state.fileName,
+        goalType: p.goalType || state.goalType,
+        goalDate: p.goalDate || state.goalDate,
+        sprintMode: p.sprintMode || state.sprintMode,
+        blocks: p.blocks || state.blocks,
+        recommendedOrder: p.recommendedOrder || state.recommendedOrder,
+        subjectColor: p.subjectColor || state.subjectColor,
+        learningStyle: p.learningStyle || state.learningStyle,
+        subjectHistory: p.subjectHistory || state.subjectHistory,
+        projects: p.projects || state.projects,
+        activeProjectId: p.activeProjectId || state.activeProjectId,
+        examResult: p.examResult || state.examResult,
+        examResultAskedAt: p.examResultAskedAt || state.examResultAskedAt,
+        blocksAnalyzedTotal: p.blocksAnalyzedTotal || state.blocksAnalyzedTotal,
+        sessionsTotal: p.sessionsTotal || state.sessionsTotal,
+        flashcards: p.flashcards || state.flashcards,
+      };
+    }
+
     case 'GO_TO_STEP2':
       return { ...state, onboardingStep: 2 };
 
@@ -90,8 +129,9 @@ export function appReducer(state, action) {
         onboardingStep: 3,
       };
 
+    // Screen 2 wurde mit Screen 1 zusammengeführt → Back geht direkt zu Step 1
     case 'BACK_TO_STEP2':
-      return { ...state, onboardingStep: 2 };
+      return { ...state, onboardingStep: 1 };
 
     case 'START_ANALYSIS':
       return {

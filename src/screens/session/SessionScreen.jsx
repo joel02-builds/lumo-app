@@ -9,12 +9,14 @@ import LernzettelScreen from './LernzettelScreen.jsx';
 import ConceptMapScreen from './ConceptMapScreen.jsx';
 import SessionSummaryScreen from './SessionSummaryScreen.jsx';
 import MidSessionBreakScreen from './MidSessionBreakScreen.jsx';
+import ElaborationPhase from './ElaborationPhase.jsx';
 import SessionTimer from '../../components/SessionTimer.jsx';
 import BreakSuggestionToast from '../../components/BreakSuggestionToast.jsx';
 import { getBlockColor } from '../../utils/subjectColors.js';
 
 const PHASES = {
   FOCUS_RITUAL: 'focus-ritual',
+  ELABORATION: 'elaboration',  // Vorwissen-Aktivierung vor dem Lernen
   CARDS: 'cards',
   DEPTH_CHOICE: 'depth-choice',
   EXPLAIN: 'explain',
@@ -25,7 +27,42 @@ const PHASES = {
   SESSION_SUMMARY: 'session-summary',
 };
 
-const BREAK_INTERVAL_SECONDS = 20 * 60;
+// Standard-Pausenintervall (Evidenz: Dinges et al. 1987, Sweller 1988)
+const DEFAULT_BREAK_INTERVAL_SECONDS = 20 * 60;
+const MIN_BREAK_INTERVAL_SECONDS = 15 * 60; // bei sehr langen Blöcken kürzer
+const MAX_BREAK_INTERVAL_SECONDS = 25 * 60; // bei kurzen Blöcken länger
+
+/**
+ * Adaptiver Break-Intervall basierend auf Block-Länge.
+ *
+ * Evidenz:
+ * ─────────────────────────────────────────────────────────────────────────
+ * Cognitive Load Theory (Sweller, 1988): Kognitive Überlastung entsteht
+ *   schneller bei dichtem, komplexem Material. Break-Frequenz sollte
+ *   an Materialdichte angepasst werden.
+ *
+ * Optimal rest timing (Dinges et al., 1987): Pausen nach 15–25 Minuten
+ *   konsolidieren Gedächtnis effektiver als feste 20-Min-Intervalle.
+ *
+ * Adaptive Logik:
+ * – Langer Block (>30 min): 15 Min Intervall (höhere kognitive Last)
+ * – Kurzer Block (<10 min): 25 Min Intervall (weniger Dichte, User noch nicht müde)
+ * – Mittel: 20 Min Standard
+ *
+ * ADHS-spezifisch:
+ * – Fixe Timer wirken willkürlich und werden ignoriert
+ * – Kontextbasierte Empfehlungen werden als relevanter wahrgenommen
+ */
+function getBreakIntervalSeconds(block) {
+  const est = block?.estimatedMinutes;
+  if (!est || est <= 0) return DEFAULT_BREAK_INTERVAL_SECONDS;
+  if (est > 30) return MIN_BREAK_INTERVAL_SECONDS;   // 15 min
+  if (est < 10) return MAX_BREAK_INTERVAL_SECONDS;   // 25 min
+  // Lineare Interpolation zwischen 25 min (bei 10 min Block) und 15 min (bei 30 min Block):
+  // breakMin = 25 - (est - 10) / (30 - 10) * (25 - 15) = 25 - (est-10)/2
+  const breakMin = Math.round(25 - ((est - 10) / 2));
+  return Math.max(MIN_BREAK_INTERVAL_SECONDS, Math.min(MAX_BREAK_INTERVAL_SECONDS, breakMin * 60));
+}
 
 // Owns the full flow for exactly one block. Mount with key={block.id} from
 // the parent so a new block always starts with a clean phase state.
@@ -45,7 +82,11 @@ export default function SessionScreen({ block, blocks, goalType, sprintMode, lea
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [block?.id]);
 
-  // Pause-Empfehlung alle 20 aktiven Minuten, als Overlay statt Phasenwechsel
+  // Adaptiver Break-Intervall — basiert auf Block-Länge statt fixem 20-Min-Timer
+  // (Evidenz: Sweller 1988 Cognitive Load Theory, Dinges et al. 1987)
+  const breakIntervalSeconds = getBreakIntervalSeconds(block);
+
+  // Pause-Empfehlung nach adaptiven Minuten, als Overlay statt Phasenwechsel
   // (siehe MidSessionBreakScreen), damit Chatverlauf/Antwort erhalten bleiben.
   const [lastPromptThreshold, setLastPromptThreshold] = useState(0);
   const [showMidBreak, setShowMidBreak] = useState(false);
@@ -75,7 +116,7 @@ export default function SessionScreen({ block, blocks, goalType, sprintMode, lea
     onHeaderVisibilityChange?.(hasOwnHeader);
   }, [hasOwnHeader, onHeaderVisibilityChange]);
 
-  const currentThreshold = Math.floor(elapsedSeconds / BREAK_INTERVAL_SECONDS);
+  const currentThreshold = Math.floor(elapsedSeconds / breakIntervalSeconds);
   const showBreakSuggestion = timerActive && currentThreshold > lastPromptThreshold && phase !== PHASES.CARDS;
 
   // SessionScreen re-rendert jede Sekunde (Timer). Ohne useCallback bekämen
@@ -93,11 +134,21 @@ export default function SessionScreen({ block, blocks, goalType, sprintMode, lea
   if (phase === PHASES.FOCUS_RITUAL) {
     return (
       <FocusRitualPhase
-        onDone={() => setPhase(PHASES.CARDS)}
+        onDone={() => setPhase(PHASES.ELABORATION)}
         block={block}
         allBlocks={blocks}
         onMoodSet={setSessionMood}
         sprintMode={sprintMode}
+      />
+    );
+  }
+
+  if (phase === PHASES.ELABORATION) {
+    return (
+      <ElaborationPhase
+        block={block}
+        onDone={() => setPhase(PHASES.CARDS)}
+        onSkip={() => setPhase(PHASES.CARDS)}
       />
     );
   }

@@ -163,7 +163,21 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHis
         {/* Kein Entscheidungsbaum. Eine Aktion. Sofort sichtbar. */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', width: '100%' }}>
 
-          <LumoMascot state={allDone ? 'complete' : dueBlocks.length > 0 ? 'cheer' : 'idle'} />
+          <LumoMascot
+            label="Lumo"
+            state={
+              allDone
+                ? 'complete'
+                : absenceInfo?.isLong
+                ? 'absence'       // > 7 Tage weg → nachdenklich-freudige Rückkehr
+                : streakDays >= 7
+                ? 'streak'        // 7-Tage-Streak-Meilenstein → Jubel-Pose
+                : dueBlocks.length > 0
+                ? 'cheer'         // Fällige Karten → motivierend
+                : 'idle'          // Standard
+            }
+            pulseOnce={streakDays >= 7 || streakDays % 7 === 0 && streakDays > 0}
+          />
 
           {/* Greeting – kurz und direkt */}
           <div style={{ textAlign: 'center' }}>
@@ -369,10 +383,39 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHis
           </div>
         )}
 
+        {/* Streak-Meilenstein Banner — erscheint bei 7/14/21/30 Tagen */}
+        {streakDays > 0 && streakDays % 7 === 0 && (
+          <div style={{
+            width: '100%',
+            background: 'linear-gradient(135deg, rgba(212,168,67,0.15) 0%, rgba(212,168,67,0.05) 100%)',
+            border: '1px solid rgba(212,168,67,0.3)',
+            borderRadius: '14px',
+            padding: '14px 18px',
+            textAlign: 'center',
+            animation: 'fadeIn 0.5s ease',
+          }}>
+            <p style={{ fontSize: '18px', margin: '0 0 4px' }}>
+              {streakDays === 7 ? '🎉' : streakDays === 14 ? '⚡' : streakDays === 21 ? '🌟' : '🏆'}
+            </p>
+            <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--gold)', margin: '0 0 2px' }}>
+              {streakDays === 7 && '7 Tage am Stück!'}
+              {streakDays === 14 && 'Zwei Wochen durch!'}
+              {streakDays === 21 && '21 Tage – Gewohnheit gebildet!'}
+              {streakDays >= 30 && `${streakDays} Tage – beeindruckend.`}
+            </p>
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '0' }}>
+              {streakDays === 7 && 'Eine Woche konsequent gelernt. Weiter so.'}
+              {streakDays === 14 && 'Das Gehirn baut gerade echte Strukturen auf.'}
+              {streakDays === 21 && 'Nach 21 Tagen ist Lernen zur echten Gewohnheit geworden.'}
+              {streakDays >= 30 && 'Langfristiges Lernen ist das Wirksamste was du tun kannst.'}
+            </p>
+          </div>
+        )}
+
         {/* Streak + Lernzeit-Hinweis – ganz unten, nur Kontext */}
         {(streakDays >= 2 || lernzeitHinweis.show) && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'center' }}>
-            {streakDays >= 2 && (
+            {streakDays >= 2 && streakDays % 7 !== 0 && (
               <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0', fontStyle: 'italic' }}>
                 {streakDays < 7
                   ? `Ich bin seit ${streakDays} Tagen dabei.`
