@@ -1,10 +1,36 @@
+import { useMemo } from 'react';
 import LumoMascot from '../../components/LumoMascot.jsx';
 import { getBlockColor } from '../../utils/subjectColors.js';
+
+// Sleep-Consolidation Hinweise – Walker 2009, Stickgold 2005
+// Hippocampus konsolidiert Gedächtnisspuren während des Schlafs.
+// Ton: ruhig, kein Fachjargon, kein Imperativ ("Du musst jetzt schlafen"),
+// keine Erwartung ("wenn du schläfst wird's besser") – stattdessen:
+// neutrales Faktum als stiller Abschluss. Erscheint nur beim Beenden der Session.
+const SLEEP_HINTS = [
+  'Das Gelernte von heute festigt sich im Schlaf von selbst weiter.',
+  'Dein Gehirn arbeitet jetzt weiter – auch ohne Bildschirm.',
+  'Was heute saß, vertieft sich in der Nacht.',
+  'Gute Nacht. Das Gehirn übernimmt den Rest.',
+  'Jetzt kommt der stille Teil des Lernens.',
+];
+
+function getSleepHint() {
+  return SLEEP_HINTS[Math.floor(Math.random() * SLEEP_HINTS.length)];
+}
+
+// Ist es Abend / Nacht? Dann ist Sleep-Consolidation besonders relevant.
+function isEvening() {
+  const h = new Date().getHours();
+  return h >= 18 || h < 5;
+}
 
 export default function SessionSummaryScreen({ block, evaluation, onContinue, onPause, allBlocks, sessionMinutes }) {
   const subjectColor = getBlockColor(block);
   const completedCount = allBlocks?.filter(b => b.status === 'completed').length || 0;
   const totalCount = allBlocks?.length || 0;
+  // Einmal pro Render fixieren – kein Flackern bei Re-Render
+  const sleepHint = useMemo(() => getSleepHint(), []);
   const gapBlocks = allBlocks?.filter(b =>
     b.status === 'completed' && (b.confidence === 'unsicher' || b.confidence === 'grosse_luecken')
   ) || [];
@@ -44,18 +70,6 @@ export default function SessionSummaryScreen({ block, evaluation, onContinue, on
           <p style={{ color: 'var(--text-secondary)', fontSize: '15px' }}>
             {completedCount} von {totalCount} Blöcken geschafft.
           </p>
-          {sessionMinutes > 45 && (
-            <p style={{
-              fontSize: '13px',
-              color: 'var(--text-secondary)',
-              textAlign: 'center',
-              fontStyle: 'italic',
-              margin: '-8px 0 0',
-            }}>
-              Du hast heute über {sessionMinutes} Minuten gelernt.
-              Schlaf hilft dem Gehirn das jetzt zu festigen.
-            </p>
-          )}
         </div>
 
         {completedCount >= 3 && !allDone && completedCount % 3 === 0 && (
@@ -221,6 +235,24 @@ export default function SessionSummaryScreen({ block, evaluation, onContinue, on
             </p>
           </div>
         )}
+
+        {/* Sleep-Consolidation Hinweis – stiller Abschluss der Session
+            Erscheint immer (nicht nur nach 45 min) – Consolidation gilt für jede Session.
+            Abends: etwas prominenter, da Schlaf unmittelbar bevorsteht.
+            Tags: dezenter, da Schlaf noch fern ist.
+            Kein Imperativ ("schlaf jetzt"), kein Fachjargon – nur ein ruhiges Faktum. */}
+        <p style={{
+          fontSize: '13px',
+          color: 'var(--text-secondary)',
+          textAlign: 'center',
+          lineHeight: '1.6',
+          margin: '0',
+          opacity: isEvening() ? 0.85 : 0.55,
+          fontStyle: 'italic',
+          padding: '0 8px',
+        }}>
+          {sleepHint}
+        </p>
 
         {/* Buttons */}
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
