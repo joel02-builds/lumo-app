@@ -139,149 +139,172 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHis
     return pool[day % pool.length];
   }
 
+  // Sprint-Modus: Tage bis zur Prüfung berechnen
+  let sprintDaysUntil = null;
+  if (sprintMode && goalDate) {
+    const now = new Date(); now.setHours(0,0,0,0);
+    const exam = new Date(goalDate); exam.setHours(0,0,0,0);
+    sprintDaysUntil = Math.ceil((exam - now) / (1000 * 60 * 60 * 24));
+  }
+  const sprintDayWord = sprintDaysUntil === null ? 'bald'
+    : sprintDaysUntil <= 0 ? 'heute'
+    : sprintDaysUntil === 1 ? 'morgen'
+    : `in ${sprintDaysUntil} Tagen`;
+
+  // Due-Pile: Nur ohne Abwesenheit zeigen
+  const dueBlocks = absenceInfo ? [] : getBlocksDueToday(safeBlocks);
+  const lernzeitHinweis = getLernzeitHinweis();
+
   return (
     <div className="screen">
-      <div className="screen-content" style={{ gap: '24px', maxWidth: '480px' }}>
-        <LumoMascot state={allDone ? 'complete' : getBlocksDueToday(safeBlocks).length > 0 ? 'cheer' : 'idle'} />
+      <div className="screen-content" style={{ gap: '20px', maxWidth: '480px', paddingTop: '24px' }}>
 
-        <div style={{ textAlign: 'center' }}>
-          <h1 style={{ fontSize: '32px', marginBottom: '8px' }}>{getGreeting()}</h1>
-          {allDone ? (
-            <p style={{ color: 'var(--gold)', fontWeight: '600', fontSize: '18px' }}>
-              Du hast alle {total} Blöcke geschafft. Starkes Lernen.
-            </p>
-          ) : absenceInfo ? (
-            // Bei Abwesenheit: sanfter Wiedereinstieg, kein Block-Zähler-Druck
-            <p style={{ color: 'var(--text-secondary)', fontSize: '17px', lineHeight: '1.5' }}>
-              Schön dass du wieder da bist.
-            </p>
-          ) : (
-            <p style={{ color: 'var(--text-secondary)', fontSize: '17px', lineHeight: '1.5' }}>
-              {completed > 0
-                ? `Du hast ${completed} von ${total} Blöcken geschafft. Noch ${remaining} ${remaining === 1 ? 'Block' : 'Blöcke'}.`
-                : `${total} Blöcke warten auf dich.`}
-            </p>
-          )}
-          {streakDays >= 1 && (
-            <p style={{
-              fontSize: '13px',
-              color: 'var(--text-secondary)',
-              margin: '-8px 0 0',
-              fontStyle: 'italic',
-            }}>
-              {streakDays === 1
-                ? 'Ich bin heute dabei.'
-                : streakDays === 2
-                ? 'Ich bin seit gestern dabei.'
-                : streakDays < 7
-                ? `Ich bin seit ${streakDays} Tagen dabei.`
-                : streakDays < 30
-                ? `Wir lernen seit ${streakDays} Tagen zusammen.`
-                : `${streakDays} Tage. Du machst das wirklich.`
+        {/* ── HERO-ZONE: Lumo + Greeting + primärer CTA ─────────────────── */}
+        {/* Kein Entscheidungsbaum. Eine Aktion. Sofort sichtbar. */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', width: '100%' }}>
+
+          <LumoMascot state={allDone ? 'complete' : dueBlocks.length > 0 ? 'cheer' : 'idle'} />
+
+          {/* Greeting – kurz und direkt */}
+          <div style={{ textAlign: 'center' }}>
+            <h1 style={{ fontSize: '28px', marginBottom: '6px', lineHeight: '1.2' }}>
+              {allDone ? '🎉 Alles geschafft!' : getGreeting()}
+            </h1>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '15px', margin: '0', lineHeight: '1.5' }}>
+              {allDone
+                ? `Du hast alle ${total} Blöcke gemeistert.`
+                : absenceInfo
+                ? 'Schön dass du wieder da bist.'
+                : completed > 0
+                ? `${completed} von ${total} Blöcken geschafft.`
+                : null
               }
             </p>
-          )}
-          {(() => {
-            const hinweis = getLernzeitHinweis();
-            if (!hinweis.show) return null;
-            return (
-              <p style={{
-                fontSize: '12px',
-                color: 'var(--text-secondary)',
-                fontStyle: 'italic',
-                margin: '-12px 0 0',
-                textAlign: 'center',
+          </div>
+
+          {/* ── PRIMÄRER CTA – sofort sichtbar, ohne scrollen ── */}
+          {next && !allDone && (
+            <div style={{ width: '100%' }}>
+              {/* Block-Preview über dem Button */}
+              <div style={{
+                width: '100%',
+                background: 'var(--bg-card-bright)',
+                border: '1px solid rgba(212, 168, 67, 0.35)',
+                borderBottom: 'none',
+                borderRadius: '16px 16px 0 0',
+                padding: '14px 20px 12px',
               }}>
-                {hinweis.text}
-              </p>
-            );
-          })()}
-          {topSubject && completed > 2 && (
-            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '-12px 0 0', textAlign: 'center' }}>
-              Dein meistgelerntes Fach: {topSubject.charAt(0).toUpperCase() + topSubject.slice(1)}
-            </p>
+                <p style={{
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  letterSpacing: '1.5px',
+                  textTransform: 'uppercase',
+                  color: 'var(--gold)',
+                  margin: '0 0 4px',
+                }}>
+                  {absenceInfo ? 'Lumo hat gewählt' : 'Als nächstes'}
+                </p>
+                <p style={{
+                  fontSize: '17px',
+                  fontWeight: '600',
+                  color: 'var(--text-primary)',
+                  margin: '0',
+                  lineHeight: '1.3',
+                }}>
+                  {next.title}
+                </p>
+                {absenceInfo && (
+                  <p style={{
+                    fontSize: '13px',
+                    color: 'var(--text-secondary)',
+                    margin: '6px 0 0',
+                    lineHeight: '1.4',
+                  }}>
+                    Das ist heute das Wichtigste.
+                  </p>
+                )}
+              </div>
+              {/* CTA-Button direkt drunter – nahtlos verbunden */}
+              <button
+                onClick={() => onStartBlock(next.id)}
+                style={{
+                  width: '100%',
+                  background: 'var(--gold)',
+                  color: '#1a1206',
+                  border: 'none',
+                  borderRadius: '0 0 16px 16px',
+                  padding: '18px 24px',
+                  fontSize: '17px',
+                  fontWeight: '800',
+                  cursor: 'pointer',
+                  letterSpacing: '0.3px',
+                  transition: 'opacity 0.15s ease',
+                }}
+                onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+              >
+                {absenceInfo ? 'Jetzt starten →' : 'Weiter lernen →'}
+              </button>
+            </div>
+          )}
+
+          {/* Alle-Blöcke-Fertig */}
+          {allDone && (
+            <Button onClick={onNewProject} style={{ width: '100%' }}>
+              Neues Thema starten
+            </Button>
           )}
         </div>
 
-        {/* Sprint-Modus Banner */}
-        {sprintMode && (() => {
-          let daysUntil = null;
-          if (goalDate) {
-            const now = new Date(); now.setHours(0,0,0,0);
-            const exam = new Date(goalDate); exam.setHours(0,0,0,0);
-            daysUntil = Math.ceil((exam - now) / (1000 * 60 * 60 * 24));
-          }
-          const dayWord = daysUntil === null ? 'bald'
-            : daysUntil <= 0 ? 'heute'
-            : daysUntil === 1 ? 'morgen'
-            : `in ${daysUntil} Tagen`;
-          return (
-            <div style={{
-              width: '100%',
-              background: 'rgba(212, 168, 67, 0.08)',
-              border: '1px solid rgba(212, 168, 67, 0.3)',
-              borderRadius: '14px',
-              padding: '14px 18px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-            }}>
-              <span style={{ fontSize: '20px', flexShrink: 0 }}>⚡</span>
-              <div>
-                <p style={{ fontSize: '13px', fontWeight: '700', color: 'var(--gold)', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-                  Sprint-Modus
-                </p>
-                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0', lineHeight: '1.45' }}>
-                  Prüfung {dayWord}. Fokus auf das Wichtigste.
-                </p>
-              </div>
-            </div>
-          );
-        })()}
+        {/* ── SEKUNDÄRE INFOS: alles was nicht für den Start nötig ist ── */}
 
-        {/* Abwesenheits-Adaption: Lumo passt Plan an, kein Shame */}
+        {/* Abwesenheits-Adaption – kommt NACH dem CTA, nicht davor */}
         {absenceInfo && (
           <div style={{
             width: '100%',
-            background: absenceInfo.isLong
-              ? 'rgba(61, 158, 110, 0.07)'
-              : 'rgba(212, 168, 67, 0.07)',
-            border: `1px solid ${absenceInfo.isLong ? 'rgba(61, 158, 110, 0.25)' : 'rgba(212, 168, 67, 0.25)'}`,
-            borderRadius: '16px',
-            padding: '18px 20px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '6px',
+            background: absenceInfo.isLong ? 'rgba(61, 158, 110, 0.07)' : 'rgba(212, 168, 67, 0.06)',
+            border: `1px solid ${absenceInfo.isLong ? 'rgba(61, 158, 110, 0.25)' : 'rgba(212, 168, 67, 0.2)'}`,
+            borderRadius: '14px',
+            padding: '14px 18px',
           }}>
-            <p style={{
-              fontSize: '15px',
-              fontWeight: '700',
-              color: 'var(--text-primary)',
-              margin: '0',
-              lineHeight: '1.4',
-            }}>
+            <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', margin: '0 0 4px', lineHeight: '1.4' }}>
               {absenceInfo.message} Ich habe deinen Plan angepasst.
             </p>
-            <p style={{
-              fontSize: '13px',
-              color: 'var(--text-secondary)',
-              margin: '0',
-              lineHeight: '1.5',
-            }}>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0', lineHeight: '1.5' }}>
               {absenceInfo.isLong
-                ? 'Kein Stress. Ein Block reicht heute – ich zeige dir den wichtigsten.'
-                : 'Fang einfach an. Ich zeige dir wo es weitergeht.'}
+                ? 'Kein Stress. Ein Block reicht heute.'
+                : 'Fang einfach an – ich zeige dir wo es weitergeht.'}
             </p>
           </div>
         )}
 
+        {/* Sprint-Modus */}
+        {sprintMode && (
+          <div style={{
+            width: '100%',
+            background: 'rgba(212, 168, 67, 0.07)',
+            border: '1px solid rgba(212, 168, 67, 0.3)',
+            borderRadius: '14px',
+            padding: '12px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+          }}>
+            <span style={{ fontSize: '18px', flexShrink: 0 }}>⚡</span>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0', lineHeight: '1.4' }}>
+              <span style={{ fontWeight: '700', color: 'var(--gold)' }}>Sprint-Modus</span> – Prüfung {sprintDayWord}.
+            </p>
+          </div>
+        )}
+
+        {/* Prüfungsergebnis abfragen */}
         {shouldAskExamResult(safeBlocks, goalType, examResult, examResultAskedAt) && (
           <button
             onClick={onAskExamResult}
             style={{
               width: '100%',
-              background: 'rgba(212, 168, 67, 0.1)',
-              border: '1px solid rgba(212, 168, 67, 0.4)',
+              background: 'rgba(212, 168, 67, 0.08)',
+              border: '1px solid rgba(212, 168, 67, 0.35)',
               borderRadius: '12px',
               padding: '14px 18px',
               cursor: 'pointer',
@@ -292,122 +315,91 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHis
               Wie lief die Prüfung?
             </p>
             <p style={{ fontSize: '14px', color: 'var(--text-primary)', margin: '0' }}>
-              Lumo möchte wissen wie es war. Tippe um es zu erzählen.
+              Tippe um es Lumo zu erzählen →
             </p>
           </button>
         )}
 
-        {(() => {
-          // Bei Abwesenheit (>1 Tag) keinen Due-Pile zeigen – kein Shame,
-          // Lumo wählt stattdessen einen Block (im "Ich empfehle"-Block unten).
-          if (absenceInfo) return null;
-          const dueBlocks = getBlocksDueToday(safeBlocks);
-          if (dueBlocks.length === 0) return null;
-          return (
-            <div style={{
-              width: '100%',
-              background: 'rgba(212, 168, 67, 0.08)',
-              border: '1px solid rgba(212, 168, 67, 0.3)',
-              borderRadius: '14px',
-              padding: '16px 18px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '10px',
-            }}>
-              <p style={{
-                fontSize: '11px',
-                fontWeight: '700',
-                letterSpacing: '1.5px',
-                textTransform: 'uppercase',
-                color: 'var(--gold)',
-                margin: '0',
-              }}>
-                Zeit zur Wiederholung
-              </p>
-              {dueBlocks.map(b => (
-                <button
-                  key={b.id}
-                  onClick={() => onStartBlock(b.id)}
-                  style={{
-                    background: 'var(--bg-card)',
-                    border: '1px solid var(--border)',
-                    borderRadius: '10px',
-                    padding: '12px 14px',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    color: 'var(--text-primary)',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                  }}
-                >
-                  {b.title} →
-                </button>
-              ))}
-            </div>
-          );
-        })()}
-
-        {next && !allDone && (
+        {/* Due-Pile – nur ohne Abwesenheit, und erst nach dem Haupt-CTA */}
+        {dueBlocks.length > 0 && (
           <div style={{
             width: '100%',
-            background: absenceInfo ? 'var(--bg-card-bright)' : 'var(--bg-card)',
-            border: absenceInfo
-              ? '1px solid rgba(212, 168, 67, 0.4)'
-              : '1px solid var(--border)',
-            borderRadius: '16px',
-            padding: '20px 24px',
-            textAlign: 'left',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border)',
+            borderRadius: '14px',
+            padding: '16px 18px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px',
           }}>
             <p style={{
               fontSize: '11px',
-              fontWeight: '600',
+              fontWeight: '700',
               letterSpacing: '1.5px',
               textTransform: 'uppercase',
-              color: 'var(--gold)',
-              marginBottom: '6px',
+              color: 'var(--text-secondary)',
+              margin: '0',
             }}>
-              {absenceInfo ? 'Lumo hat gewählt' : 'Ich empfehle'}
+              Auch fällig
             </p>
-            <p style={{
-              fontSize: '18px',
-              fontWeight: '600',
-              color: 'var(--text-primary)',
-              lineHeight: '1.3',
-              marginBottom: absenceInfo ? '8px' : '0',
-            }}>
-              {next.title}
-            </p>
-            {absenceInfo && (
-              <p style={{
-                fontSize: '13px',
-                color: 'var(--text-secondary)',
-                margin: '0',
-                lineHeight: '1.4',
-              }}>
-                Das ist heute das Wichtigste. Alles andere kommt danach.
+            {dueBlocks.slice(0, 2).map(b => (
+              <button
+                key={b.id}
+                onClick={() => onStartBlock(b.id)}
+                style={{
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '10px',
+                  padding: '11px 14px',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  color: 'var(--text-secondary)',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                }}
+              >
+                {b.title} →
+              </button>
+            ))}
+            {dueBlocks.length > 2 && (
+              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '0', textAlign: 'center' }}>
+                + {dueBlocks.length - 2} weitere
               </p>
             )}
           </div>
         )}
 
-        {next && !allDone ? (
-          <Button onClick={() => onStartBlock(next.id)} style={{ width: '100%' }}>
-            {absenceInfo ? 'Jetzt starten →' : 'Weiter lernen'}
-          </Button>
-        ) : allDone ? (
-          <Button onClick={onNewProject} style={{ width: '100%' }}>
-            Neues Thema starten
-          </Button>
-        ) : null}
+        {/* Streak + Lernzeit-Hinweis – ganz unten, nur Kontext */}
+        {(streakDays >= 2 || lernzeitHinweis.show) && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'center' }}>
+            {streakDays >= 2 && (
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0', fontStyle: 'italic' }}>
+                {streakDays < 7
+                  ? `Ich bin seit ${streakDays} Tagen dabei.`
+                  : streakDays < 30
+                  ? `Wir lernen seit ${streakDays} Tagen zusammen.`
+                  : `${streakDays} Tage. Du machst das wirklich.`
+                }
+              </p>
+            )}
+            {lernzeitHinweis.show && (
+              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '0', fontStyle: 'italic', opacity: '0.75' }}>
+                {lernzeitHinweis.text}
+              </p>
+            )}
+          </div>
+        )}
 
-        <div style={{ display: 'flex', gap: '24px' }}>
+        {/* Navigation – dezent, kein visueller Wettbewerb mit dem CTA */}
+        <div style={{ display: 'flex', gap: '24px', justifyContent: 'center' }}>
           <button className="text-link" onClick={onGoToDashboard}>
-            Alle Blöcke sehen
+            Alle Blöcke
           </button>
           <button className="text-link" onClick={onNewProject}>
             Neues Fach
           </button>
         </div>
+
       </div>
     </div>
   );
