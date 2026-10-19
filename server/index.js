@@ -129,7 +129,7 @@ function sendFriendlyError(res, err) {
 
 app.post('/api/analyze', async (req, res) => {
   try {
-    const { topic, materialText, fileBase64, fileMediaType, goalType, goalDate } = req.body || {};
+    const { topic, materialText, fileBase64, fileMediaType, goalType, goalDate, sprintMode } = req.body || {};
 
     const goalContext =
       goalType === 'exam'
@@ -165,7 +165,7 @@ app.post('/api/analyze', async (req, res) => {
     userContent.push({ type: 'text', text: textPrompt });
 
     const data = await askLumo({
-      system: getAnalyzeSystem(goalType),
+      system: getAnalyzeSystem(goalType, Boolean(sprintMode)),
       userContent,
       schema: analyzeSchema,
       maxTokens: 8000,

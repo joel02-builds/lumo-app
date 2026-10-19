@@ -61,6 +61,7 @@ export default function App() {
       materialName: state.fileName,
       goalType: state.goalType,
       goalDate: state.goalDate,
+      sprintMode: state.sprintMode,
       blocks: state.blocks,
       recommendedOrder: state.recommendedOrder,
       subjectColor: state.subjectColor,
@@ -74,7 +75,7 @@ export default function App() {
       sessionsTotal: state.sessionsTotal,
       flashcards: state.flashcards,
     });
-  }, [state.topic, state.fileName, state.goalType, state.goalDate, state.blocks, state.recommendedOrder, state.subjectColor, state.learningStyle, state.subjectHistory, state.projects, state.activeProjectId, state.examResult, state.examResultAskedAt, state.blocksAnalyzedTotal, state.sessionsTotal, state.flashcards]);
+  }, [state.topic, state.fileName, state.goalType, state.goalDate, state.sprintMode, state.blocks, state.recommendedOrder, state.subjectColor, state.learningStyle, state.subjectHistory, state.projects, state.activeProjectId, state.examResult, state.examResultAskedAt, state.blocksAnalyzedTotal, state.sessionsTotal, state.flashcards]);
 
   const handleMaterial = useCallback((payload) => {
     dispatch({ type: 'SET_MATERIAL', ...payload });
@@ -95,8 +96,8 @@ export default function App() {
   }, []);
 
   const runAnalysis = useCallback(
-    async (goalType, goalDate) => {
-      dispatch({ type: 'START_ANALYSIS', goalType, goalDate });
+    async (goalType, goalDate, sprintMode = false) => {
+      dispatch({ type: 'START_ANALYSIS', goalType, goalDate, sprintMode });
       try {
         const data = await lumoApi.analyzeMaterial({
           topic: state.topic,
@@ -105,6 +106,7 @@ export default function App() {
           fileMediaType: state.fileMediaType,
           goalType,
           goalDate,
+          sprintMode,
         });
         dispatch({ type: 'ANALYSIS_SUCCESS', data });
       } catch (err) {
@@ -115,9 +117,9 @@ export default function App() {
   );
 
   const handleGoalConfirm = useCallback(
-    ({ goalType, goalDate, learningStyle }) => {
+    ({ goalType, goalDate, learningStyle, sprintMode = false }) => {
       if (learningStyle) dispatch({ type: 'SET_LEARNING_STYLE', learningStyle });
-      runAnalysis(goalType, goalDate);
+      runAnalysis(goalType, goalDate, sprintMode);
     },
     [runAnalysis]
   );
@@ -217,6 +219,8 @@ export default function App() {
           recommendedOrder={state.recommendedOrder}
           subjectHistory={state.subjectHistory}
           goalType={state.goalType}
+          goalDate={state.goalDate}
+          sprintMode={state.sprintMode}
           examResult={state.examResult}
           examResultAskedAt={state.examResultAskedAt}
           onStartBlock={(blockId) => dispatch({ type: 'START_BLOCK', blockId })}
@@ -271,6 +275,7 @@ export default function App() {
           recommendedOrder={state.recommendedOrder}
           goalType={state.goalType}
           goalDate={state.goalDate}
+          sprintMode={state.sprintMode}
           onStartBlock={(blockId) => dispatch({ type: 'START_BLOCK', blockId })}
           onNewProject={handleNewProject}
           onViewWeakSpots={() => dispatch({ type: 'VIEW_WEAK_SPOTS' })}
@@ -330,6 +335,7 @@ export default function App() {
           block={currentBlock}
           blocks={state.blocks}
           goalType={state.goalType}
+          sprintMode={state.sprintMode}
           learningStyle={state.learningStyle}
           onTrackSubject={(subject) => dispatch({ type: 'TRACK_SUBJECT', payload: subject })}
           onAddFlashcards={(cards) => dispatch({ type: 'ADD_FLASHCARDS', payload: cards })}

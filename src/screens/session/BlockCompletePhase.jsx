@@ -30,10 +30,21 @@ function randomMessage(status) {
   return list[Math.floor(Math.random() * list.length)];
 }
 
-export default function BlockCompletePhase({ block, result, cards, onContinue, onPause, onAddFlashcards }) {
+export default function BlockCompletePhase({ block, result, cards, onContinue, onPause, onAddFlashcards, sprintMode, allBlocks }) {
   const status = result?.status || 'unsicher';
   const isGood = status === 'sicher';
   const hasGaps = !isGood && result?.uncertainPoints?.length > 0;
+
+  // Sprint-Modus: Prüfe ob alle Blöcke abgeschlossen sind
+  const remainingBlocks = allBlocks
+    ? allBlocks.filter(b => b.id !== block?.id && b.status !== 'completed').length
+    : 1;
+  const isLastSprintBlock = sprintMode && remainingBlocks === 0;
+
+  // Sprint-Modus Kern-Punkte aus Good Points ableiten
+  const sprintKeyPoints = isLastSprintBlock && result?.goodPoints?.length
+    ? result.goodPoints.slice(0, 3)
+    : [];
   const firedRef = useRef(false);
   const [showLernzettel, setShowLernzettel] = useState(false);
 
@@ -269,6 +280,81 @@ export default function BlockCompletePhase({ block, result, cards, onContinue, o
         </div>
       )}
 
+      {/* Sprint-Modus: Letzter Block – Kernpunkte zum Nochmal-Lesen */}
+      {isLastSprintBlock && (
+        <div style={{
+          width: '100%',
+          maxWidth: '360px',
+          background: 'rgba(212, 168, 67, 0.07)',
+          border: '1px solid rgba(212, 168, 67, 0.3)',
+          borderRadius: '16px',
+          padding: '20px',
+        }}>
+          <p style={{
+            fontSize: '11px',
+            fontWeight: '700',
+            letterSpacing: '1.5px',
+            textTransform: 'uppercase',
+            color: 'var(--gold)',
+            margin: '0 0 14px',
+          }}>
+            ⚡ Sprint abgeschlossen
+          </p>
+          <p style={{
+            fontSize: '15px',
+            fontWeight: '600',
+            color: 'var(--text-primary)',
+            margin: '0 0 12px',
+            lineHeight: '1.4',
+          }}>
+            Das sind deine wichtigsten Punkte.
+            <br />
+            <span style={{ fontWeight: '400', color: 'var(--text-secondary)', fontSize: '13px' }}>
+              Lies sie einmal vor dem Schlafen nochmal.
+            </span>
+          </p>
+          {sprintKeyPoints.length > 0 ? (
+            sprintKeyPoints.map((point, i) => (
+              <div key={i} style={{
+                display: 'flex',
+                gap: '10px',
+                marginBottom: '10px',
+                alignItems: 'flex-start',
+              }}>
+                <span style={{
+                  flexShrink: 0,
+                  width: '22px',
+                  height: '22px',
+                  borderRadius: '50%',
+                  background: 'var(--gold)',
+                  color: '#1a1206',
+                  fontSize: '12px',
+                  fontWeight: '800',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginTop: '1px',
+                }}>
+                  {i + 1}
+                </span>
+                <p style={{
+                  fontSize: '14px',
+                  color: 'var(--text-primary)',
+                  margin: '0',
+                  lineHeight: '1.5',
+                }}>
+                  {point}
+                </p>
+              </div>
+            ))
+          ) : (
+            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: '0', lineHeight: '1.5' }}>
+              Schau dir kurz noch einmal den Lernzettel von jedem Block an.
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Buttons */}
       <div style={{
         width: '100%',
@@ -278,7 +364,7 @@ export default function BlockCompletePhase({ block, result, cards, onContinue, o
         gap: '10px',
       }}>
         <Button onClick={onContinue} style={{ width: '100%' }}>
-          {isGood ? 'Weiter lernen →' : 'Verstanden, weiter →'}
+          {isLastSprintBlock ? 'Sprint beendet – Zurück zum Überblick' : isGood ? 'Weiter lernen →' : 'Verstanden, weiter →'}
         </Button>
         <button
           onClick={onPause}

@@ -38,13 +38,28 @@ Deine Aufgabe:
 7. Fülle "content" mit einer kompakten Zusammenfassung des Stoffs dieses Blocks (2-6 Sätze), die als Grundlage für spätere Erklärungen dient
 8. Bestimme das Fach (subject) – ein einziges Wort auf Deutsch, kleingeschrieben: biologie, chemie, physik, mathematik, geschichte, psychologie, wirtschaft, informatik, sprachen, medizin, jura – oder ein anderes passendes Fach.`;
 
-export function getAnalyzeSystem(goalType) {
+export function getAnalyzeSystem(goalType, sprintMode = false) {
   const goalContext = goalType === 'exam'
     ? '\nDer Nutzer lernt für eine PRÜFUNG: Betone Prüfungsrelevanz, markiere was besonders wichtig ist.'
     : goalType === 'homework'
     ? '\nDer Nutzer schreibt eine HAUSARBEIT: Betone Zusammenhänge und tiefes Verstehen über reine Fakten.'
     : '\nDer Nutzer möchte VERSTEHEN ohne Druck: Erkläre breiter, weniger streng, mehr Kontext.';
-  return ANALYZE_SYSTEM + goalContext;
+
+  // Sprint-Modus: Prüfung in ≤3 Tagen – maximale Priorisierung
+  const sprintContext = sprintMode
+    ? `
+
+SPRINT-MODUS (Prüfung in ≤3 Tagen):
+- Erstelle MAXIMAL 4 Blöcke, nicht mehr – Fokus auf das Absolut-Wichtigste
+- Sortiere die Blöcke nach Prüfungsrelevanz: der wichtigste Block zuerst in recommendedOrder
+- Setze estimatedMinutes auf maximal 20 Minuten pro Block – kürzer ist besser
+- Lass unwichtige Details, Hintergrundinformationen und tiefe Zusammenhänge weg
+- Jeder Block soll direkt abprüfbares Kernwissen enthalten
+- Im "content" Feld: nur die 3-4 wichtigsten Kernaussagen des Blocks, stichpunktartig
+- PRIORITÄTEN: Was kommt in Prüfungen? Was wird direkt abgefragt? Das kommt zuerst.`
+    : '';
+
+  return ANALYZE_SYSTEM + goalContext + sprintContext;
 }
 
 export const analyzeSchema = {

@@ -32,10 +32,21 @@ const LEARNING_STYLES = [
   { label: 'Mit Vergleichen', value: 'analogies', icon: '🌉', sub: 'Einfache Analogien' },
 ];
 
+function getDaysUntilDate(dateStr) {
+  if (!dateStr) return null;
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const target = new Date(dateStr);
+  target.setHours(0, 0, 0, 0);
+  return Math.ceil((target - now) / (1000 * 60 * 60 * 24));
+}
+
 export default function OnboardingScreen3({ onConfirm, onBack }) {
   const [selectedId, setSelectedId] = useState(null);
   const [goalDate, setGoalDate] = useState('');
   const [confirmedGoal, setConfirmedGoal] = useState(null);
+  const [showSprintInterstitial, setShowSprintInterstitial] = useState(false);
+  const [pendingSprintGoal, setPendingSprintGoal] = useState(null);
 
   const selectedGoal = GOALS.find((g) => g.id === selectedId);
 
@@ -43,13 +54,110 @@ export default function OnboardingScreen3({ onConfirm, onBack }) {
     if (goal.needsDate) {
       setSelectedId(goal.id);
     } else {
-      setConfirmedGoal({ goalType: goal.id, goalDate: '' });
+      setConfirmedGoal({ goalType: goal.id, goalDate: '', sprintMode: false });
     }
   }
 
   function confirmDate() {
     if (!goalDate) return;
-    setConfirmedGoal({ goalType: selectedId, goalDate });
+    // Sprint-Modus: Prüfung in ≤3 Tagen → Interstitial zeigen
+    const days = getDaysUntilDate(goalDate);
+    if (selectedId === 'exam' && days !== null && days <= 3) {
+      setPendingSprintGoal({ goalType: selectedId, goalDate, daysUntilExam: days });
+      setShowSprintInterstitial(true);
+    } else {
+      setConfirmedGoal({ goalType: selectedId, goalDate, sprintMode: false });
+    }
+  }
+
+  // Sprint-Modus Interstitial: erscheint wenn Prüfung ≤3 Tage
+  if (showSprintInterstitial && pendingSprintGoal) {
+    const { daysUntilExam } = pendingSprintGoal;
+    const dayWord = daysUntilExam === 0 ? 'heute' : daysUntilExam === 1 ? 'morgen' : `in ${daysUntilExam} Tagen`;
+    return (
+      <div className="screen" key="sprint-interstitial">
+        <div className="screen-content" style={{ gap: '20px', maxWidth: '400px' }}>
+          <LumoMascot state="cheer" label="Lumo" />
+          <div style={{ textAlign: 'center' }}>
+            <p style={{
+              fontSize: '11px',
+              fontWeight: '700',
+              letterSpacing: '1.5px',
+              textTransform: 'uppercase',
+              color: 'var(--gold)',
+              margin: '0 0 10px',
+            }}>
+              Sprint-Modus
+            </p>
+            <h1 style={{ fontSize: '22px', lineHeight: '1.35', marginBottom: '12px' }}>
+              Deine Prüfung ist {dayWord}.
+            </h1>
+            <p style={{ fontSize: '15px', color: 'var(--text-secondary)', lineHeight: '1.6', margin: '0' }}>
+              Lumo schaltet in den <strong style={{ color: 'var(--text-primary)' }}>Sprint-Modus</strong>.
+              Statt allem zu lernen, fokussierst du dich jetzt auf das Wichtigste –
+              komprimiert, direkt, prüfungsrelevant.
+            </p>
+          </div>
+
+          <div style={{
+            width: '100%',
+            background: 'rgba(212, 168, 67, 0.07)',
+            border: '1px solid rgba(212, 168, 67, 0.2)',
+            borderRadius: '14px',
+            padding: '16px 18px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px',
+          }}>
+            {[
+              { icon: '⚡', text: 'Nur die prüfungsrelevantesten Themen zuerst' },
+              { icon: '⏱', text: 'Jeder Block max. 20 Minuten' },
+              { icon: '🎯', text: 'Direkt testen statt lang erklären' },
+              { icon: '🧠', text: 'Am Ende: deine 3 wichtigsten Punkte zum Wiederholen' },
+            ].map(({ icon, text }) => (
+              <div key={text} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                <span style={{ fontSize: '16px', flexShrink: 0, marginTop: '1px' }}>{icon}</span>
+                <span style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.45' }}>{text}</span>
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={() => setConfirmedGoal({ ...pendingSprintGoal, sprintMode: true })}
+            style={{
+              width: '100%',
+              background: 'var(--gold)',
+              color: '#1a1206',
+              border: 'none',
+              borderRadius: '12px',
+              padding: '15px',
+              fontSize: '16px',
+              fontWeight: '700',
+              cursor: 'pointer',
+            }}
+          >
+            Sprint starten
+          </button>
+
+          <button
+            onClick={() => {
+              setShowSprintInterstitial(false);
+              setConfirmedGoal({ ...pendingSprintGoal, sprintMode: false });
+            }}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-secondary)',
+              fontSize: '13px',
+              cursor: 'pointer',
+              padding: '4px',
+            }}
+          >
+            Nein, normal lernen
+          </button>
+        </div>
+      </div>
+    );
   }
 
   if (confirmedGoal) {
@@ -78,7 +186,7 @@ export default function OnboardingScreen3({ onConfirm, onBack }) {
             {LEARNING_STYLES.map(({ label, value, icon, sub }) => (
               <button
                 key={value}
-                onClick={() => onConfirm({ ...confirmedGoal, learningStyle: value })}
+                onClick={() => onConfirm({ goalType: confirmedGoal.goalType, goalDate: confirmedGoal.goalDate, sprintMode: confirmedGoal.sprintMode || false, learningStyle: value })}
                 style={{
                   background: 'var(--bg-card)',
                   border: '1px solid var(--border)',

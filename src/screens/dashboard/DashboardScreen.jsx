@@ -85,7 +85,7 @@ function BlockDot({ block, subjectColor }) {
   );
 }
 
-export default function DashboardScreen({ blocks, recommendedOrder, goalType, goalDate, onStartBlock, onNewProject, onViewWeakSpots, onViewProjects, onSettings, blocksAnalyzedTotal, flashcardsCount, onViewFlashcards }) {
+export default function DashboardScreen({ blocks, recommendedOrder, goalType, goalDate, sprintMode, onStartBlock, onNewProject, onViewWeakSpots, onViewProjects, onSettings, blocksAnalyzedTotal, flashcardsCount, onViewFlashcards }) {
   const safeBlocks = (blocks || []).filter(Boolean);
   const [expandedBlock, setExpandedBlock] = useState(null);
   const next = getRecommendedBlock(safeBlocks, recommendedOrder || []);
@@ -236,6 +236,30 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
             </div>
           );
         })()}
+
+        {/* Sprint-Modus Banner */}
+        {sprintMode && (
+          <div style={{
+            width: '100%',
+            background: 'rgba(212, 168, 67, 0.08)',
+            border: '1px solid rgba(212, 168, 67, 0.35)',
+            borderRadius: '14px',
+            padding: '14px 18px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+          }}>
+            <span style={{ fontSize: '20px', flexShrink: 0 }}>⚡</span>
+            <div>
+              <p style={{ fontSize: '13px', fontWeight: '700', color: 'var(--gold)', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                Sprint-Modus aktiv
+              </p>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0', lineHeight: '1.45' }}>
+                Nur das Wichtigste. Jeder Block max. 20 Minuten.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Block Liste */}
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>

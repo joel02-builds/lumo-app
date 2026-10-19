@@ -52,7 +52,7 @@ function getLernzeitHinweis() {
   return { show: false, text: '' };
 }
 
-export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHistory, goalType, examResult, examResultAskedAt, onStartBlock, onGoToDashboard, onNewProject, onAskExamResult }) {
+export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHistory, goalType, goalDate, sprintMode, examResult, examResultAskedAt, onStartBlock, onGoToDashboard, onNewProject, onAskExamResult }) {
   const safeBlocks = (blocks || []).filter(Boolean);
   const total = safeBlocks.length;
   const completed = safeBlocks.filter((b) => b.status === 'completed').length;
@@ -177,6 +177,42 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHis
             </p>
           )}
         </div>
+
+        {/* Sprint-Modus Banner */}
+        {sprintMode && (() => {
+          let daysUntil = null;
+          if (goalDate) {
+            const now = new Date(); now.setHours(0,0,0,0);
+            const exam = new Date(goalDate); exam.setHours(0,0,0,0);
+            daysUntil = Math.ceil((exam - now) / (1000 * 60 * 60 * 24));
+          }
+          const dayWord = daysUntil === null ? 'bald'
+            : daysUntil <= 0 ? 'heute'
+            : daysUntil === 1 ? 'morgen'
+            : `in ${daysUntil} Tagen`;
+          return (
+            <div style={{
+              width: '100%',
+              background: 'rgba(212, 168, 67, 0.08)',
+              border: '1px solid rgba(212, 168, 67, 0.3)',
+              borderRadius: '14px',
+              padding: '14px 18px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+            }}>
+              <span style={{ fontSize: '20px', flexShrink: 0 }}>⚡</span>
+              <div>
+                <p style={{ fontSize: '13px', fontWeight: '700', color: 'var(--gold)', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                  Sprint-Modus
+                </p>
+                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0', lineHeight: '1.45' }}>
+                  Prüfung {dayWord}. Fokus auf das Wichtigste.
+                </p>
+              </div>
+            </div>
+          );
+        })()}
 
         {(() => {
           const days = getDaysSinceLastLearning(safeBlocks);

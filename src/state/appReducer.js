@@ -22,6 +22,7 @@ export const initialState = {
   fileMediaType: '',
   goalType: null,
   goalDate: '',
+  sprintMode: false,   // true wenn Prüfung ≤3 Tage entfernt – aktiviert komprimierten Lernmodus
   blocks: [],
   recommendedOrder: [],
   currentBlockId: null,
@@ -54,6 +55,7 @@ export function createInitialState(savedProject) {
     fileName: savedProject.materialName || '',
     goalType: savedProject.goalType || null,
     goalDate: savedProject.goalDate || '',
+    sprintMode: savedProject.sprintMode || false,
     blocks: savedProject.blocks || [],
     recommendedOrder: savedProject.recommendedOrder || [],
     subjectColor: savedProject.subjectColor || null,
@@ -96,6 +98,7 @@ export function appReducer(state, action) {
         ...state,
         goalType: action.goalType,
         goalDate: action.goalDate,
+        sprintMode: action.sprintMode || false,
         screen: SCREENS.ANALYZING,
         error: null,
       };

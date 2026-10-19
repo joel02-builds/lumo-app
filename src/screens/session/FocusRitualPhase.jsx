@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import LumoMascot from '../../components/LumoMascot.jsx';
 
-export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStats, onMoodSet }) {
+export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStats, onMoodSet, sprintMode }) {
   const [ready, setReady] = useState(false);
   const [mood, setMood] = useState(null);
 
@@ -142,8 +142,26 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
                   color: 'var(--text-secondary)',
                   margin: '0',
                 }}>
-                  ca. {mood === 'bad' ? Math.round(block.estimatedMinutes * 0.7) : block.estimatedMinutes} Minuten
+                  ca. {sprintMode ? Math.min(mood === 'bad' ? Math.round(block.estimatedMinutes * 0.7) : block.estimatedMinutes, 20) : mood === 'bad' ? Math.round(block.estimatedMinutes * 0.7) : block.estimatedMinutes} Minuten
                 </p>
+              )}
+              {sprintMode && (
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'rgba(212, 168, 67, 0.12)',
+                  border: '1px solid rgba(212, 168, 67, 0.3)',
+                  borderRadius: '8px',
+                  padding: '4px 10px',
+                  marginTop: '4px',
+                  width: 'fit-content',
+                }}>
+                  <span style={{ fontSize: '12px' }}>⚡</span>
+                  <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--gold)', letterSpacing: '0.5px' }}>
+                    Sprint-Modus
+                  </span>
+                </div>
               )}
             </div>
 
