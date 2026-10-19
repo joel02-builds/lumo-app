@@ -1,7 +1,23 @@
+import { useState } from 'react';
 import LumoMascot from '../components/LumoMascot.jsx';
 import { getSubjectColor } from '../utils/subjectColors.js';
 
 export default function ProjectsScreen({ projects, onLoad, onNew, onDelete }) {
+  // Sicherheitsnetz gegen impulsives Löschen (ADHS-Designprinzip):
+  // Erst nach Bestätigung wird das Projekt endgültig entfernt.
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+
+  function handleDeleteClick(id) {
+    setConfirmDeleteId(id);
+  }
+
+  function handleDeleteConfirm() {
+    if (confirmDeleteId) {
+      onDelete(confirmDeleteId);
+      setConfirmDeleteId(null);
+    }
+  }
+
   if (projects.length === 0) {
     return (
       <div className="screen">
@@ -31,6 +47,8 @@ export default function ProjectsScreen({ projects, onLoad, onNew, onDelete }) {
       </div>
     );
   }
+
+  const projectToDelete = projects.find(p => p.id === confirmDeleteId);
 
   return (
     <div className="screen" style={{ justifyContent: 'flex-start', paddingTop: '60px' }}>
@@ -69,15 +87,20 @@ export default function ProjectsScreen({ projects, onLoad, onNew, onDelete }) {
                   </p>
                 </div>
                 <button
-                  onClick={() => onDelete(p.id)}
+                  onClick={() => handleDeleteClick(p.id)}
+                  aria-label="Projekt löschen"
                   style={{
                     background: 'none',
                     border: 'none',
                     color: 'var(--text-secondary)',
                     cursor: 'pointer',
                     fontSize: '16px',
-                    padding: '2px 6px',
+                    padding: '4px 8px',
+                    borderRadius: '6px',
+                    transition: 'color 0.15s',
                   }}
+                  onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-primary)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-secondary)'; }}
                 >
                   ✕
                 </button>
@@ -122,6 +145,80 @@ export default function ProjectsScreen({ projects, onLoad, onNew, onDelete }) {
           + Neues Fach
         </button>
       </div>
+
+      {/* Lösch-Bestätigung Modal */}
+      {confirmDeleteId && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.65)',
+            zIndex: 2000,
+            display: 'flex',
+            alignItems: 'flex-end',
+            padding: '24px',
+          }}
+          onClick={() => setConfirmDeleteId(null)}
+        >
+          <div
+            style={{
+              width: '100%',
+              maxWidth: '480px',
+              margin: '0 auto',
+              background: 'var(--bg-card)',
+              borderRadius: '20px',
+              padding: '28px 24px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div>
+              <h2 style={{ fontSize: '18px', fontWeight: '800', margin: '0 0 6px' }}>
+                Fach löschen?
+              </h2>
+              <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: '0', lineHeight: '1.5' }}>
+                „{projectToDelete?.topic || 'Dieses Fach'}" und der gesamte Lernfortschritt werden dauerhaft gelöscht. Das lässt sich nicht rückgängig machen.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                style={{
+                  flex: 1,
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '12px',
+                  padding: '13px',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  color: 'var(--text-primary)',
+                  cursor: 'pointer',
+                }}
+              >
+                Abbrechen
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                style={{
+                  flex: 1,
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '12px',
+                  padding: '13px',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  color: 'var(--text-secondary)',
+                  cursor: 'pointer',
+                }}
+              >
+                Löschen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
