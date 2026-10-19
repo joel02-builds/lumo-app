@@ -160,6 +160,31 @@ export default function App() {
     dispatch({ type: 'VIEW_FLASHCARDS' });
   }, []);
 
+  // Streak nach echtem Block-Abschluss schreiben.
+  // Wird in SessionScreen via onRecordCompletion ausgelöst – also nur wenn
+  // der Nutzer einen Block wirklich durchgelernt hat, nicht beim bloßen Öffnen
+  // der App. Schreibt direkt in localStorage (außerhalb des Reducers, weil
+  // der Reducer pure bleiben soll).
+  const handleRecordCompletion = useCallback((result) => {
+    try {
+      const today = new Date().toDateString();
+      const raw = localStorage.getItem('lumo_streak');
+      const streak = raw ? JSON.parse(raw) : { days: 0, lastDate: null };
+
+      if (streak.lastDate !== today) {
+        // Erster Block heute: Streak um 1 erhöhen (oder auf 1 setzen wenn neu)
+        const newDays = streak.lastDate === new Date(Date.now() - 86400000).toDateString()
+          ? streak.days + 1   // gestern gelernt → Streak läuft weiter
+          : 1;                 // länger nicht gelernt → Streak startet neu bei 1
+        localStorage.setItem('lumo_streak', JSON.stringify({ days: newDays, lastDate: today }));
+      }
+      // Wenn lastDate === today: bereits heute einen Block abgeschlossen – kein Update nötig
+    } catch {
+      // localStorage nicht verfügbar – still ignorieren
+    }
+    dispatch({ type: 'BLOCK_FINISHED', blockId: currentBlock?.id, ...result });
+  }, [currentBlock?.id]);
+
   const handleExamResultDone = useCallback((result) => {
     dispatch({ type: 'SET_EXAM_RESULT', payload: result });
     dispatch({ type: 'RETURN_TO_DASHBOARD' });
@@ -308,7 +333,7 @@ export default function App() {
           learningStyle={state.learningStyle}
           onTrackSubject={(subject) => dispatch({ type: 'TRACK_SUBJECT', payload: subject })}
           onAddFlashcards={(cards) => dispatch({ type: 'ADD_FLASHCARDS', payload: cards })}
-          onRecordCompletion={(result) => dispatch({ type: 'BLOCK_FINISHED', blockId: currentBlock.id, ...result })}
+          onRecordCompletion={handleRecordCompletion}
           onSaveCards={(cards) => dispatch({ type: 'SAVE_BLOCK_CARDS', payload: { blockId: currentBlock.id, cards } })}
           onPause={() => dispatch({ type: 'RETURN_TO_DASHBOARD' })}
           onHeaderVisibilityChange={setSessionHasOwnHeader}

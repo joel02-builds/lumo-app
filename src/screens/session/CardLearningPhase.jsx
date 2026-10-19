@@ -1289,7 +1289,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
           </p>
         )}
 
-        {onAskFreely && phase !== 'answering' && phase !== 'feedback' && alternativeExplanation && (
+        {onAskFreely && (phase === 'reading' || phase === 'final-recall') && (
           <button
             className="text-link"
             onClick={onAskFreely}
