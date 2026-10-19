@@ -8,9 +8,9 @@ export default function MidSessionBreakScreen({ onContinue }) {
     <div className="break-overlay">
       <div className="screen-content">
         <LumoMascot state="idle" />
-        <h1 style={{ fontSize: '26px' }}>Gut gemacht.</h1>
+        <h1 style={{ fontSize: '26px' }}>Du hast drangeblieben.</h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '16px', lineHeight: '1.5' }}>
-          Komm zurück wenn du bereit bist.<br />
+          Kurze Pause. Komm zurück wenn du bereit bist.<br />
           Ich bin hier.
         </p>
         <button

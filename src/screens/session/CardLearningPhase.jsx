@@ -46,30 +46,41 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
 
   // Micro-Reward Pool – variable-ratio für dopaminerge Verstärkung
   // Mood-adaptiv: Ton passt sich dem emotionalen Zustand an
+  //
+  // Effort-Praise statt Ability-Praise (Dweck 1998 / Mueller & Dweck 1998):
+  // NICHT: "Du bist gut." / "Richtig!" / "Stark." (Ability-Praise → fragiles Selbstbild)
+  // SONDERN: Prozess loben – das Durchdenken, das Erarbeiten, das Dranbeleiben
+  // Belege: Effort-Praise → mehr Ausdauer, höhere Fehlertoleranz, längerfristige Motivation
+  //
+  // Kurz halten (≤ 5 Wörter): Kein Satz, der übertrieben wirkt.
+  // Spezifisch auf Prozess: "durchgedacht", "erarbeitet", "drangeblieben"
   const REWARD_MESSAGES_BY_MOOD = {
     bad: [
-      'Du hast es.',
-      'Gut.',
-      'Das war richtig.',
-      'Schön.',
-      'Ja, genau.',
-      'Weiter so.',
+      // Sanft, kein Druck – Mut zur Antwort loben
+      'Du hast es probiert.',
+      'Gut durchgehalten.',
+      'Du hast dich getraut.',
+      'Schon mal hingeschaut.',
+      'Drangeblieben – das zählt.',
+      'Du hast nachgedacht.',
     ],
     okay: [
-      'Das saß.',
-      'Genau so.',
-      'Gut gedacht.',
-      'Richtig.',
-      'Du hast es.',
-      'Sauber.',
+      // Prozess betonen – das Durcharbeiten, nicht das Ergebnis
+      'Gut durchgedacht.',
+      'Erarbeitet. Genau so.',
+      'Du hast das hergeleitet.',
+      'Das war Arbeit – sitzt jetzt.',
+      'Drangeblieben. Gut.',
+      'Du hast dich durchgekämpft.',
     ],
     good: [
-      'Das saß. 🎯',
-      'Genau so!',
-      'Stark.',
-      'Ja! Genau das.',
-      'Du hast es drauf.',
-      'Sauber gedacht.',
+      // Prozess + leichte Energie – aber nie "Du bist brillant"
+      'Gut durchgedacht. 🎯',
+      'Das hast du dir erarbeitet.',
+      'Drangeblieben – und es sitzt.',
+      'Du hast das hergeleitet!',
+      'Genau so arbeitet man sich durch.',
+      'Das war echter Denkaufwand.',
     ],
   };
   const REWARD_MESSAGES = REWARD_MESSAGES_BY_MOOD[mood] || REWARD_MESSAGES_BY_MOOD.okay;
@@ -324,7 +335,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
       });
       setFinalFeedback(result);
     } catch {
-      setFinalFeedback({ isGood: true, feedback: 'Gut gemacht – du hast den Block abgeschlossen.' });
+      setFinalFeedback({ isGood: true, feedback: 'Du hast dich durch den ganzen Block gearbeitet.' });
     } finally {
       setFinalSending(false);
     }

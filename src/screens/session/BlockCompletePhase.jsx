@@ -4,23 +4,28 @@ import Button from '../../components/Button.jsx';
 import LernzettelInline from '../../components/LernzettelInline.jsx';
 import { lumoApi } from '../../api/lumo.js';
 
+// Effort-Praise statt Ability-Praise (Dweck 1998):
+// Loben WAS der Nutzer GETAN hat – nicht was er IST.
+// "Du hast durchgehalten" > "Du bist gut"
+// "Du hast das erarbeitet" > "Das war richtig"
+// Besonders wichtig: Bei Lücken Mut zur Aufmerksamkeit loben, nicht Ergebnis abwerten.
 const MESSAGES = {
   sicher: [
-    'Du hast es. Wirklich.',
-    'Das sitzt. Wirklich.',
-    'Verstanden. Abgehakt. Weiter geht\'s.',
-    'Das war echter Fortschritt heute.',
-    'Ich hab\'s gesehen – du hast das verstanden.',
+    'Du hast dir das erarbeitet.',
+    'Durchgehalten und verstanden – das ist der Weg.',
+    'Du hast nachgedacht, nicht geraten.',
+    'Das war echte Arbeit. Und es sitzt.',
+    'Ich hab gesehen wie du das durchgedacht hast.',
   ],
   unsicher: [
-    'Gut versucht. Ich merk mir was noch fehlt.',
-    'Fast da. Beim nächsten Mal sitzt es.',
-    'Du hast es angepackt – das zählt für mich.',
-    'Ich bring das nochmal wenn du bereit bist.',
+    'Du hast dich durchgekämpft – das merkt man.',
+    'Angepackt und dranbeigeblieben. Das zählt.',
+    'Du hast es versucht. Ich merk mir was noch fehlt.',
+    'Der erste Durchgang ist immer der schwerste.',
   ],
   grosse_luecken: [
-    'Anfangen ist das Schwerste. Du hast angefangen.',
-    'Noch nicht da – aber ich bin dabei.',
+    'Du hast angefangen – das ist das Schwierigste.',
+    'Dranbeigeblieben, auch wenn es sich schwer anfühlte.',
     'Ich merk mir was noch fehlt. Wir holen das nach.',
   ],
 };

@@ -16,7 +16,7 @@ export default function ExamResultScreen({ project, onDone, onDismiss }) {
 
   const RESPONSES = {
     sehr_gut: 'Das ist das Ergebnis von echtem Lernen. Du hast es wirklich verstanden – das zeigt sich jetzt.',
-    gut: 'Gut gemacht. Das war echte Arbeit. Beim nächsten Mal noch etwas gezielter die Lücken angehen.',
+    gut: 'Du hast durchgehalten und dich vorbereitet – das sieht man. Gezielter an den Lücken weiterarbeiten.',
     befriedigend: 'Okay ist okay. Schau dir an was noch offen war – da steckt das nächste Mal mehr drin.',
     ausreichend: 'Bestanden ist bestanden. Ich merke mir was noch nicht saß – das wiederholen wir.',
     nicht_bestanden: 'Das tut weh – ich weiß. Aber du weißt jetzt genau was fehlt. Das ist mehr wert als es klingt.',

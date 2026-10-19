@@ -302,10 +302,14 @@ Bewerte die Antwort kurz und direkt. Sei warm aber ehrlich.
 Bestimme:
 - isGood: true wenn die Antwort zeigt dass das Konzept verstanden wurde, false wenn nicht
 - feedback: Ein einziger Satz (maximal 15 Wörter) als direkte Reaktion auf die Antwort
-  - Bei guter Antwort: kurze Bestätigung was richtig war, dann direkt weiter
-  - Bei schlechter Antwort: konkret was fehlte, kein "Versuch es nochmal" ohne Inhalt
-  - Niemals wertend über die Person, nur über den Inhalt
-  - Kein "Gut gemacht" oder leere Lobhudelei`;
+
+Pflicht-Prinzip für feedback (Effort-Praise, Dweck 1998):
+  - Lobe immer den PROZESS – was der Nutzer GETAN hat – nie was er IST
+  - ERLAUBT: "Du hast den Zusammenhang erkannt.", "Gut durchgedacht.", "Du hast das hergeleitet."
+  - VERBOTEN: "Du bist gut.", "Richtig!", "Stark.", "Klasse.", "Super.", leeres Lob ohne Inhalt
+  - Bei guter Antwort: Was wurde konkret richtig durchdacht oder erkannt? Einziger Satz.
+  - Bei schlechter Antwort: Was fehlt noch im Verständnis? Kein "Versuch es nochmal" ohne Inhalt.
+  - Niemals wertend über die Person, nur über den Denkprozess und den Inhalt`;
 
 export const evaluateCardAnswerSchema = {
   type: 'object',
