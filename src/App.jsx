@@ -141,6 +141,13 @@ export default function App() {
     });
   }, [state.topic, state.fileName, state.goalType, state.goalDate, state.sprintMode, state.blocks, state.recommendedOrder, state.subjectColor, state.learningStyle, state.subjectHistory, state.projects, state.activeProjectId, state.examResult, state.examResultAskedAt, state.blocksAnalyzedTotal, state.sessionsTotal, state.flashcards]);
 
+  // ── Abgeleitete Werte — VOR allen useCallbacks, die sie referenzieren ────
+  // WICHTIG: Diese Konstanten MÜSSEN vor den useCallback-Hooks stehen.
+  // Vites Minifier/Bundler kann sonst eine Temporal Dead Zone (TDZ) erzeugen,
+  // die in Production zu einem ReferenceError führt (auch wenn Dev-Mode funktioniert).
+  const currentBlock = state.blocks.find((b) => b?.id === state.currentBlockId);
+  const isWelcomeScreen = state.screen === SCREENS.ONBOARDING && state.onboardingStep === 1;
+
   // Kombinierter Handler für den neuen Screen 1+2:
   // Material-Payload kommt direkt aus OnboardingScreen1 und setzt
   // onboardingStep → 3 (überspringt den alten Screen 2).
@@ -259,9 +266,6 @@ export default function App() {
     dispatch({ type: 'SET_EXAM_RESULT_ASKED' });
     dispatch({ type: 'RETURN_TO_DASHBOARD' });
   }, []);
-
-  const currentBlock = state.blocks.find((b) => b?.id === state.currentBlockId);
-  const isWelcomeScreen = state.screen === SCREENS.ONBOARDING && state.onboardingStep === 1;
 
   return (
     <>
