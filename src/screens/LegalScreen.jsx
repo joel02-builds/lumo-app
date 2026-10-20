@@ -14,6 +14,31 @@
  * – Klare Struktur, keine Wand aus Juristen-Deutsch
  * – Kurze, verständliche Sprache wo rechtlich vertretbar
  */
+
+// ── Shared styles — VOR der Funktion, damit Vite keine TDZ erzeugt ──────────
+const headingStyle = {
+  fontSize: '18px',
+  fontWeight: '700',
+  color: 'var(--text-primary)',
+  margin: '0 0 16px',
+};
+
+const subHeadingStyle = {
+  fontSize: '14px',
+  fontWeight: '700',
+  color: 'var(--gold)',
+  margin: '24px 0 8px',
+  textTransform: 'uppercase',
+  letterSpacing: '0.05em',
+};
+
+const textStyle = {
+  fontSize: '14px',
+  color: 'var(--text-secondary)',
+  lineHeight: '1.7',
+  margin: '0',
+};
+
 export default function LegalScreen({ onBack }) {
   return (
     <div className="screen" style={{ justifyContent: 'flex-start', paddingTop: '60px', paddingBottom: '40px' }}>
@@ -147,26 +172,3 @@ export default function LegalScreen({ onBack }) {
   );
 }
 
-// ── Shared styles ──────────────────────────────────────────────────────────
-const headingStyle = {
-  fontSize: '18px',
-  fontWeight: '700',
-  color: 'var(--text-primary)',
-  margin: '0 0 16px',
-};
-
-const subHeadingStyle = {
-  fontSize: '14px',
-  fontWeight: '700',
-  color: 'var(--gold)',
-  margin: '24px 0 8px',
-  textTransform: 'uppercase',
-  letterSpacing: '0.05em',
-};
-
-const textStyle = {
-  fontSize: '14px',
-  color: 'var(--text-secondary)',
-  lineHeight: '1.7',
-  margin: '0',
-};
