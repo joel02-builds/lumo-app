@@ -12,6 +12,10 @@ class ErrorBoundary extends Component {
   static getDerivedStateFromError(error) {
     return { hasError: true, error };
   }
+  componentDidCatch(error, info) {
+    // Immer in die Console loggen — auch in Production
+    console.error('[Lumo Error Boundary]', error, info?.componentStack);
+  }
   render() {
     if (this.state.hasError) {
       return (
@@ -49,6 +53,20 @@ class ErrorBoundary extends Component {
           >
             Seite neu laden
           </button>
+          {/* Debug-Info: nur sichtbar wenn man draufklickt */}
+          <details style={{ marginTop: '8px' }}>
+            <summary style={{ fontSize: '12px', color: '#8A9BAE', cursor: 'pointer', opacity: 0.5 }}>
+              Fehlerdetails
+            </summary>
+            <pre style={{
+              fontSize: '11px', color: '#8A9BAE', textAlign: 'left',
+              background: 'rgba(255,255,255,0.05)', borderRadius: '8px',
+              padding: '12px', marginTop: '8px', maxWidth: '360px',
+              overflow: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+            }}>
+              {this.state.error?.message}{'\n'}{this.state.error?.stack?.split('\n').slice(0,5).join('\n')}
+            </pre>
+          </details>
         </div>
       );
     }
