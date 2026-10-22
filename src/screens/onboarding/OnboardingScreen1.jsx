@@ -227,7 +227,10 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
               color: 'var(--text-primary)',
               margin: 0,
             }}>
-              Du hast alle Materialien<br />und Unterlagen.<br />
+              Du hast alles.<br />
+              <span style={{ color: 'var(--text-secondary)', fontWeight: '500', fontSize: '22px' }}>
+                Skript, Folien, Mitschriften, …
+              </span><br />
               <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>
                 Aber wo fängst du an?
               </span>
