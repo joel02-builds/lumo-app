@@ -5,6 +5,7 @@ import { getRecommendedBlock } from '../../utils/blockProgress.js';
 import { getBlockColor } from '../../utils/subjectColors.js';
 import { getRemainingFreeBlocks, isFreeLimitReached, isApproachingLimit } from '../../utils/planLimits.js';
 import { lumoApi } from '../../api/lumo.js';
+import { getDueCards } from '../../utils/fsrs.js';
 
 function getDaysUntilExam(goalDate) {
   if (!goalDate) return null;
@@ -85,10 +86,24 @@ function BlockDot({ block, subjectColor }) {
   );
 }
 
-export default function DashboardScreen({ blocks, recommendedOrder, goalType, goalDate, sprintMode, onStartBlock, onNewProject, onViewWeakSpots, onViewProjects, onSettings, blocksAnalyzedTotal, flashcardsCount, onViewFlashcards }) {
+export default function DashboardScreen({ blocks, recommendedOrder, goalType, goalDate, sprintMode, onStartBlock, onNewProject, onViewWeakSpots, onViewProjects, onSettings, blocksAnalyzedTotal, flashcardsCount, onViewFlashcards, flashcards, projects }) {
   const safeBlocks = (blocks || []).filter(Boolean);
   const [expandedBlock, setExpandedBlock] = useState(null);
   const next = getRecommendedBlock(safeBlocks, recommendedOrder || []);
+
+  // Fällige SR-Karten berechnen (FSRS-6)
+  const allFlashcards = flashcards || [];
+  const dueCards = getDueCards(allFlashcards);
+  const dueCount = dueCards.length;
+
+  // Kumulativer Fortschritt über alle Projekte
+  const allProjects = projects || [];
+  const allCompletedBlocks = [
+    ...safeBlocks.filter(b => b.status === 'completed' && b.confidence === 'sicher'),
+    ...allProjects.flatMap(p => (p.blocks || []).filter(b => b.status === 'completed' && b.confidence === 'sicher')),
+  ];
+  const totalMasteredConcepts = allCompletedBlocks.reduce((sum, b) => sum + (b.cards?.length || 0), 0);
+  const totalSessions = blocksAnalyzedTotal || 0;
 
   // Lädt die Karten des nächsten Blocks schon im Hintergrund, damit der
   // Request/Cache beim tatsächlichen Klick bereits warm ist.
@@ -175,6 +190,83 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
             </div>
           );
         })()}
+
+        {/* Kumulative Stats — SDT Kompetenzerleben (Deci & Ryan)
+            Zeigt akkumulierten Fortschritt über ALLE Projekte, nicht nur den aktuellen.
+            Warum: 10 grüne Dots zeigen keinen Beweis für Wachstum. "47 Konzepte
+            gemeistert" schon. */}
+        {totalMasteredConcepts > 0 && (
+          <div style={{
+            display: 'flex',
+            gap: '12px',
+            width: '100%',
+            justifyContent: 'center',
+          }}>
+            <div style={{
+              flex: 1,
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border)',
+              borderRadius: '14px',
+              padding: '14px 16px',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--green)', lineHeight: '1' }}>
+                {totalMasteredConcepts}
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px', fontWeight: '500' }}>
+                Konzepte gemeistert
+              </div>
+            </div>
+            <div style={{
+              flex: 1,
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border)',
+              borderRadius: '14px',
+              padding: '14px 16px',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--gold)', lineHeight: '1' }}>
+                {allCompletedBlocks.length}
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px', fontWeight: '500' }}>
+                Blöcke verstanden
+              </div>
+            </div>
+            {dueCount > 0 && (
+              <div
+                onClick={onViewFlashcards}
+                style={{
+                  flex: 1,
+                  background: 'rgba(212,168,67,0.1)',
+                  border: '1px solid rgba(212,168,67,0.4)',
+                  borderRadius: '14px',
+                  padding: '14px 16px',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  position: 'relative',
+                }}
+              >
+                <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--gold)', lineHeight: '1' }}>
+                  {dueCount}
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--gold)', marginTop: '4px', fontWeight: '700' }}>
+                  Karten fällig
+                </div>
+                {/* Pulsierender Dot als Aufmerksamkeits-Signal */}
+                <div style={{
+                  position: 'absolute',
+                  top: '8px',
+                  right: '8px',
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: 'var(--gold)',
+                  animation: 'lumo-pulse 2s ease-in-out infinite',
+                }} />
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Fortschritt
             ADHS-Design:
@@ -523,11 +615,8 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
           })}
         </div>
 
-        {next && !allDone && (
-          <Button onClick={() => onStartBlock(next.id)} style={{ width: '100%' }}>
-            Weiter mit „{next.title}"
-          </Button>
-        )}
+        {/* Platzhalter damit Inhalt nicht vom Sticky-CTA verdeckt wird */}
+        {next && !allDone && <div style={{ height: '80px', flexShrink: 0 }} />}
 
         {allDone && (
           <p style={{
@@ -545,8 +634,12 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
             onClick={onViewFlashcards}
             style={{
               width: '100%',
-              background: 'var(--bg-card)',
-              border: `1px solid ${flashcardsCount > 5 ? 'var(--gold)' : 'var(--border)'}`,
+              background: dueCount > 0 ? 'rgba(212,168,67,0.07)' : 'var(--bg-card)',
+              border: dueCount > 0
+                ? '1px solid rgba(212,168,67,0.4)'
+                : flashcardsCount > 5
+                ? '1px solid var(--gold)'
+                : '1px solid var(--border)',
               borderRadius: '14px',
               padding: '14px 18px',
               cursor: 'pointer',
@@ -554,18 +647,34 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
               alignItems: 'center',
               gap: '14px',
               textAlign: 'left',
+              position: 'relative',
             }}
           >
             <span style={{ fontSize: '24px' }}>🃏</span>
             <div style={{ flex: 1 }}>
-              <p style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', margin: '0 0 2px' }}>
-                Karteikarten wiederholen
+              <p style={{ fontSize: '15px', fontWeight: '600', color: dueCount > 0 ? 'var(--gold)' : 'var(--text-primary)', margin: '0 0 2px' }}>
+                {dueCount > 0 ? `${dueCount} Karten heute fällig` : 'Karteikarten wiederholen'}
               </p>
               <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0' }}>
-                {flashcardsCount} {flashcardsCount === 1 ? 'Karte' : 'Karten'} warten auf dich
+                {dueCount > 0
+                  ? `Jetzt wiederholen — bevor du vergisst`
+                  : `${flashcardsCount} ${flashcardsCount === 1 ? 'Karte' : 'Karten'} warten auf dich`}
               </p>
             </div>
-            <span style={{ color: 'var(--text-secondary)', fontSize: '16px' }}>→</span>
+            {dueCount > 0 && (
+              <div style={{
+                background: 'var(--gold)',
+                color: '#1a1206',
+                borderRadius: '20px',
+                padding: '4px 10px',
+                fontSize: '13px',
+                fontWeight: '800',
+                flexShrink: 0,
+              }}>
+                {dueCount}
+              </div>
+            )}
+            {!dueCount && <span style={{ color: 'var(--text-secondary)', fontSize: '16px' }}>→</span>}
           </button>
         )}
 
@@ -689,6 +798,31 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
         )}
 
       </div>
+
+      {/* ── Sticky CTA (Fitts' Law) ──────────────────────────────────────────
+          Primärer Button immer am unteren Bildschirmrand — kein Scrollen nötig.
+          Fitts' Law: große, nah am Daumen liegende Ziele werden öfter genutzt.
+          ADHS: kein "Wo war nochmal der Button?" — er ist immer da. */}
+      {next && !allDone && (
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: '12px 16px calc(12px + env(safe-area-inset-bottom))',
+          background: 'linear-gradient(to top, var(--bg) 75%, transparent)',
+          zIndex: 50,
+          display: 'flex',
+          justifyContent: 'center',
+        }}>
+          <Button
+            onClick={() => onStartBlock(next.id)}
+            style={{ width: '100%', maxWidth: '560px', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}
+          >
+            Weiter mit „{next.title}" →
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

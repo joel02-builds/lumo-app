@@ -17,69 +17,131 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
       <div className="screen-content" style={{ gap: '20px', maxWidth: '400px', width: '100%' }}>
 
         {!mood ? (
+          /* ── Mood-Check (Pekrun 2006 Academic Emotions) ──────────────────
+             4 konkrete Lernzustände statt 3 abstrakter Emojis.
+             Pekrun unterscheidet aktivierende vs. deaktivierende Emotionen.
+             Jeder Zustand triggert eine andere Session-Anpassung.
+             Hick's Law: Skip-Button immer sichtbar, Entscheidungslast minimal. */
           <div style={{ width: '100%', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <LumoMascot state="idle" />
-            <h1 style={{ fontSize: '24px', marginBottom: '4px' }}>
-              Wie geht's dir gerade?
-            </h1>
-            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: '0' }}>
-              Ich passe die Session an.
-            </p>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+            <div>
+              <h1 style={{ fontSize: '22px', marginBottom: '4px' }}>
+                Wie startest du gerade?
+              </h1>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0' }}>
+                Ich passe die Session an — 1 Tipp.
+              </p>
+            </div>
+            {/* 2×2 Grid: besser lesbar als 3 enge Kacheln */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', width: '100%' }}>
               {[
-                { emoji: '😊', label: 'Gut', value: 'good' },
-                { emoji: '😐', label: 'So lala', value: 'okay' },
-                { emoji: '😔', label: 'Nicht gut', value: 'bad' },
-              ].map(({ emoji, label, value }) => (
+                {
+                  emoji: '⚡',
+                  label: 'Fokussiert',
+                  sub: 'Ich bin dabei',
+                  value: 'focused',
+                  color: 'var(--green)',
+                  bg: 'rgba(61,158,110,0.08)',
+                  border: 'rgba(61,158,110,0.25)',
+                },
+                {
+                  emoji: '😴',
+                  label: 'Müde',
+                  sub: 'Wenig Energie',
+                  value: 'tired',
+                  color: 'var(--text-secondary)',
+                  bg: 'var(--bg-card)',
+                  border: 'var(--border)',
+                },
+                {
+                  emoji: '😰',
+                  label: 'Gestresst',
+                  sub: 'Viel im Kopf',
+                  value: 'stressed',
+                  color: 'var(--amber, #C47A2B)',
+                  bg: 'rgba(196,122,43,0.08)',
+                  border: 'rgba(196,122,43,0.25)',
+                },
+                {
+                  emoji: '🤯',
+                  label: 'Überfordert',
+                  sub: 'Zu viel auf einmal',
+                  value: 'overwhelmed',
+                  color: 'var(--amber, #C47A2B)',
+                  bg: 'rgba(196,122,43,0.08)',
+                  border: 'rgba(196,122,43,0.25)',
+                },
+              ].map(({ emoji, label, sub, value, color, bg, border }) => (
                 <button
                   key={value}
                   onClick={() => { setMood(value); onMoodSet?.(value); }}
                   style={{
-                    background: 'var(--bg-card)',
-                    border: '1px solid var(--border)',
+                    background: bg,
+                    border: `1px solid ${border}`,
                     borderRadius: '14px',
-                    padding: '14px 20px',
+                    padding: '14px 12px',
                     cursor: 'pointer',
                     display: 'flex',
                     flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '6px',
+                    alignItems: 'flex-start',
+                    gap: '4px',
                     transition: 'all 0.15s ease',
-                    flex: 1,
+                    textAlign: 'left',
                   }}
                 >
-                  <span style={{ fontSize: '28px' }}>{emoji}</span>
-                  <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '500' }}>{label}</span>
+                  <span style={{ fontSize: '22px' }}>{emoji}</span>
+                  <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>{label}</span>
+                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.3' }}>{sub}</span>
                 </button>
               ))}
             </div>
+            {/* Hick's Law: Skip ist prominent, nicht versteckt */}
+            <button
+              onClick={() => { setMood('good'); onMoodSet?.('good'); }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--text-secondary)',
+                fontSize: '13px',
+                cursor: 'pointer',
+                padding: '4px',
+                textDecoration: 'underline',
+                textUnderlineOffset: '3px',
+              }}
+            >
+              Überspringen – einfach starten
+            </button>
           </div>
         ) : (
           <>
             <LumoMascot state="idle" />
 
-            {/* Mood-spezifische Nachricht */}
-            {mood === 'bad' && (
+            {/* ── Mood-spezifische Session-Anpassung (Pekrun 2006) ───────────
+                Aktivierende Emotionen → volle Tiefe
+                Deaktivierende Emotionen → reduzierte Komplexität, mehr Pausen */}
+            {(mood === 'tired' || mood === 'stressed' || mood === 'overwhelmed') && (
               <div style={{
-                background: 'rgba(212, 168, 67, 0.08)',
-                border: '1px solid rgba(212, 168, 67, 0.3)',
+                background: 'rgba(196,122,43,0.08)',
+                border: '1px solid rgba(196,122,43,0.25)',
                 borderRadius: '12px',
                 padding: '14px 18px',
-                textAlign: 'center',
+                textAlign: 'left',
               }}>
-                <p style={{ fontSize: '15px', color: 'var(--text-primary)', margin: '0 0 8px', fontWeight: '600' }}>
-                  Ich passe die Session an.
+                <p style={{ fontSize: '14px', color: 'var(--text-primary)', margin: '0 0 8px', fontWeight: '600' }}>
+                  {mood === 'tired' && 'Session angepasst für wenig Energie:'}
+                  {mood === 'stressed' && 'Session angepasst für viel Druck:'}
+                  {mood === 'overwhelmed' && 'Session vereinfacht — ein Schritt nach dem anderen:'}
                 </p>
-                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0', lineHeight: '1.5' }}>
-                  ✓ Kürzere Erklärungen<br/>
-                  ✓ Einfachere Fragen<br/>
-                  ✓ Weniger Druck beim Recall
+                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0', lineHeight: '1.8' }}>
+                  {mood === 'tired' && '✓ Kürzere Erklärungen · ✓ Einfachere Fragen · ✓ Kein Zeitdruck'}
+                  {mood === 'stressed' && '✓ Ein Block, dann Pause · ✓ Kein Recall-Druck · ✓ Du bestimmst das Tempo'}
+                  {mood === 'overwhelmed' && '✓ Nur das Wichtigste · ✓ Kein Mehrfach-Konzept · ✓ Ich mach es ganz einfach'}
                 </p>
               </div>
             )}
-            {mood === 'okay' && (
-              <p style={{ fontSize: '14px', color: 'var(--text-secondary)', textAlign: 'center', margin: '0' }}>
-                Alright. Ich halte es heute übersichtlich – keine langen Texte.
+            {mood === 'focused' && (
+              <p style={{ fontSize: '14px', color: 'var(--green)', textAlign: 'center', margin: '0', fontWeight: '500' }}>
+                ⚡ Volle Tiefe — ich gehe heute mehr ins Detail.
               </p>
             )}
 
@@ -186,11 +248,11 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
                   color: mood === 'bad' ? 'var(--text-secondary)' : 'var(--gold)',
                   margin: '0 0 10px',
                 }}>
-                  {mood === 'bad'
+                  {(mood === 'tired' || mood === 'overwhelmed')
                     ? 'Kommen nochmal – aber nicht heute'
                     : gapBlocks.some(b => b.confidence === 'grosse_luecken') ? 'Noch nicht sicher' : 'Noch unsicher'}
                 </p>
-                {gapBlocks.slice(0, mood === 'bad' ? 1 : 2).map(b => (
+                {gapBlocks.slice(0, (mood === 'tired' || mood === 'overwhelmed') ? 1 : 2).map(b => (
                   <p key={b.id} style={{
                     fontSize: '14px',
                     color: 'var(--text-secondary)',
@@ -201,7 +263,7 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
                     {b.title}
                   </p>
                 ))}
-                {gapBlocks.length > 2 && mood !== 'bad' && (
+                {gapBlocks.length > 2 && mood !== 'tired' && mood !== 'overwhelmed' && (
                   <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '8px 0 0' }}>
                     + {gapBlocks.length - 2} weitere
                   </p>
@@ -215,7 +277,10 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
               onClick={onDone}
               style={{ width: '100%', marginTop: '4px' }}
             >
-              {mood === 'bad' ? 'Trotzdem starten – kurz und einfach' : 'Los geht\'s'}
+              {mood === 'tired' ? 'Trotzdem starten – kurz und einfach'
+               : mood === 'stressed' ? 'Starten – ich halte es übersichtlich'
+               : mood === 'overwhelmed' ? 'Starten – Schritt für Schritt'
+               : 'Los geht\'s'}
             </button>
 
             <button

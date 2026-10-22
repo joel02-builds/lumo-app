@@ -10,6 +10,7 @@ import {
   requestPersistentStorage,
   getStorageStatus,
 } from './utils/projectStorage.js';
+import { loadServerState, scheduleSyncToServer, mergeStates, syncStreak } from './utils/serverSync.js';
 import { clearAllNotes } from './utils/notesStorage.js';
 import { startKeepAlive } from './utils/keepAlive.js';
 import StorageWarningBanner from './components/StorageWarningBanner.jsx';
@@ -71,6 +72,21 @@ export default function App() {
           }
         } catch {
           // IDB nicht verfügbar — localStorage-Init reicht
+        }
+
+        // Server-State laden und mit lokalem State mergen (Gerätesync)
+        try {
+          const serverResult = await loadServerState();
+          if (!cancelled && serverResult?.state) {
+            const localData = await loadProjectAsync();
+            const merged = mergeStates(localData, serverResult.state);
+            if (merged && JSON.stringify(merged) !== JSON.stringify(localData)) {
+              console.log('[Sync] Server-State übernommen (anderes Gerät/Browser)');
+              dispatch({ type: 'HYDRATE_FROM_STORAGE', payload: merged });
+            }
+          }
+        } catch {
+          // Server nicht erreichbar — kein Problem, lokal läuft alles
         }
       }
 
@@ -139,6 +155,9 @@ export default function App() {
     saveProjectAsync(snapshot).catch(() => {
       // IDB-Fehler sind nicht kritisch – localStorage ist der Fallback
     });
+
+    // Server-Sync (debounced, fire-and-forget — App funktioniert ohne)
+    scheduleSyncToServer(snapshot);
   }, [state.topic, state.fileName, state.goalType, state.goalDate, state.sprintMode, state.blocks, state.recommendedOrder, state.subjectColor, state.learningStyle, state.subjectHistory, state.projects, state.activeProjectId, state.examResult, state.examResultAskedAt, state.blocksAnalyzedTotal, state.sessionsTotal, state.flashcards]);
 
   // ── Abgeleitete Werte — VOR allen useCallbacks, die sie referenzieren ────

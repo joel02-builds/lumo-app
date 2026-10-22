@@ -2,8 +2,10 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import Anthropic from '@anthropic-ai/sdk';
+import { initDB, createNewUser, getOrCreateUser, loadUserState, saveUserState, deleteUserState, updateStreak } from './db.js';
 import {
   getAnalyzeSystem,
   analyzeSchema,
@@ -78,9 +80,43 @@ const FRIENDLY_ERROR = 'Lumo hat gerade ein kleines Problem. Versuch es gleich n
 const TIMEOUT_ERROR = 'Lumo braucht einen Moment länger. Warte kurz oder versuch es nochmal.';
 const CLAUDE_TIMEOUT_MS = 28000; // knapp unter dem 30s-Timeout des Frontends
 
+// DB initialisieren — non-blocking, App läuft auch ohne DB
+initDB();
+
+const COOKIE_NAME = 'lumo_uid';
+const COOKIE_MAX_AGE = 365 * 24 * 60 * 60 * 1000; // 1 Jahr
+
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: true,
+  credentials: true, // für Cookie-Handling nötig
+}));
+app.use(cookieParser());
 app.use(express.json({ limit: '35mb' }));
+
+// ─── User-ID Middleware ───────────────────────────────────────────────────
+// Liest Cookie oder erstellt neue User-ID. Immer vor API-Routen.
+app.use('/api/', (req, res, next) => {
+  try {
+    const cookieId = req.cookies?.[COOKIE_NAME];
+    const userId = getOrCreateUser(cookieId) || cookieId;
+
+    if (!cookieId && userId) {
+      // Neuer User: Cookie setzen
+      res.cookie(COOKIE_NAME, userId, {
+        maxAge: COOKIE_MAX_AGE,
+        httpOnly: true,
+        sameSite: isProd ? 'strict' : 'lax',
+        secure: isProd,
+      });
+    }
+
+    req.userId = userId;
+  } catch {
+    // Middleware nie crashen lassen
+  }
+  next();
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Rate Limiting – schützt vor Missbrauch und unkontrollierten API-Kosten
@@ -435,6 +471,66 @@ app.post('/api/youtube-videos', async (req, res) => {
     res.json({ data: { videos, query: searchQuery, fallback: false } });
   } catch (err) {
     sendFriendlyError(res, err);
+  }
+});
+
+// ─── Persistent State Endpoints ──────────────────────────────────────────
+
+/**
+ * GET /api/state — Lädt den gespeicherten State für diesen User.
+ * Gibt { state: null } wenn kein State vorhanden (Neuer User).
+ */
+app.get('/api/state', (req, res) => {
+  try {
+    const state = loadUserState(req.userId);
+    res.json({ state, userId: req.userId });
+  } catch (err) {
+    console.error('[State] Load-Fehler:', err.message);
+    res.json({ state: null });
+  }
+});
+
+/**
+ * POST /api/state — Speichert den State für diesen User.
+ * Body: { state: { ... } }
+ */
+app.post('/api/state', (req, res) => {
+  try {
+    const { state } = req.body || {};
+    if (!state || typeof state !== 'object') {
+      return res.status(400).json({ error: 'Ungültiger State' });
+    }
+    const ok = saveUserState(req.userId, state);
+    res.json({ ok, userId: req.userId });
+  } catch (err) {
+    console.error('[State] Save-Fehler:', err.message);
+    res.json({ ok: false });
+  }
+});
+
+/**
+ * DELETE /api/state — Löscht den State (Nutzer-Reset).
+ */
+app.delete('/api/state', (req, res) => {
+  try {
+    deleteUserState(req.userId);
+    // Cookie löschen
+    res.clearCookie(COOKIE_NAME);
+    res.json({ ok: true });
+  } catch {
+    res.json({ ok: false });
+  }
+});
+
+/**
+ * POST /api/state/streak — Aktualisiert den Streak nach einer Session.
+ */
+app.post('/api/state/streak', (req, res) => {
+  try {
+    const streak = updateStreak(req.userId);
+    res.json({ streak });
+  } catch {
+    res.json({ streak: null });
   }
 });
 

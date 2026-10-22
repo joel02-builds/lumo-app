@@ -15,7 +15,9 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "latest",
+    "better-sqlite3": "^13.0.3",
     "canvas-confetti": "^1.9.4",
+    "cookie-parser": "^1.4.7",
     "cors": "latest",
     "dotenv": "latest",
     "express": "latest",

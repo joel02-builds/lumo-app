@@ -8,6 +8,9 @@ import { lumoApi } from '../../api/lumo.js';
 
 const READ_DELAY_MS = 20000;
 const TRANSITION_MS = 1500;
+// Barkley 2011: ADHS-Nutzer brauchen explizite Closure-Signale.
+// Nach 3 User-Nachrichten: Lumo schlägt sanft vor, zum Verständnis-Check zu wechseln.
+const CLOSURE_SUGGESTION_AFTER = 3;
 
 export default function ExplainChatPhase({ block, depth, onDone, onExit }) {
   const [messages, setMessages] = useState([]);
@@ -18,6 +21,8 @@ export default function ExplainChatPhase({ block, depth, onDone, onExit }) {
   const [attempt, setAttempt] = useState(0);
   const [timeUp, setTimeUp] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
+  // Closure-Banner: nach N User-Messages wird der Vorschlag angezeigt
+  const [closureDismissed, setClosureDismissed] = useState(false);
   const logRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -69,6 +74,9 @@ export default function ExplainChatPhase({ block, depth, onDone, onExit }) {
 
   const hasAskedQuestion = messages.some((m) => m.role === 'user');
   const canFinish = timeUp || hasAskedQuestion;
+  const userMessageCount = messages.filter((m) => m.role === 'user').length;
+  // Closure-Banner: nach N Austauschen anzeigen, wenn User es nicht dismissed hat
+  const showClosureBanner = !closureDismissed && userMessageCount >= CLOSURE_SUGGESTION_AFTER && !sending && !loading;
 
   // Voice-Input: transkribierten Text an bestehendes Feld anhängen
   const handleVoiceResult = useCallback((transcript) => {
@@ -250,6 +258,67 @@ export default function ExplainChatPhase({ block, depth, onDone, onExit }) {
 
         {error && messages.length > 0 && (
           <ErrorBanner message={error} onClose={() => setError(null)} onExit={onExit} />
+        )}
+
+        {/* ── Closure Banner (Barkley 2011) ────────────────────────────────
+            Nach 3 User-Nachrichten: sanfter Vorschlag zum Verständnis-Check.
+            Nicht erzwungen — User kann weiterfragen oder direkt abschließen. */}
+        {showClosureBanner && (
+          <div style={{
+            margin: '8px 0',
+            padding: '16px 18px',
+            borderRadius: '18px 18px 18px 4px',
+            background: 'linear-gradient(135deg, rgba(212,168,67,0.12) 0%, rgba(212,168,67,0.06) 100%)',
+            border: '1px solid rgba(212,168,67,0.3)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+              <span style={{ fontSize: '20px', flexShrink: 0, marginTop: '1px' }}>💡</span>
+              <div>
+                <p style={{ margin: '0 0 4px', fontSize: '15px', fontWeight: '600', color: 'var(--gold)' }}>
+                  Ich glaube, du hast das.
+                </p>
+                <p style={{ margin: '0', fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+                  Soll ich kurz prüfen, ob es wirklich sitzt?
+                </p>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => setTransitioning(true)}
+                style={{
+                  flex: 1,
+                  background: 'var(--gold)',
+                  color: '#1a1206',
+                  border: 'none',
+                  borderRadius: '12px',
+                  padding: '11px 16px',
+                  fontSize: '14px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'opacity 0.15s',
+                }}
+              >
+                Ja, zum Check →
+              </button>
+              <button
+                onClick={() => setClosureDismissed(true)}
+                style={{
+                  background: 'transparent',
+                  color: 'var(--text-secondary)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '12px',
+                  padding: '11px 16px',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                }}
+              >
+                Ich frag noch was
+              </button>
+            </div>
+          </div>
         )}
       </div>
 
