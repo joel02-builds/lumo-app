@@ -3,8 +3,6 @@ import LumoMascot from '../components/LumoMascot.jsx';
 import { getSubjectColor } from '../utils/subjectColors.js';
 
 export default function ProjectsScreen({ projects, onLoad, onNew, onDelete }) {
-  // Sicherheitsnetz gegen impulsives Löschen (ADHS-Designprinzip):
-  // Erst nach Bestätigung wird das Projekt endgültig entfernt.
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   function handleDeleteClick(id) {
@@ -21,12 +19,14 @@ export default function ProjectsScreen({ projects, onLoad, onNew, onDelete }) {
   if (projects.length === 0) {
     return (
       <div className="screen">
-        <div className="screen-content">
+        <div className="screen-content" style={{ gap: '20px' }}>
           <LumoMascot state="idle" />
-          <h1 style={{ fontSize: '24px', textAlign: 'center' }}>Noch keine Projekte.</h1>
-          <p style={{ color: 'var(--text-secondary)', textAlign: 'center' }}>
-            Starte dein erstes Lernprojekt.
-          </p>
+          <div style={{ textAlign: 'center' }}>
+            <h1 style={{ fontSize: '22px', marginBottom: '8px' }}>Noch keine Fächer.</h1>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '15px', lineHeight: '1.6', margin: 0 }}>
+              Lade dein erstes Skript hoch — Lumo teilt es in lernbare Blöcke auf.
+            </p>
+          </div>
           <button
             onClick={onNew}
             style={{
@@ -35,13 +35,14 @@ export default function ProjectsScreen({ projects, onLoad, onNew, onDelete }) {
               color: '#1a1206',
               border: 'none',
               borderRadius: '12px',
-              padding: '15px',
+              padding: '14px',
               fontSize: '16px',
-              fontWeight: '700',
+              fontWeight: '800',
               cursor: 'pointer',
+              letterSpacing: '-0.01em',
             }}
           >
-            Neues Fach starten
+            Erstes Fach starten →
           </button>
         </div>
       </div>
@@ -51,40 +52,80 @@ export default function ProjectsScreen({ projects, onLoad, onNew, onDelete }) {
   const projectToDelete = projects.find(p => p.id === confirmDeleteId);
 
   return (
-    <div className="screen" style={{ justifyContent: 'flex-start', paddingTop: '60px' }}>
-      <div className="screen-content" style={{ maxWidth: '520px', gap: '16px' }}>
-        <h2 style={{ fontSize: '22px', fontWeight: '700', margin: '0' }}>
-          Meine Fächer
-        </h2>
+    <div className="screen" style={{ justifyContent: 'flex-start', paddingTop: '56px' }}>
+      <div style={{ width: '100%', maxWidth: '520px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
 
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: '800', letterSpacing: '-0.025em', margin: 0 }}>
+            Meine Fächer
+          </h2>
+          <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+            {projects.length} {projects.length === 1 ? 'Fach' : 'Fächer'}
+          </span>
+        </div>
+
+        {/* Projekt-Karten */}
         {projects.map(p => {
           const color = p.subjectColor || getSubjectColor(p.subject);
           const done = p.blocks.filter(b => b.status === 'completed').length;
           const total = p.blocks.length;
           const pct = total ? Math.round((done / total) * 100) : 0;
+          const isComplete = pct === 100;
+
           return (
             <div
               key={p.id}
               style={{
                 width: '100%',
                 background: 'var(--bg-card)',
-                border: `1px solid ${color}44`,
-                borderLeft: `4px solid ${color}`,
+                border: `1px solid ${color}33`,
+                borderLeft: `3px solid ${color}`,
                 borderRadius: '14px',
                 padding: '16px 18px',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '10px',
+                gap: '12px',
               }}
             >
+              {/* Titel-Zeile */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <p style={{ fontSize: '16px', fontWeight: '600', color: 'var(--text-primary)', margin: '0 0 4px' }}>
+                <div style={{ flex: 1, minWidth: 0, paddingRight: '8px' }}>
+                  <p style={{
+                    fontSize: '15px',
+                    fontWeight: '700',
+                    color: 'var(--text-primary)',
+                    margin: '0 0 4px',
+                    letterSpacing: '-0.01em',
+                    lineHeight: '1.3',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}>
                     {p.topic || 'Ohne Titel'}
                   </p>
-                  <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '0' }}>
-                    {done} von {total} Blöcken · {pct}%
-                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{
+                      fontSize: '12px',
+                      color: 'var(--text-secondary)',
+                    }}>
+                      {done}/{total} Blöcke
+                    </span>
+                    {isComplete && (
+                      <span style={{
+                        fontSize: '11px',
+                        fontWeight: '700',
+                        color: 'var(--green)',
+                        background: 'rgba(61,158,110,0.12)',
+                        borderRadius: '999px',
+                        padding: '2px 8px',
+                        letterSpacing: '0.03em',
+                        textTransform: 'uppercase',
+                      }}>
+                        Fertig
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <button
                   onClick={() => handleDeleteClick(p.id)}
@@ -94,52 +135,76 @@ export default function ProjectsScreen({ projects, onLoad, onNew, onDelete }) {
                     border: 'none',
                     color: 'var(--text-secondary)',
                     cursor: 'pointer',
-                    fontSize: '16px',
-                    padding: '4px 8px',
+                    fontSize: '15px',
+                    padding: '2px 6px',
                     borderRadius: '6px',
-                    transition: 'color 0.15s',
+                    opacity: 0.5,
+                    flexShrink: 0,
+                    transition: 'opacity 0.15s',
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-primary)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-secondary)'; }}
+                  onMouseEnter={e => { e.currentTarget.style.opacity = '1'; }}
+                  onMouseLeave={e => { e.currentTarget.style.opacity = '0.5'; }}
                 >
                   ✕
                 </button>
               </div>
-              <div style={{ height: '4px', background: 'var(--bg-elevated)', borderRadius: '4px', overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: '4px' }} />
+
+              {/* Progress Bar */}
+              <div style={{ height: '3px', background: 'var(--bg-elevated)', borderRadius: '4px', overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%',
+                  width: `${pct}%`,
+                  background: isComplete ? 'var(--green)' : color,
+                  borderRadius: '4px',
+                  transition: 'width 0.4s ease',
+                }} />
               </div>
+
+              {/* CTA */}
               <button
                 onClick={() => onLoad(p.id)}
                 style={{
                   width: '100%',
-                  background: color,
-                  color: '#1a1206',
-                  border: 'none',
+                  background: isComplete ? 'var(--bg-elevated)' : color,
+                  color: isComplete ? 'var(--text-secondary)' : '#1a1206',
+                  border: isComplete ? '1px solid var(--border)' : 'none',
                   borderRadius: '10px',
-                  padding: '11px',
+                  padding: '10px',
                   fontSize: '14px',
                   fontWeight: '700',
                   cursor: 'pointer',
+                  letterSpacing: '-0.01em',
+                  transition: 'opacity 0.15s ease',
                 }}
               >
-                Weiter lernen →
+                {isComplete ? 'Nochmal wiederholen' : 'Weiter lernen →'}
               </button>
             </div>
           );
         })}
 
+        {/* Neues Fach Button */}
         <button
           onClick={onNew}
           style={{
             width: '100%',
-            background: 'var(--bg-elevated)',
-            border: '1px dashed var(--border)',
+            background: 'transparent',
+            border: '1px dashed rgba(212,168,67,0.3)',
             borderRadius: '14px',
-            padding: '16px',
-            fontSize: '15px',
+            padding: '14px',
+            fontSize: '14px',
             color: 'var(--text-secondary)',
             cursor: 'pointer',
             fontWeight: '500',
+            transition: 'border-color 0.15s ease, color 0.15s ease',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.borderColor = 'var(--gold)';
+            e.currentTarget.style.color = 'var(--gold)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.borderColor = 'rgba(212,168,67,0.3)';
+            e.currentTarget.style.color = 'var(--text-secondary)';
           }}
         >
           + Neues Fach
@@ -167,7 +232,7 @@ export default function ProjectsScreen({ projects, onLoad, onNew, onDelete }) {
               margin: '0 auto',
               background: 'var(--bg-card)',
               borderRadius: '20px',
-              padding: '28px 24px',
+              padding: '26px 24px',
               display: 'flex',
               flexDirection: 'column',
               gap: '16px',
@@ -175,10 +240,10 @@ export default function ProjectsScreen({ projects, onLoad, onNew, onDelete }) {
             onClick={e => e.stopPropagation()}
           >
             <div>
-              <h2 style={{ fontSize: '18px', fontWeight: '800', margin: '0 0 6px' }}>
+              <h2 style={{ fontSize: '17px', fontWeight: '800', margin: '0 0 6px', letterSpacing: '-0.02em' }}>
                 Fach löschen?
               </h2>
-              <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: '0', lineHeight: '1.5' }}>
+              <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.5' }}>
                 „{projectToDelete?.topic || 'Dieses Fach'}" und der gesamte Lernfortschritt werden dauerhaft gelöscht. Das lässt sich nicht rückgängig machen.
               </p>
             </div>
@@ -190,9 +255,9 @@ export default function ProjectsScreen({ projects, onLoad, onNew, onDelete }) {
                   background: 'var(--bg-elevated)',
                   border: '1px solid var(--border)',
                   borderRadius: '12px',
-                  padding: '13px',
+                  padding: '12px',
                   fontSize: '15px',
-                  fontWeight: '600',
+                  fontWeight: '700',
                   color: 'var(--text-primary)',
                   cursor: 'pointer',
                 }}
@@ -206,7 +271,7 @@ export default function ProjectsScreen({ projects, onLoad, onNew, onDelete }) {
                   background: 'var(--bg-elevated)',
                   border: '1px solid var(--border)',
                   borderRadius: '12px',
-                  padding: '13px',
+                  padding: '12px',
                   fontSize: '15px',
                   fontWeight: '600',
                   color: 'var(--text-secondary)',

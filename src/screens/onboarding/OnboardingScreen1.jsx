@@ -1,18 +1,28 @@
 /**
- * OnboardingScreen1 — Überarbeiteter kombinierter Willkommens- & Material-Screen
+ * OnboardingScreen1 — Lumo-Intro + Material-Upload
  *
- * Änderungen vs. vorher:
- * ─────────────────────────────────────────────────────────────────────────
- * 1. "Ich bin Lumo" — Mascot wird mit kurzer Intro-Animation eingeführt
- * 2. Material-Eingabe direkt hier (Screen 1 + 2 zusammengeführt)
- * 3. Demo-Material-Option ("Beispiel nutzen") für sofortiges Erleben ohne Upload
- * 4. Lernstil-Picker entfernt (erscheint später im Dashboard, nach erster Session)
- * 5. Schnellerer Weg zum ersten Wert: 1 Schritt statt 2 bis zum Ziel-Screen
+ * Design-Entscheidungen:
  *
- * ADHS-Design-Prinzipien:
- * – Kein roter Feedback-Text für neutrale States (No-Red Principle)
- * – Immediacy: Demo-Material macht sofortigen Start möglich ohne Barrier
- * – Keine Überwältigung: feature chips weg, nur das Wesentliche
+ * 1. VALUE BEFORE ASK
+ *    Studenten laden nichts hoch wenn sie nicht wissen was sie dafür bekommen.
+ *    Deshalb: 3 konkrete Versprechen BEVOR das Formular erscheint.
+ *    (Evidence: Nielsen "show value first", Duolingo's "make first step feel obvious")
+ *
+ * 2. KEIN FEATURE-BINGO
+ *    Keine langen Bullet-Listen. Nur das, was für Studenten wirklich relevant ist:
+ *    "Ich muss das heute Abend wirklich verstehen."
+ *    Lumo's Antwort darauf, in 3 Zeilen.
+ *
+ * 3. DIREKTER ÜBERGANG ZUM NUTZEN
+ *    Sobald der User "Los" klickt, erscheint das Formular — kein separater Screen.
+ *    Reduziert Dropout zwischen Versprechen und Aktion.
+ *
+ * 4. DEMO-MATERIAL bleibt (Zeigt sofort was Lumo tut, ohne eigenes Material)
+ *
+ * ADHS-Design:
+ * – Keine roten Fehlertexte
+ * – Keine Überwältigung durch zu viele Felder auf einmal
+ * – Klarer Fokus: immer nur eine Sache pro Moment
  */
 
 import { useRef, useState, useEffect } from 'react';
@@ -24,7 +34,6 @@ const MAX_FILE_SIZE = 25 * 1024 * 1024;
 const MIN_WORDS = 100;
 const MAX_CHARS = 50000;
 
-// Demo-Material für sofortigen Einstieg ohne eigenes Material
 const DEMO_MATERIAL = {
   topic: 'Neurobiologie – Synaptische Übertragung',
   text: `Die synaptische Übertragung ist der Grundmechanismus der neuronalen Kommunikation im Nervensystem.
@@ -51,7 +60,31 @@ function countWords(text) {
   return trimmed ? trimmed.split(/\s+/).filter(Boolean).length : 0;
 }
 
+// Was Lumo konkret tut — gezeigt als kurze visuelle Karten vor dem Formular
+const VALUE_PROPS = [
+  {
+    icon: '📦',
+    headline: 'Dein Material. Aufgeteilt.',
+    body: 'Lumo zerlegt alles in kleine lernbare Blöcke. Kein endloses Durchlesen mehr.',
+  },
+  {
+    icon: '💬',
+    headline: 'Fragen. Sofort beantwortet.',
+    body: 'Nicht verstanden? Frag einfach. Lumo erklärt solange, bis es sitzt.',
+  },
+  {
+    icon: '🧠',
+    headline: 'Erklär es selbst. Dann weißt du es.',
+    body: 'Lumo testet dich mit der Feynman-Technik — dem wirksamsten Lernprinzip.',
+  },
+];
+
 export default function OnboardingScreen1({ onNext, onShowLegal }) {
+  // 'intro'     → Lumo-Einführungsmoment (1.8s auto-weiter)
+  // 'value'     → 3 Value Props werden gezeigt
+  // 'form'      → Formular erscheint
+  const [phase, setPhase] = useState('intro');
+
   const [topic, setTopic] = useState('');
   const [fileName, setFileName] = useState('');
   const [materialText, setMaterialText] = useState('');
@@ -60,15 +93,15 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
   const [fileError, setFileError] = useState('');
   const [truncationNotice, setTruncationNotice] = useState(false);
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
-  const [showIntro, setShowIntro] = useState(true); // Lumo-Intro-Moment
   const [usingDemo, setUsingDemo] = useState(false);
   const inputRef = useRef(null);
 
-  // Nach 2s verschwindet der Intro-Moment und gibt die Felder frei
+  // Intro-Moment: nach 1.8s automatisch zu Value-Phase
   useEffect(() => {
-    const t = setTimeout(() => setShowIntro(false), 2000);
+    if (phase !== 'intro') return;
+    const t = setTimeout(() => setPhase('value'), 1800);
     return () => clearTimeout(t);
-  }, []);
+  }, [phase]);
 
   function applyMaterialText(rawText) {
     if (rawText.length > MAX_CHARS) {
@@ -159,230 +192,283 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
     onNext({ topic: topic.trim(), materialText, fileName, fileBase64, fileMediaType });
   }
 
+  // ── Phase: INTRO ──
+  if (phase === 'intro') {
+    return (
+      <div className="screen">
+        <div className="screen-content" style={{ gap: '16px' }}>
+          <LumoMascot state="cheer" size="large" label="Lumo" />
+          <div style={{ textAlign: 'center', animation: 'fadeIn 0.5s ease' }}>
+            <h1 style={{ fontSize: '28px', fontWeight: '800', lineHeight: '1.2', marginBottom: '8px' }}>
+              Hallo. Ich bin Lumo.
+            </h1>
+            <p style={{ color: 'var(--gold)', fontWeight: '600', fontSize: '17px', margin: 0 }}>
+              Dein KI-Lernbegleiter.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Phase: VALUE ──
+  if (phase === 'value') {
+    return (
+      <div className="screen">
+        <div className="screen-content" style={{ gap: '24px', maxWidth: '400px', animation: 'fadeIn 0.4s ease' }}>
+          <LumoMascot state="idle" size="small" label="Lumo" />
+
+          <div style={{ textAlign: 'center' }}>
+            <p style={{
+              fontSize: '11px',
+              fontWeight: '700',
+              letterSpacing: '1.5px',
+              textTransform: 'uppercase',
+              color: 'var(--gold)',
+              marginBottom: '10px',
+            }}>
+              Wie Lumo lernen verändert
+            </p>
+            <h1 style={{ fontSize: '22px', lineHeight: '1.35' }}>
+              Lad dein Skript hoch.<br />Lumo macht den Rest.
+            </h1>
+          </div>
+
+          {/* Value Props — kompakt, scanbar, konkret */}
+          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {VALUE_PROPS.map((v, i) => (
+              <div
+                key={i}
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '14px',
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '14px',
+                  padding: '14px 16px',
+                  animation: `fadeIn 0.4s ease ${i * 0.1}s both`,
+                  textAlign: 'left',
+                }}
+              >
+                <span style={{ fontSize: '22px', flexShrink: 0, marginTop: '1px' }}>{v.icon}</span>
+                <div>
+                  <p style={{
+                    fontSize: '14px',
+                    fontWeight: '700',
+                    color: 'var(--text-primary)',
+                    marginBottom: '3px',
+                    lineHeight: '1.3',
+                  }}>
+                    {v.headline}
+                  </p>
+                  <p style={{
+                    fontSize: '13px',
+                    color: 'var(--text-secondary)',
+                    lineHeight: '1.5',
+                    margin: 0,
+                  }}>
+                    {v.body}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <button
+              onClick={() => setPhase('form')}
+              style={{
+                width: '100%',
+                background: 'var(--gold)',
+                color: '#1a1206',
+                border: 'none',
+                borderRadius: '14px',
+                padding: '15px',
+                fontSize: '17px',
+                fontWeight: '800',
+                cursor: 'pointer',
+              }}
+            >
+              Material hochladen →
+            </button>
+            <button
+              onClick={() => { useDemo(); setPhase('form'); }}
+              style={{
+                width: '100%',
+                background: 'transparent',
+                color: 'var(--text-secondary)',
+                border: '1px dashed rgba(212,168,67,0.4)',
+                borderRadius: '14px',
+                padding: '11px',
+                fontSize: '14px',
+                fontWeight: '500',
+                cursor: 'pointer',
+              }}
+            >
+              Erst mal ausprobieren ✦
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Phase: FORM ──
   return (
     <div className="screen">
-      <div className="screen-content" style={{ gap: '20px', maxWidth: '440px' }}>
+      <div className="screen-content" style={{ gap: '18px', maxWidth: '440px', animation: 'fadeIn 0.35s ease' }}>
 
-        {/* Lumo-Einführungsmoment — verschwindet nach 2s */}
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '10px',
-          transition: 'all 0.4s ease',
-        }}>
-          <LumoMascot
-            state={showIntro ? 'cheer' : 'idle'}
-            size={showIntro ? 'large' : 'small'}
-            label={showIntro ? undefined : 'Lumo'}
+        <div style={{ textAlign: 'center' }}>
+          <LumoMascot state="idle" size="small" label="Lumo" />
+          <h1 style={{ fontSize: '20px', fontWeight: '800', marginTop: '12px', marginBottom: '4px', lineHeight: '1.2' }}>
+            Was lernst du gerade?
+          </h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0 }}>
+            Thema eingeben und Material einfügen — Lumo übernimmt den Rest.
+          </p>
+        </div>
+
+        {/* Thema-Eingabe */}
+        <input
+          type="text"
+          placeholder="Thema, z. B. Biologie – Zellbiologie"
+          value={topic}
+          onChange={(e) => setTopic(e.target.value)}
+          style={{ width: '100%' }}
+          autoFocus
+        />
+
+        {/* Material-Eingabe */}
+        {!hasPdf && !usingDemo && (
+          <textarea
+            rows={5}
+            style={{ width: '100%' }}
+            value={materialText}
+            onChange={(e) => {
+              applyMaterialText(e.target.value);
+              if (usingDemo) setUsingDemo(false);
+            }}
+            placeholder="Füge hier dein Lernmaterial ein …"
           />
+        )}
 
-          {showIntro ? (
-            <div style={{ textAlign: 'center', animation: 'fadeIn 0.6s ease' }}>
-              <h1 style={{
-                fontSize: '26px',
-                fontWeight: '800',
-                marginBottom: '8px',
-                lineHeight: '1.2',
-              }}>
-                Hallo. Ich bin Lumo.
-              </h1>
-              <p style={{
-                color: 'var(--gold)',
+        {/* Demo-Material aktiv */}
+        {usingDemo && (
+          <div style={{
+            width: '100%',
+            background: 'var(--bg-card)',
+            borderRadius: '12px',
+            border: '1px solid var(--gold)',
+            padding: '14px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+          }}>
+            <span style={{ fontSize: '20px', flexShrink: 0 }}>📄</span>
+            <div style={{ flex: 1, textAlign: 'left' }}>
+              <p style={{ fontSize: '13px', fontWeight: '700', color: 'var(--gold)', margin: '0 0 2px' }}>
+                Beispiel-Material geladen
+              </p>
+              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>
+                {DEMO_MATERIAL.topic}
+              </p>
+            </div>
+            <button
+              onClick={removeFile}
+              style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '16px', padding: 0, flexShrink: 0 }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {truncationNotice && (
+          <p className="field-notice">
+            Dein Material ist sehr umfangreich – Lumo nimmt die ersten 50.000 Zeichen.
+          </p>
+        )}
+
+        {/* Upload-Zeile */}
+        <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <input
+            ref={inputRef}
+            id="file-upload"
+            type="file"
+            accept=".pdf,.txt,.md,text/plain,application/pdf"
+            onChange={handleFile}
+            className="visually-hidden"
+          />
+          {!fileName && !usingDemo ? (
+            <label htmlFor="file-upload" className="upload-label" style={{ flex: 1 }}>
+              📎 PDF oder Textdatei hochladen
+            </label>
+          ) : fileName ? (
+            <div className="upload-chip" style={{ flex: 1 }}>
+              <span>{fileName}</span>
+              <button type="button" onClick={removeFile} aria-label="Datei entfernen">×</button>
+            </div>
+          ) : null}
+
+          {!fileName && !usingDemo && !materialText.trim() && !fileBase64 && (
+            <button
+              onClick={useDemo}
+              style={{
+                background: 'var(--bg-card)',
+                border: '1px dashed var(--gold)',
+                borderRadius: '10px',
+                padding: '8px 14px',
+                fontSize: '13px',
                 fontWeight: '600',
-                fontSize: '16px',
-                margin: '0',
-              }}>
-                Ich lerne mit dir.
-              </p>
-            </div>
-          ) : (
-            <div style={{ textAlign: 'center' }}>
-              <h1 style={{ fontSize: '22px', fontWeight: '800', marginBottom: '4px', lineHeight: '1.2' }}>
-                Was lernst du gerade?
-              </h1>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: '0' }}>
-                Gib dein Thema und Material ein – ich übernehme den Rest.
-              </p>
-            </div>
+                color: 'var(--gold)',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+              }}
+            >
+              Beispiel ✦
+            </button>
           )}
         </div>
 
-        {/* Formular — erscheint nach Intro mit sanfter Animation */}
-        {!showIntro && (
-          <div style={{ width: '100%', animation: 'slideDown 0.4s ease both', display: 'contents' }}>
-            {/* Thema-Eingabe */}
-            <input
-              type="text"
-              placeholder="Thema, z. B. Biologie – Zellbiologie"
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              style={{ width: '100%' }}
-              autoFocus
-            />
-
-            {/* Material-Eingabe */}
-            {!hasPdf && !usingDemo && (
-              <textarea
-                rows={5}
-                style={{ width: '100%' }}
-                value={materialText}
-                onChange={(e) => {
-                  applyMaterialText(e.target.value);
-                  if (usingDemo) setUsingDemo(false);
-                }}
-                placeholder="Füge hier dein Lernmaterial ein …"
-              />
-            )}
-
-            {/* Demo-Material aktiv */}
-            {usingDemo && (
-              <div style={{
-                width: '100%',
-                background: 'var(--bg-card)',
-                borderRadius: '12px',
-                border: '1px solid var(--gold)',
-                padding: '14px 16px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-              }}>
-                <span style={{ fontSize: '20px', flexShrink: 0 }}>📄</span>
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: '13px', fontWeight: '700', color: 'var(--gold)', margin: '0 0 2px' }}>
-                    Beispiel-Material geladen
-                  </p>
-                  <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '0' }}>
-                    {DEMO_MATERIAL.topic}
-                  </p>
-                </div>
-                <button
-                  onClick={removeFile}
-                  style={{
-                    background: 'none', border: 'none',
-                    color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '16px',
-                    padding: '0', flexShrink: 0,
-                  }}
-                >
-                  ✕
-                </button>
-              </div>
-            )}
-
-            {truncationNotice && (
-              <p className="field-notice">
-                Dein Material ist sehr umfangreich – Lumo nimmt die ersten 50.000 Zeichen.
-              </p>
-            )}
-
-            {/* Upload-Zeile + Demo-Option */}
-            <div style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              flexWrap: 'wrap',
-            }}>
-              <input
-                ref={inputRef}
-                id="file-upload"
-                type="file"
-                accept=".pdf,.txt,.md,text/plain,application/pdf"
-                onChange={handleFile}
-                className="visually-hidden"
-              />
-              {!fileName && !usingDemo ? (
-                <label htmlFor="file-upload" className="upload-label" style={{ flex: 1 }}>
-                  📎 Datei hochladen (PDF oder Text)
-                </label>
-              ) : fileName ? (
-                <div className="upload-chip" style={{ flex: 1 }}>
-                  <span>{fileName}</span>
-                  <button type="button" onClick={removeFile} aria-label="Datei entfernen">×</button>
-                </div>
-              ) : null}
-
-              {/* Demo-Material Button — schneller Einstieg */}
-              {!fileName && !usingDemo && !materialText.trim() && !fileBase64 && (
-                <button
-                  onClick={useDemo}
-                  style={{
-                    background: 'var(--bg-card)',
-                    border: '1px dashed var(--gold)',
-                    borderRadius: '10px',
-                    padding: '8px 14px',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    color: 'var(--gold)',
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap',
-                    flexShrink: 0,
-                  }}
-                >
-                  Beispiel nutzen ✦
-                </button>
-              )}
-            </div>
-
-            {fileError && <p className="field-error">{fileError}</p>}
-            {attemptedSubmit && materialError && (
-              <p style={{
-                fontSize: '14px',
-                color: 'var(--amber)',
-                margin: '0',
-                padding: '8px 12px',
-                background: 'var(--amber-soft)',
-                borderRadius: '8px',
-              }}>
-                {materialError}
-              </p>
-            )}
-
-            <Button onClick={handleNext} disabled={!topic.trim()} style={{ width: '100%' }}>
-              Weiter →
-            </Button>
-
-            {/* Vertrauens-Chip – klein und unaufdringlich */}
-            <p style={{
-              fontSize: '12px',
-              color: 'var(--text-secondary)',
-              textAlign: 'center',
-              margin: '0',
-              opacity: 0.6,
-              fontStyle: 'italic',
-            }}>
-              „Ich hab endlich aufgehört Lernmaterial nur durchzulesen." — Beta-Feedback
-            </p>
-
-            {/* Legal footer – DSGVO-konform, dezent */}
-            {onShowLegal && (
-              <p style={{
-                fontSize: '11px',
-                color: 'var(--text-secondary)',
-                textAlign: 'center',
-                margin: '0',
-                opacity: 0.45,
-              }}>
-                <button
-                  type="button"
-                  onClick={onShowLegal}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: 'inherit',
-                    fontSize: 'inherit',
-                    cursor: 'pointer',
-                    padding: '0',
-                    textDecoration: 'underline',
-                    textUnderlineOffset: '2px',
-                  }}
-                >
-                  Impressum & Datenschutz
-                </button>
-              </p>
-            )}
-          </div>
+        {fileError && <p className="field-error">{fileError}</p>}
+        {attemptedSubmit && materialError && (
+          <p style={{
+            fontSize: '14px',
+            color: 'var(--amber)',
+            margin: 0,
+            padding: '8px 12px',
+            background: 'var(--amber-soft)',
+            borderRadius: '8px',
+          }}>
+            {materialError}
+          </p>
         )}
+
+        <Button onClick={handleNext} disabled={!topic.trim()} style={{ width: '100%' }}>
+          Weiter →
+        </Button>
+
+        {/* Legal footer */}
+        {onShowLegal && (
+          <p style={{ fontSize: '11px', color: 'var(--text-secondary)', textAlign: 'center', margin: 0, opacity: 0.45 }}>
+            <button
+              type="button"
+              onClick={onShowLegal}
+              style={{ background: 'none', border: 'none', color: 'inherit', fontSize: 'inherit', cursor: 'pointer', padding: 0, textDecoration: 'underline', textUnderlineOffset: '2px' }}
+            >
+              Impressum & Datenschutz
+            </button>
+          </p>
+        )}
+
+        <button
+          className="text-link"
+          style={{ fontSize: '13px', opacity: 0.6 }}
+          onClick={() => setPhase('value')}
+        >
+          ← Was macht Lumo?
+        </button>
       </div>
     </div>
   );
