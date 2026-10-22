@@ -30,13 +30,24 @@ export const ANALYZE_SYSTEM = `${LUMO_PERSONA}
 
 Deine Aufgabe:
 1. Analysiere das Lernmaterial (oder das genannte Thema, falls kein Material vorliegt)
-2. Teile es in höchstens 6 sinnvolle Lernblöcke auf – nicht zu groß, nicht zu klein
+2. Teile es in sinnvolle Lernblöcke auf – maximal 6
 3. Gib jedem Block einen kurzen, klaren Titel
 4. Schätze die Schwierigkeit jedes Blocks ein (leicht, mittel oder schwer)
 5. Schätze eine realistische Bearbeitungszeit in Minuten pro Block
 6. Empfehle eine sinnvolle Reihenfolge (Block-IDs)
 7. Fülle "content" mit einer kompakten Zusammenfassung des Stoffs dieses Blocks (2-6 Sätze), die als Grundlage für spätere Erklärungen dient
-8. Bestimme das Fach (subject) – ein einziges Wort auf Deutsch, kleingeschrieben: biologie, chemie, physik, mathematik, geschichte, psychologie, wirtschaft, informatik, sprachen, medizin, jura – oder ein anderes passendes Fach.`;
+8. Bestimme das Fach (subject) – ein einziges Wort auf Deutsch, kleingeschrieben: biologie, chemie, physik, mathematik, geschichte, psychologie, wirtschaft, informatik, sprachen, medizin, jura – oder ein anderes passendes Fach.
+
+WICHTIG – Wie du Blöcke aufteilst:
+Entscheide die Anzahl der Blöcke ausschließlich nach konzeptueller Eigenständigkeit – nicht nach Textlänge oder Seitenanzahl.
+
+Frage dich für jedes Konzept: Kann es ohne das andere verstanden werden? Wenn ja, gehört es in einen eigenen Block.
+
+Beispiele:
+- Ein kurzes, dichtes Paper über Quantenmechanik kann 4 Blöcke brauchen, weil jedes Konzept eigenständig ist.
+- Ein 10-seitiger Text über ein einziges Thema (z.B. "Was ist Photosynthese?") braucht vielleicht nur 1-2 Blöcke.
+
+Niemals nach Wortanzahl oder Länge aufteilen. Immer nach: Sind das eigenständige Konzepte, die unabhängig voneinander gelernt werden können?`;
 
 export function getAnalyzeSystem(goalType, sprintMode = false) {
   const goalContext = goalType === 'exam'
@@ -50,7 +61,7 @@ export function getAnalyzeSystem(goalType, sprintMode = false) {
     ? `
 
 SPRINT-MODUS (Prüfung in ≤3 Tagen):
-- Erstelle MAXIMAL 4 Blöcke, nicht mehr – Fokus auf das Absolut-Wichtigste
+- Erstelle MAXIMAL 4 Blöcke – nicht weil der Text kurz ist, sondern weil nur das Absolut-Prüfungsrelevante zählt. Weniger Blöcke = mehr Fokus.
 - Sortiere die Blöcke nach Prüfungsrelevanz: der wichtigste Block zuerst in recommendedOrder
 - Setze estimatedMinutes auf maximal 20 Minuten pro Block – kürzer ist besser
 - Lass unwichtige Details, Hintergrundinformationen und tiefe Zusammenhänge weg
