@@ -13,7 +13,7 @@ import {
 const DIFFICULTY_COLORS = {
   leicht: '#3D9E6E',
   mittel: '#D4A843',
-  schwer: '#E07B54',
+  schwer: '#C47A2B', // var(--amber) — ADHS-safe: kein Rot für Schwierigkeitsstufen
 };
 
 // ADHS-Design: var(--red) NIEMALS für Bewertungs-Optionen.

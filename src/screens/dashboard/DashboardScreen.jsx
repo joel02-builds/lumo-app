@@ -462,8 +462,8 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
                         <span style={{
                           fontSize: '10px',
                           fontWeight: '700',
-                          color: b.difficulty === 'schwer' ? '#E07B54' : b.difficulty === 'mittel' ? 'var(--gold)' : 'var(--green)',
-                          background: b.difficulty === 'schwer' ? 'rgba(224,123,84,0.12)' : b.difficulty === 'mittel' ? 'rgba(212,168,67,0.12)' : 'rgba(61,158,110,0.12)',
+                          color: b.difficulty === 'schwer' ? 'var(--amber)' : b.difficulty === 'mittel' ? 'var(--gold)' : 'var(--green)',
+                          background: b.difficulty === 'schwer' ? 'var(--amber-soft)' : b.difficulty === 'mittel' ? 'rgba(212,168,67,0.12)' : 'rgba(61,158,110,0.12)',
                           borderRadius: '999px',
                           padding: '1px 7px',
                           letterSpacing: '0.02em',

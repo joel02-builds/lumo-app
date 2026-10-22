@@ -124,8 +124,8 @@ const DEMO_STEPS = [
             <span style={{
               fontSize: '11px',
               fontWeight: '700',
-              color: b.diff === 'schwer' ? '#E07B54' : b.diff === 'mittel' ? 'var(--gold)' : 'var(--green)',
-              background: b.diff === 'schwer' ? 'rgba(224,123,84,0.12)' : b.diff === 'mittel' ? 'rgba(212,168,67,0.12)' : 'rgba(61,158,110,0.12)',
+              color: b.diff === 'schwer' ? 'var(--amber)' : b.diff === 'mittel' ? 'var(--gold)' : 'var(--green)',
+              background: b.diff === 'schwer' ? 'var(--amber-soft)' : b.diff === 'mittel' ? 'rgba(212,168,67,0.12)' : 'rgba(61,158,110,0.12)',
               borderRadius: '999px',
               padding: '3px 9px',
             }}>

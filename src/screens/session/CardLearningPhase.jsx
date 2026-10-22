@@ -479,14 +479,16 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
               disabled={!answer.trim() || finalSending}
               style={{
                 width: '100%',
-                background: answer.trim() ? 'var(--gold)' : 'var(--bg-card)',
+                background: answer.trim() ? 'var(--gold)' : 'transparent',
                 color: answer.trim() ? '#1a1206' : 'var(--text-secondary)',
-                border: 'none',
+                border: answer.trim() ? 'none' : '1.5px dashed rgba(255,255,255,0.15)',
                 borderRadius: '12px',
                 padding: '16px',
                 fontSize: '17px',
                 fontWeight: '700',
-                cursor: answer.trim() ? 'pointer' : 'not-allowed',
+                cursor: answer.trim() && !finalSending ? 'pointer' : 'default',
+                transition: 'all 0.2s ease',
+                opacity: finalSending ? 0.7 : 1,
               }}
             >
               {finalSending ? 'Lumo bewertet …' : 'Abschicken'}
@@ -585,7 +587,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                   ? 'var(--green)'
                   : i === currentIndex
                   ? subjectColor
-                  : 'var(--border)',
+                  : 'rgba(255,255,255,0.22)',
                 transition: 'all 0.3s ease',
                 boxShadow: i === currentIndex ? `0 0 8px ${subjectColor}` : 'none',
               }} />
@@ -644,8 +646,8 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
           borderRadius: '20px',
           padding: 'clamp(20px, 5vw, 36px) clamp(16px, 4vw, 40px)',
           boxShadow: phase === 'reading'
-            ? '0 0 40px rgba(212, 168, 67, 0.08), 0 8px 32px rgba(0,0,0,0.3)'
-            : '0 8px 32px rgba(0,0,0,0.3)',
+            ? '0 0 60px rgba(212, 168, 67, 0.12), 0 12px 48px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.4)'
+            : '0 12px 48px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.4)',
           transition: 'all 0.3s ease',
           opacity: animating ? 0 : 1,
           transform: animating ? 'translateY(8px)' : 'translateY(0)',
@@ -1091,14 +1093,15 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                       disabled={reexplaining}
                       style={{
                         flex: 1,
-                        background: 'var(--bg-card-bright)',
+                        background: 'transparent',
                         color: reexplaining ? 'var(--text-secondary)' : 'var(--text-primary)',
-                        border: '1px solid var(--border)',
+                        border: '1.5px solid rgba(255,255,255,0.2)',
                         borderRadius: '12px',
                         padding: '13px',
                         fontSize: '15px',
                         fontWeight: '600',
                         cursor: reexplaining ? 'not-allowed' : 'pointer',
+                        opacity: reexplaining ? 0.5 : 1,
                       }}
                     >
                       {reexplaining ? 'Lumo denkt …' : 'Nein, nochmal'}
@@ -1173,18 +1176,20 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                   onClick={handleNoIdea}
                   disabled={hintLoading}
                   style={{
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--text-secondary)',
+                    background: 'rgba(212, 168, 67, 0.06)',
+                    border: '1px solid rgba(212, 168, 67, 0.2)',
+                    borderRadius: '8px',
+                    color: 'var(--gold)',
                     fontSize: '13px',
-                    cursor: 'pointer',
-                    padding: '4px',
+                    cursor: hintLoading ? 'default' : 'pointer',
+                    padding: '8px 14px',
                     marginBottom: '12px',
-                    textDecoration: 'underline',
                     alignSelf: 'flex-start',
+                    opacity: hintLoading ? 0.6 : 0.85,
+                    transition: 'opacity 0.15s ease',
                   }}
                 >
-                  {hintLoading ? 'Lumo denkt …' : 'Keine Ahnung – zeig mir einen Hinweis'}
+                  {hintLoading ? 'Lumo denkt …' : '💡 Ich brauche einen Hinweis'}
                 </button>
               )}
 
@@ -1193,15 +1198,16 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                 disabled={!answer.trim() || sending}
                 style={{
                   width: '100%',
-                  background: answer.trim() ? 'var(--gold)' : 'var(--bg-card-bright)',
+                  background: answer.trim() ? 'var(--gold)' : 'transparent',
                   color: answer.trim() ? '#1a1206' : 'var(--text-secondary)',
-                  border: 'none',
+                  border: answer.trim() ? 'none' : '1.5px dashed rgba(255,255,255,0.15)',
                   borderRadius: '12px',
                   padding: '14px',
                   fontSize: '16px',
                   fontWeight: '700',
-                  cursor: answer.trim() && !sending ? 'pointer' : 'not-allowed',
-                  transition: 'all 0.15s ease',
+                  cursor: answer.trim() && !sending ? 'pointer' : 'default',
+                  transition: 'all 0.2s ease',
+                  opacity: sending ? 0.7 : 1,
                 }}
               >
                 {sending ? 'Lumo denkt …' : 'Abschicken'}

@@ -202,8 +202,8 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
                 <span style={{
                   fontSize: '11px',
                   fontWeight: '700',
-                  color: block.difficulty === 'schwer' ? '#E07B54' : block.difficulty === 'mittel' ? 'var(--gold)' : 'var(--green)',
-                  background: block.difficulty === 'schwer' ? 'rgba(224,123,84,0.12)' : block.difficulty === 'mittel' ? 'rgba(212,168,67,0.12)' : 'rgba(61,158,110,0.12)',
+                  color: block.difficulty === 'schwer' ? 'var(--amber)' : block.difficulty === 'mittel' ? 'var(--gold)' : 'var(--green)',
+                  background: block.difficulty === 'schwer' ? 'var(--amber-soft)' : block.difficulty === 'mittel' ? 'rgba(212,168,67,0.12)' : 'rgba(61,158,110,0.12)',
                   borderRadius: '999px',
                   padding: '3px 10px',
                   letterSpacing: '0.02em',
