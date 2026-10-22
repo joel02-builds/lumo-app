@@ -227,9 +227,9 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
               color: 'var(--text-primary)',
               margin: 0,
             }}>
-              Du liest. Du verstehst.<br />
+              Du hast alle Materialien<br />und Unterlagen.<br />
               <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>
-                Und trotzdem bleibt nichts hängen.
+                Aber wo fängst du an?
               </span>
             </h1>
           </div>
