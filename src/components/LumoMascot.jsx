@@ -112,10 +112,12 @@ export default function LumoMascot({
   label,
   size = 'normal',
   pulseOnce,
+  glowPulse = false, // true → goldener Leuchtring pulsiert
   intro = false, // true → Einführungs-Animation "Ich bin Lumo"
 }) {
   const src = MASCOT_IMAGES[state] || MASCOT_IMAGES.idle;
-  const px = size === 'small' ? 40 : size === 'large' ? 160 : 120;
+  // small=40, medium=56, normal=120, large=160
+  const px = size === 'small' ? 40 : size === 'medium' ? 56 : size === 'large' ? 160 : 120;
 
   const [imgVisible, setImgVisible] = useState(true);
   const [currentSrc, setCurrentSrc] = useState(src);
@@ -150,7 +152,9 @@ export default function LumoMascot({
     ? 'lumo-bounce 0.8s ease-in-out infinite alternate'
     : 'none';
 
-  const imageFilter = isComplete
+  const imageFilter = glowPulse
+    ? 'drop-shadow(0 0 18px rgba(212,168,67,0.7))'
+    : isComplete
     ? 'drop-shadow(0 0 12px rgba(212,168,67,0.6))'
     : state === 'streak'
     ? 'drop-shadow(0 0 16px rgba(212,168,67,0.8))'

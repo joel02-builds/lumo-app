@@ -50,8 +50,8 @@ export default function CookieConsent({ onAccept, onDecline }) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    // Kurze Verzögerung, damit der erste Render fertig ist
-    const t = setTimeout(() => setVisible(true), 400);
+    // Verzögerung: erst nach 1.8s zeigen, damit Hook+Intro ungestört bleiben
+    const t = setTimeout(() => setVisible(true), 1800);
     return () => clearTimeout(t);
   }, []);
 
@@ -66,80 +66,74 @@ export default function CookieConsent({ onAccept, onDecline }) {
         left: 0,
         right: 0,
         zIndex: 100,
-        padding: '16px',
-        paddingBottom: 'calc(16px + env(safe-area-inset-bottom))',
-        transform: visible ? 'translateY(0)' : 'translateY(100%)',
-        transition: 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+        padding: '12px 16px',
+        paddingBottom: 'calc(12px + env(safe-area-inset-bottom))',
+        transform: visible ? 'translateY(0)' : 'translateY(110%)',
+        opacity: visible ? 1 : 0,
+        transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease',
         pointerEvents: visible ? 'auto' : 'none',
       }}
     >
       <div style={{
-        maxWidth: '560px',
+        maxWidth: '520px',
         margin: '0 auto',
-        background: 'var(--bg-elevated)',
-        border: '1px solid var(--border)',
-        borderRadius: '18px',
-        padding: '18px 20px',
-        boxShadow: '0 8px 40px rgba(0,0,0,0.4)',
+        background: 'rgba(25, 37, 48, 0.97)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: '1px solid rgba(212, 168, 67, 0.2)',
+        borderRadius: '16px',
+        padding: '14px 18px',
+        boxShadow: '0 -4px 40px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3)',
         display: 'flex',
         flexDirection: 'column',
-        gap: '14px',
+        gap: '12px',
       }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-          <span style={{ fontSize: '20px', flexShrink: 0, marginTop: '1px' }}>🍪</span>
-          <div>
-            <p style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 4px' }}>
-              Lumo speichert deinen Fortschritt
-            </p>
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.6' }}>
-              Dafür nutzen wir einen anonymen Cookie (<code style={{ background: 'var(--bg-card)', borderRadius: '4px', padding: '1px 5px', fontSize: '12px' }}>lumo_uid</code>),
-              der deinen Lernstand geräteübergreifend synchronisiert. Kein Name, keine E-Mail — nur ein anonymer Code.
-            </p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.5', flex: 1, minWidth: '180px' }}>
+            <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>Fortschritt speichern?</span>
+            {' '}Anonymer Cookie für geräteübergreifenden Lernstand.
+          </p>
+          <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+            <button
+              onClick={onAccept}
+              style={{
+                background: 'var(--gold)',
+                color: '#1a1206',
+                border: 'none',
+                borderRadius: '10px',
+                padding: '9px 18px',
+                fontSize: '13px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Ja, gerne
+            </button>
+            <button
+              onClick={onDecline}
+              style={{
+                background: 'transparent',
+                color: 'var(--text-secondary)',
+                border: '1px solid var(--border)',
+                borderRadius: '10px',
+                padding: '9px 14px',
+                fontSize: '13px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Nur lokal
+            </button>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button
-            onClick={onAccept}
-            style={{
-              flex: 1,
-              background: 'var(--gold)',
-              color: '#1a1206',
-              border: 'none',
-              borderRadius: '12px',
-              padding: '12px 16px',
-              fontSize: '14px',
-              fontWeight: '700',
-              cursor: 'pointer',
-            }}
-          >
-            Akzeptieren
-          </button>
-          <button
-            onClick={onDecline}
-            style={{
-              flex: 1,
-              background: 'var(--bg-card)',
-              color: 'var(--text-secondary)',
-              border: '1px solid var(--border)',
-              borderRadius: '12px',
-              padding: '12px 16px',
-              fontSize: '14px',
-              fontWeight: '500',
-              cursor: 'pointer',
-            }}
-          >
-            Nur lokal speichern
-          </button>
-        </div>
-
-        <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: 0, opacity: 0.6, textAlign: 'center' }}>
-          Mehr dazu in unserer{' '}
+        <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: 0, opacity: 0.5, textAlign: 'center' }}>
           <span
             role="button"
             tabIndex={0}
             onClick={() => {
-              // Datenschutz öffnen — wird via window-Event kommuniziert
               window.dispatchEvent(new CustomEvent('lumo:show-legal'));
             }}
             onKeyDown={(e) => {
@@ -147,7 +141,7 @@ export default function CookieConsent({ onAccept, onDecline }) {
                 window.dispatchEvent(new CustomEvent('lumo:show-legal'));
               }
             }}
-            style={{ color: 'var(--gold)', textDecoration: 'underline', cursor: 'pointer' }}
+            style={{ color: 'var(--gold)', textDecoration: 'underline', cursor: 'pointer', opacity: 0.8 }}
           >
             Datenschutzerklärung
           </span>

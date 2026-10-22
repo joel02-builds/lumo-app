@@ -417,31 +417,40 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
     return (
       <div className="screen">
         <div className="screen-content" style={{ gap: '0', justifyContent: 'center', padding: '0 28px' }}>
-          <div style={{ textAlign: 'center', animation: 'fadeIn 0.5s ease' }}>
+          <div style={{ textAlign: 'center', animation: 'fadeIn 0.6s ease' }}>
             <p style={{
-              fontSize: '13px',
+              fontSize: '12px',
               fontWeight: '700',
-              letterSpacing: '2px',
+              letterSpacing: '2.5px',
               textTransform: 'uppercase',
               color: 'var(--gold)',
-              marginBottom: '20px',
-              opacity: 0.8,
+              marginBottom: '24px',
+              opacity: 0.75,
             }}>
               Kennst du das?
             </p>
             <h1 style={{
-              fontSize: '26px',
+              fontSize: '28px',
               fontWeight: '800',
-              lineHeight: '1.35',
-              letterSpacing: '-0.025em',
+              lineHeight: '1.4',
+              letterSpacing: '-0.03em',
               color: 'var(--text-primary)',
               margin: 0,
             }}>
               Du hast alles.<br />
-              <span style={{ color: 'var(--text-secondary)', fontWeight: '500', fontSize: '22px' }}>
-                Skript, Folien, Mitschriften, …
+              <span style={{
+                color: 'var(--text-secondary)',
+                fontWeight: '400',
+                fontSize: '20px',
+                letterSpacing: '-0.015em',
+              }}>
+                Skript, Folien, Mitschriften&nbsp;…
               </span><br />
-              <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>
+              <span style={{
+                color: 'var(--text-secondary)',
+                fontWeight: '600',
+                fontSize: '24px',
+              }}>
                 Aber wo fängst du an?
               </span>
             </h1>
@@ -455,13 +464,19 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
   if (phase === 'intro') {
     return (
       <div className="screen">
-        <div className="screen-content" style={{ gap: '16px' }}>
-          <LumoMascot state="cheer" size="large" label="Lumo" />
+        <div className="screen-content" style={{ gap: '20px' }}>
+          <LumoMascot state="cheer" size="large" label="Lumo" glowPulse />
           <div style={{ textAlign: 'center', animation: 'fadeIn 0.5s ease' }}>
-            <h1 style={{ fontSize: '28px', fontWeight: '800', lineHeight: '1.2', marginBottom: '8px' }}>
+            <h1 style={{ fontSize: '30px', fontWeight: '800', lineHeight: '1.2', marginBottom: '10px', letterSpacing: '-0.03em' }}>
               Hallo. Ich bin Lumo.
             </h1>
-            <p style={{ color: 'var(--gold)', fontWeight: '600', fontSize: '17px', margin: 0 }}>
+            <p style={{
+              color: 'var(--gold)',
+              fontWeight: '600',
+              fontSize: '18px',
+              margin: 0,
+              opacity: 0.9,
+            }}>
               Dein KI-Lernbegleiter.
             </p>
           </div>
@@ -474,26 +489,17 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
   if (phase === 'value') {
     return (
       <div className="screen">
-        <div className="screen-content" style={{ gap: '24px', maxWidth: '400px', animation: 'fadeIn 0.4s ease' }}>
-          <LumoMascot state="idle" size="small" label="Lumo" />
+        <div className="screen-content" style={{ gap: '22px', maxWidth: '460px', animation: 'fadeIn 0.4s ease' }}>
+          <LumoMascot state="idle" size="medium" label="Lumo" />
 
           <div style={{ textAlign: 'center' }}>
-            <p style={{
-              fontSize: '11px',
-              fontWeight: '700',
-              letterSpacing: '1.5px',
-              textTransform: 'uppercase',
-              color: 'var(--gold)',
-              marginBottom: '10px',
-            }}>
-              Wie Lumo lernen verändert
-            </p>
-            <h1 style={{ fontSize: '22px', lineHeight: '1.35' }}>
-              Lad dein Skript hoch.<br />Lumo macht den Rest.
+            <h1 style={{ fontSize: '24px', lineHeight: '1.3', fontWeight: '800', letterSpacing: '-0.025em' }}>
+              Lad dein Skript hoch.<br />
+              <span style={{ color: 'var(--gold)' }}>Lumo macht den Rest.</span>
             </h1>
           </div>
 
-          {/* Value Props — kompakt, scanbar, konkret */}
+          {/* Value Props — mit visuellem Gewicht und Differenzierung */}
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {VALUE_PROPS.map((v, i) => (
               <div
@@ -502,15 +508,29 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
                   display: 'flex',
                   alignItems: 'flex-start',
                   gap: '14px',
-                  background: 'var(--bg-card)',
-                  border: '1px solid var(--border)',
+                  background: i === 0 ? 'rgba(212, 168, 67, 0.06)' : 'var(--bg-card)',
+                  border: i === 0 ? '1px solid rgba(212, 168, 67, 0.25)' : '1px solid var(--border)',
+                  borderLeft: i === 0 ? '3px solid var(--gold)' : '1px solid var(--border)',
                   borderRadius: '14px',
                   padding: '14px 16px',
-                  animation: `fadeIn 0.4s ease ${i * 0.1}s both`,
+                  animation: `fadeIn 0.45s ease ${i * 0.12}s both`,
                   textAlign: 'left',
+                  transition: 'border-color 0.15s ease, background 0.15s ease',
                 }}
               >
-                <span style={{ fontSize: '22px', flexShrink: 0, marginTop: '1px' }}>{v.icon}</span>
+                <div style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '10px',
+                  background: 'var(--bg-card-bright)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '18px',
+                  flexShrink: 0,
+                }}>
+                  {v.icon}
+                </div>
                 <div>
                   <p style={{
                     fontSize: '14px',
@@ -539,15 +559,20 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
               onClick={() => setPhase('form')}
               style={{
                 width: '100%',
-                background: 'var(--gold)',
+                background: 'linear-gradient(135deg, #e0b34a 0%, var(--gold) 60%, #c8952e 100%)',
                 color: '#1a1206',
                 border: 'none',
                 borderRadius: '14px',
-                padding: '15px',
+                padding: '16px',
                 fontSize: '17px',
                 fontWeight: '800',
                 cursor: 'pointer',
+                boxShadow: '0 4px 20px rgba(212, 168, 67, 0.35)',
+                letterSpacing: '-0.01em',
+                transition: 'filter 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease',
               }}
+              onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(1.08)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+              onMouseLeave={e => { e.currentTarget.style.filter = ''; e.currentTarget.style.transform = ''; }}
             >
               Material hochladen →
             </button>
@@ -557,13 +582,16 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
                 width: '100%',
                 background: 'transparent',
                 color: 'var(--text-secondary)',
-                border: '1px dashed rgba(212,168,67,0.4)',
+                border: '1px dashed rgba(212,168,67,0.35)',
                 borderRadius: '14px',
                 padding: '11px',
                 fontSize: '14px',
                 fontWeight: '500',
                 cursor: 'pointer',
+                transition: 'border-color 0.15s ease, color 0.15s ease',
               }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(212,168,67,0.7)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(212,168,67,0.35)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
             >
               Erst mal ausprobieren ✦
             </button>
@@ -580,29 +608,31 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
   if (phase === 'demo') {
     const step = DEMO_STEPS[demoStep];
     const isLastStep = demoStep === DEMO_STEPS.length - 1;
-    const progress = ((demoStep) / (DEMO_STEPS.length - 1)) * 100;
+    // Progress: erster Schritt = 20%, letzter = 100%
+    const progress = ((demoStep + 1) / DEMO_STEPS.length) * 100;
 
     return (
       <div className="screen">
-        <div className="screen-content" style={{ gap: '20px', maxWidth: '420px', animation: 'fadeIn 0.3s ease' }}>
+        <div className="screen-content" style={{ gap: '20px', maxWidth: '440px', animation: 'fadeIn 0.3s ease' }}>
 
           {/* Progress Bar */}
           <div style={{ width: '100%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <span style={{ fontSize: '11px', fontWeight: '700', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--gold)' }}>
+              <span style={{ fontSize: '11px', fontWeight: '700', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--gold)', opacity: 0.8 }}>
                 So funktioniert Lumo
               </span>
               <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                 {demoStep + 1} / {DEMO_STEPS.length}
               </span>
             </div>
-            <div style={{ height: '3px', background: 'var(--border)', borderRadius: '999px', overflow: 'hidden' }}>
+            <div style={{ height: '4px', background: 'var(--bg-card)', borderRadius: '999px', overflow: 'hidden' }}>
               <div style={{
                 height: '100%',
                 width: `${progress}%`,
-                background: 'var(--gold)',
+                background: 'linear-gradient(90deg, #c97f12, var(--gold))',
                 borderRadius: '999px',
-                transition: 'width 0.4s ease',
+                transition: 'width 0.5s ease',
+                boxShadow: '0 0 8px rgba(212, 168, 67, 0.5)',
               }} />
             </div>
           </div>
@@ -719,15 +749,15 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
   // ── Phase: FORM ──
   return (
     <div className="screen">
-      <div className="screen-content" style={{ gap: '14px', maxWidth: '440px', animation: 'fadeIn 0.35s ease' }}>
+      <div className="screen-content" style={{ gap: '16px', maxWidth: '460px', animation: 'fadeIn 0.35s ease' }}>
 
         <div style={{ textAlign: 'center' }}>
-          <LumoMascot state="idle" size="small" label="Lumo" />
-          <h1 style={{ fontSize: '20px', fontWeight: '800', marginTop: '12px', marginBottom: '4px', lineHeight: '1.2' }}>
+          <LumoMascot state="idle" size="medium" label="Lumo" />
+          <h1 style={{ fontSize: '22px', fontWeight: '800', marginTop: '14px', marginBottom: '6px', lineHeight: '1.25', letterSpacing: '-0.025em' }}>
             Was lernst du gerade?
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0 }}>
-            Thema eingeben und Material einfügen — Lumo übernimmt den Rest.
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0, lineHeight: '1.5' }}>
+            Thema eingeben, Material einfügen — Lumo übernimmt den Rest.
           </p>
         </div>
 
@@ -856,17 +886,22 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
           disabled={!topic.trim()}
           style={{
             width: '100%',
-            background: topic.trim() ? 'var(--gold)' : 'var(--bg-card)',
+            background: topic.trim()
+              ? 'linear-gradient(135deg, #e0b34a 0%, var(--gold) 60%, #c8952e 100%)'
+              : 'var(--bg-card)',
             color: topic.trim() ? '#1a1206' : 'var(--text-secondary)',
             border: 'none',
             borderRadius: '14px',
-            padding: '15px',
+            padding: '16px',
             fontSize: '17px',
             fontWeight: '800',
             cursor: topic.trim() ? 'pointer' : 'not-allowed',
             letterSpacing: '-0.01em',
-            transition: 'background 0.15s ease, color 0.15s ease',
+            boxShadow: topic.trim() ? '0 4px 20px rgba(212, 168, 67, 0.3)' : 'none',
+            transition: 'background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease, filter 0.15s ease',
           }}
+          onMouseEnter={e => { if (topic.trim()) { e.currentTarget.style.filter = 'brightness(1.08)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}}
+          onMouseLeave={e => { e.currentTarget.style.filter = ''; e.currentTarget.style.transform = ''; }}
         >
           Weiter →
         </button>

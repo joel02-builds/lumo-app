@@ -55,24 +55,38 @@
   padding: 16px 40px;
   font-size: 17px;
   font-weight: 800;
-  background: var(--gold);
+  background: linear-gradient(135deg, #e0b34a 0%, var(--gold) 60%, #c8952e 100%);
   color: #1a1206;
-  box-shadow: 0 4px 20px rgba(245, 166, 35, 0.35);
+  box-shadow: var(--shadow-gold);
   letter-spacing: -0.01em;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    filter 0.18s ease;
 }
 .lumo-btn--primary:hover:not(:disabled) {
-  opacity: 0.94;
-  box-shadow: 0 8px 34px rgba(245, 166, 35, 0.5);
-  transform: translateY(-1px);
+  filter: brightness(1.08);
+  box-shadow: 0 10px 40px rgba(212, 168, 67, 0.55), 0 4px 12px rgba(212, 168, 67, 0.25);
+  transform: translateY(-2px);
+}
+.lumo-btn--primary:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+  box-shadow: var(--shadow-gold);
 }
 
 .lumo-btn--secondary {
   background: transparent;
   color: var(--text-primary);
   border: 1px solid var(--border);
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
 .lumo-btn--secondary:hover:not(:disabled) {
-  border-color: var(--gold);
+  border-color: rgba(212, 168, 67, 0.5);
+  background: rgba(212, 168, 67, 0.05);
+  transform: translateY(-1px);
 }
 
 /* "Ich hab's verstanden" vor Ablauf der Lesezeit: inaktiv und zurückhaltend. */
@@ -448,15 +462,23 @@
   color: inherit;
   text-align: left;
   cursor: pointer;
+  box-shadow: var(--shadow-card);
   transition:
-    border-color 0.15s ease,
-    background 0.15s ease;
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
 }
 .block-item:hover,
 .block-item:focus-visible {
-  border-color: var(--gold);
+  border-color: rgba(212, 168, 67, 0.45);
   background: var(--bg-card-bright);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4), 0 0 0 1px rgba(212, 168, 67, 0.1);
+  transform: translateY(-1px);
   outline: none;
+}
+.block-item:active {
+  transform: translateY(0) scale(0.99);
 }
 
 /* Visuelles Gewicht pro Status, damit Priorität auf einen Blick erkennbar ist. */
@@ -709,6 +731,7 @@
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 18px 20px;
+  box-shadow: var(--shadow-card);
 }
 .summary-block h3 {
   font-size: 16px;
