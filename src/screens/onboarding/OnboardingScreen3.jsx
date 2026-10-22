@@ -1,50 +1,26 @@
 /**
- * OnboardingScreen3 — Ziel-Auswahl
+ * OnboardingScreen3 — Optionaler Termin-Screen
  *
- * Änderungen vs. vorher:
- * ─────────────────────────────────────────────────────────────────────────
- * 1. Lernstil-Picker ENTFERNT — wird später im Dashboard/Einstellungen angeboten
- *    nach der ersten Session, wenn der Nutzer bereits Kontext hat.
- *    Evidenz: Learning-Style-Picker im Onboarding erhöht Drop-Off,
- *    weil er nicht für sofortigen Wert steht und die Entscheidung unklar ist.
- *    (Pashler et al., 2008: Lernstile als Konzept schwach belegt)
+ * Entscheidung: Die 3 Ziel-Optionen (Prüfung / Hausarbeit / Einfach verstehen)
+ * wurden entfernt. Begründung:
  *
- * 2. Nach Ziel + Datum-Bestätigung → direkt onConfirm (keine weitere Stufe)
- * 3. Back-Button geht zurück zu Onboarding Screen 1 (nicht mehr Step 2)
+ *   1. Cognitive Load: User wollen sofort loslegen, nicht kategorisieren.
+ *   2. Differenzierung unklar: "Prüfung" vs "Verstehen" ist eine Frage der
+ *      Intensität, nicht des Flows — Lumo kann das selbst ableiten.
+ *   3. Dropout-Risiko: Jede extra Entscheidung vor dem ersten Wert kostet.
+ *      (Hick's Law: Entscheidungszeit ∝ Anzahl Optionen)
  *
- * Flows:
- * ─────────────────────────────────────────────────────────────────────────
- *   [Ziel auswählen]
- *     → "Einfach verstehen" → onConfirm direkt
- *     → "Prüfung" / "Hausarbeit" → Datum-Picker → [Sprint-Check] → onConfirm
+ * Was bleibt:
+ *   – Optionaler Termin: Wer einen Abgabe- oder Prüfungstermin hat, kann ihn
+ *     eintragen. Lumo nutzt ihn für den Countdown und ggf. Sprint-Modus.
+ *   – "Jetzt loslegen" überspringt den Termin komplett.
+ *   – Sprint-Modus bleibt für Prüfungen ≤3 Tage erhalten.
+ *
+ * Default bei "Jetzt loslegen": goalType = 'understand', goalDate = '', sprintMode = false
  */
 
 import { useState } from 'react';
 import LumoMascot from '../../components/LumoMascot.jsx';
-import Button from '../../components/Button.jsx';
-
-const GOALS = [
-  {
-    id: 'exam',
-    label: 'Prüfung',
-    needsDate: true,
-    dateLabel: 'Wann ist die Prüfung?',
-    sub: 'Lumo fokussiert auf Prüfungsrelevanz und testet dich strenger.',
-  },
-  {
-    id: 'homework',
-    label: 'Hausarbeit',
-    needsDate: true,
-    dateLabel: 'Wann ist die Abgabe?',
-    sub: 'Lumo hilft dir das Thema tief zu verstehen und zu strukturieren.',
-  },
-  {
-    id: 'understand',
-    label: 'Einfach verstehen',
-    needsDate: false,
-    sub: 'Lumo erklärt ohne Druck – du bestimmst das Tempo.',
-  },
-];
 
 function getDaysUntilDate(dateStr) {
   if (!dateStr) return null;
@@ -56,36 +32,13 @@ function getDaysUntilDate(dateStr) {
 }
 
 export default function OnboardingScreen3({ onConfirm, onBack }) {
-  const [selectedId, setSelectedId] = useState(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [goalDate, setGoalDate] = useState('');
+  const [goalType, setGoalType] = useState('understand');
   const [showSprintInterstitial, setShowSprintInterstitial] = useState(false);
   const [pendingSprintGoal, setPendingSprintGoal] = useState(null);
 
-  const selectedGoal = GOALS.find((g) => g.id === selectedId);
-
-  function selectGoal(goal) {
-    if (goal.needsDate) {
-      setSelectedId(goal.id);
-    } else {
-      // Direkter Abschluss ohne weiteren Schritt
-      onConfirm({ goalType: goal.id, goalDate: '', sprintMode: false, learningStyle: null });
-    }
-  }
-
-  function confirmDate() {
-    if (!goalDate) return;
-    const days = getDaysUntilDate(goalDate);
-    // Sprint-Modus: Prüfung in ≤3 Tagen → Interstitial zeigen
-    if (selectedId === 'exam' && days !== null && days <= 3) {
-      setPendingSprintGoal({ goalType: selectedId, goalDate, daysUntilExam: days });
-      setShowSprintInterstitial(true);
-    } else {
-      // Direkter Abschluss ohne Lernstil-Schritt
-      onConfirm({ goalType: selectedId, goalDate, sprintMode: false, learningStyle: null });
-    }
-  }
-
-  // Sprint-Modus Interstitial: erscheint wenn Prüfung ≤3 Tage entfernt
+  // Sprint-Modus Interstitial: Prüfung in ≤3 Tagen
   if (showSprintInterstitial && pendingSprintGoal) {
     const { daysUntilExam } = pendingSprintGoal;
     const dayWord = daysUntilExam === 0 ? 'heute' : daysUntilExam === 1 ? 'morgen' : `in ${daysUntilExam} Tagen`;
@@ -175,13 +128,55 @@ export default function OnboardingScreen3({ onConfirm, onBack }) {
     );
   }
 
-  // Datum-Picker für Prüfung / Hausarbeit
-  if (selectedGoal?.needsDate) {
+  // Datum-Picker (erscheint wenn "Termin eintragen" geklickt)
+  if (showDatePicker) {
+    function confirmDate() {
+      if (!goalDate) return;
+      const days = getDaysUntilDate(goalDate);
+      // Sprint-Modus wenn Prüfung in ≤3 Tagen
+      if (goalType === 'exam' && days !== null && days <= 3) {
+        setPendingSprintGoal({ goalType, goalDate, daysUntilExam: days });
+        setShowSprintInterstitial(true);
+      } else {
+        onConfirm({ goalType, goalDate, sprintMode: false, learningStyle: null });
+      }
+    }
+
     return (
       <div className="screen" key="goal-date">
-        <div className="screen-content">
+        <div className="screen-content" style={{ gap: '24px', maxWidth: '400px' }}>
           <LumoMascot state="idle" label="Lumo" />
-          <h1>{selectedGoal.dateLabel}</h1>
+          <div style={{ textAlign: 'center' }}>
+            <h1 style={{ fontSize: '22px', marginBottom: '8px' }}>Wann ist der Termin?</h1>
+            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.5', margin: '0' }}>
+              Lumo zeigt dir einen Countdown und passt den Fokus an.
+            </p>
+          </div>
+
+          {/* Typ-Auswahl: Prüfung oder Abgabe — kompakt */}
+          <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+            {[{ id: 'exam', label: '📝 Prüfung' }, { id: 'homework', label: '📄 Abgabe' }].map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setGoalType(t.id)}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  borderRadius: '12px',
+                  border: goalType === t.id ? '2px solid var(--gold)' : '1px solid var(--border)',
+                  background: goalType === t.id ? 'rgba(212,168,67,0.10)' : 'var(--bg-card)',
+                  color: goalType === t.id ? 'var(--gold)' : 'var(--text-secondary)',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
           <input
             type="date"
             style={{
@@ -201,33 +196,94 @@ export default function OnboardingScreen3({ onConfirm, onBack }) {
             value={goalDate}
             onChange={(e) => setGoalDate(e.target.value)}
           />
-          <Button onClick={confirmDate} disabled={!goalDate}>
-            Los geht's →
-          </Button>
-          <button className="text-link" onClick={() => setSelectedId(null)}>
-            Zurück zur Auswahl
-          </button>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+            <button
+              onClick={confirmDate}
+              disabled={!goalDate}
+              style={{
+                width: '100%',
+                background: goalDate ? 'var(--gold)' : 'var(--bg-card)',
+                color: goalDate ? '#1a1206' : 'var(--text-secondary)',
+                border: 'none',
+                borderRadius: '12px',
+                padding: '15px',
+                fontSize: '16px',
+                fontWeight: '700',
+                cursor: goalDate ? 'pointer' : 'not-allowed',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              Los geht's →
+            </button>
+            <button
+              className="text-link"
+              onClick={() => setShowDatePicker(false)}
+            >
+              Zurück
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
-  // Ziel-Auswahl (Hauptansicht)
+  // Hauptansicht — Direktstart ohne Entscheidungszwang
   return (
-    <div className="screen" key="goal-list">
+    <div className="screen" key="goal-start">
       <button className="back-link" onClick={onBack}>
         ← Zurück
       </button>
-      <div className="screen-content">
+      <div className="screen-content" style={{ gap: '28px', maxWidth: '400px' }}>
         <LumoMascot state="idle" label="Lumo" />
-        <h1>Was ist dein Ziel?</h1>
-        <div className="goal-options">
-          {GOALS.map((g) => (
-            <button key={g.id} className="goal-btn" onClick={() => selectGoal(g)}>
-              <span style={{ display: 'block', fontWeight: '700', fontSize: '16px' }}>{g.label}</span>
-              <span style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px', fontWeight: '400' }}>{g.sub}</span>
-            </button>
-          ))}
+
+        <div style={{ textAlign: 'center' }}>
+          <h1 style={{ fontSize: '24px', lineHeight: '1.3', marginBottom: '10px' }}>
+            Bereit zum Starten.
+          </h1>
+          <p style={{ fontSize: '15px', color: 'var(--text-secondary)', lineHeight: '1.6', margin: '0' }}>
+            Lumo analysiert dein Material und teilt es in lernbare Blöcke auf.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+          {/* Primärer CTA: direkt starten */}
+          <button
+            onClick={() => onConfirm({ goalType: 'understand', goalDate: '', sprintMode: false, learningStyle: null })}
+            style={{
+              width: '100%',
+              background: 'var(--gold)',
+              color: '#1a1206',
+              border: 'none',
+              borderRadius: '14px',
+              padding: '16px',
+              fontSize: '17px',
+              fontWeight: '800',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            Jetzt loslegen →
+          </button>
+
+          {/* Sekundär: optionaler Termin */}
+          <button
+            onClick={() => setShowDatePicker(true)}
+            style={{
+              width: '100%',
+              background: 'transparent',
+              color: 'var(--text-secondary)',
+              border: '1px solid var(--border)',
+              borderRadius: '14px',
+              padding: '13px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            Ich habe einen Prüfungs- oder Abgabetermin
+          </button>
         </div>
       </div>
     </div>

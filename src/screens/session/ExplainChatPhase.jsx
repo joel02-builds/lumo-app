@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import LumoMascot from '../../components/LumoMascot.jsx';
 import ErrorBanner from '../../components/ErrorBanner.jsx';
 import NotesPanel from '../../components/NotesPanel.jsx';
+import HighlightedText from '../../components/HighlightedText.jsx';
+import { useSpeechInput } from '../../hooks/useSpeechInput.js';
 import { lumoApi } from '../../api/lumo.js';
 
 const READ_DELAY_MS = 20000;
@@ -67,6 +69,12 @@ export default function ExplainChatPhase({ block, depth, onDone, onExit }) {
 
   const hasAskedQuestion = messages.some((m) => m.role === 'user');
   const canFinish = timeUp || hasAskedQuestion;
+
+  // Voice-Input: transkribierten Text an bestehendes Feld anhängen
+  const handleVoiceResult = useCallback((transcript) => {
+    setQuestion((prev) => prev ? `${prev} ${transcript}` : transcript);
+  }, []);
+  const { isListening, isSupported: voiceSupported, startListening, stopListening } = useSpeechInput({ onResult: handleVoiceResult });
 
   async function sendMessage(rawText) {
     const text = rawText.trim();
@@ -210,7 +218,9 @@ export default function ExplainChatPhase({ block, depth, onDone, onExit }) {
               lineHeight: '1.6',
               fontWeight: m.role === 'user' ? '500' : '400',
             }}>
-              {m.text}
+              {m.role === 'assistant'
+                ? <HighlightedText text={m.text} color="var(--gold)" />
+                : m.text}
             </div>
           </div>
         ))}
@@ -265,13 +275,13 @@ export default function ExplainChatPhase({ block, depth, onDone, onExit }) {
           </button>
         )}
 
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
           <textarea
             ref={inputRef}
             rows={2}
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Frag Lumo etwas …"
+            placeholder={isListening ? 'Ich höre zu …' : 'Frag Lumo etwas …'}
             disabled={loading}
             style={{
               flex: 1,
@@ -279,6 +289,7 @@ export default function ExplainChatPhase({ block, depth, onDone, onExit }) {
               fontSize: '16px',
               borderRadius: '12px',
               minHeight: '52px',
+              borderColor: isListening ? 'var(--gold)' : undefined,
             }}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
@@ -287,6 +298,34 @@ export default function ExplainChatPhase({ block, depth, onDone, onExit }) {
               }
             }}
           />
+
+          {/* Mikrofon-Button — nur wenn Browser unterstützt */}
+          {voiceSupported && (
+            <button
+              onClick={isListening ? stopListening : startListening}
+              disabled={loading}
+              title={isListening ? 'Aufnahme stoppen' : 'Antwort einsprechen'}
+              style={{
+                background: isListening ? 'var(--gold)' : 'var(--bg-card)',
+                color: isListening ? '#1a1206' : 'var(--text-secondary)',
+                border: isListening ? 'none' : '1px solid var(--border)',
+                borderRadius: '12px',
+                width: '48px',
+                height: '52px',
+                fontSize: '18px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                flexShrink: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                animation: isListening ? 'lumo-pulse 1.2s ease-in-out infinite' : 'none',
+              }}
+            >
+              🎤
+            </button>
+          )}
+
           <button
             onClick={() => sendMessage(question)}
             disabled={!question.trim() || sending || loading}

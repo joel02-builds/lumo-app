@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import LumoMascot from '../../components/LumoMascot.jsx';
 import Button from '../../components/Button.jsx';
 import ErrorBanner from '../../components/ErrorBanner.jsx';
+import { useSpeechInput } from '../../hooks/useSpeechInput.js';
 import { lumoApi } from '../../api/lumo.js';
 
 // Phase 2 + 3 – Aktiver Abruf & direktes Feedback: erzwungene Selbsterklärung
@@ -60,6 +61,12 @@ export default function CheckUnderstandingPhase({ block, onDone, onExit }) {
       handleSubmit();
     }
   }
+
+  // Voice-Input: transkribierten Text an bestehende Antwort anhängen
+  const handleVoiceResult = useCallback((transcript) => {
+    setAnswer((prev) => prev ? `${prev} ${transcript}` : transcript);
+  }, []);
+  const { isListening, isSupported: voiceSupported, startListening, stopListening } = useSpeechInput({ onResult: handleVoiceResult });
 
   if (result) {
     return (
@@ -139,14 +146,51 @@ export default function CheckUnderstandingPhase({ block, onDone, onExit }) {
           Stell dir vor du erklärst es deinem besten Freund.<br />Was würdest du sagen?
         </h1>
         {hint && <p className="hint-text">{hint}</p>}
-        <textarea
-          rows={5}
-          style={{ width: '100%' }}
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
-          placeholder="Fang einfach an – auch ein Satz reicht …"
-          autoFocus
-        />
+
+        {/* Textarea + Mikrofon-Button nebeneinander */}
+        <div style={{ width: '100%', position: 'relative' }}>
+          <textarea
+            rows={5}
+            style={{
+              width: '100%',
+              paddingRight: voiceSupported ? '56px' : undefined,
+              borderColor: isListening ? 'var(--gold)' : undefined,
+            }}
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+            placeholder={isListening ? 'Ich höre zu … sprich einfach.' : 'Fang einfach an – auch ein Satz reicht …'}
+            autoFocus
+          />
+          {voiceSupported && (
+            <button
+              type="button"
+              onClick={isListening ? stopListening : startListening}
+              disabled={submitting || hintLoading}
+              title={isListening ? 'Aufnahme stoppen' : 'Antwort einsprechen'}
+              style={{
+                position: 'absolute',
+                right: '10px',
+                bottom: '10px',
+                background: isListening ? 'var(--gold)' : 'var(--bg-elevated)',
+                color: isListening ? '#1a1206' : 'var(--text-secondary)',
+                border: isListening ? 'none' : '1px solid var(--border)',
+                borderRadius: '10px',
+                width: '38px',
+                height: '38px',
+                fontSize: '16px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.15s ease',
+                animation: isListening ? 'lumo-pulse 1.2s ease-in-out infinite' : 'none',
+              }}
+            >
+              🎤
+            </button>
+          )}
+        </div>
+
         {error && (
           <ErrorBanner message={error} onRetry={handleRetry} onClose={() => setError(null)} onExit={onExit} />
         )}
