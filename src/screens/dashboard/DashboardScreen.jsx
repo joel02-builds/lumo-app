@@ -560,16 +560,35 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
           <button
             onClick={onViewWeakSpots}
             style={{
-              background: 'none',
-              border: 'none',
-              color: weakCount > 0 ? 'var(--gold)' : 'var(--text-secondary)',
-              fontSize: '13px',
+              width: '100%',
+              background: weakCount > 0 ? 'rgba(212,168,67,0.07)' : 'var(--bg-elevated)',
+              border: weakCount > 0 ? '1px solid rgba(212,168,67,0.3)' : '1px solid var(--border)',
+              borderRadius: '14px',
+              padding: '14px 18px',
               cursor: 'pointer',
-              padding: '8px',
-              textDecoration: 'underline',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '14px',
+              textAlign: 'left',
             }}
           >
-            {weakCount > 0 ? `${weakCount} zum Wiederholen` : 'Mein Lernstand'}
+            <span style={{ fontSize: '22px', flexShrink: 0 }}>
+              {weakCount > 0 ? '○' : '✓'}
+            </span>
+            <div style={{ flex: 1 }}>
+              <p style={{
+                fontSize: '14px',
+                fontWeight: '600',
+                color: weakCount > 0 ? 'var(--gold)' : 'var(--text-primary)',
+                margin: '0 0 2px',
+              }}>
+                {weakCount > 0 ? `${weakCount} ${weakCount === 1 ? 'Block' : 'Blöcke'} zum Wiederholen` : 'Mein Lernstand'}
+              </p>
+              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '0' }}>
+                {weakCount > 0 ? 'Lücken jetzt schließen' : 'Alles auf einen Blick'}
+              </p>
+            </div>
+            <span style={{ color: weakCount > 0 ? 'var(--gold)' : 'var(--text-secondary)', fontSize: '16px' }}>→</span>
           </button>
         )}
 

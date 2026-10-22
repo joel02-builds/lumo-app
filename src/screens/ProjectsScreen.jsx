@@ -2,8 +2,23 @@ import { useState } from 'react';
 import LumoMascot from '../components/LumoMascot.jsx';
 import { getSubjectColor } from '../utils/subjectColors.js';
 
+function getStreakDays() {
+  try {
+    const raw = localStorage.getItem('lumo_streak');
+    if (!raw) return 0;
+    const streak = JSON.parse(raw);
+    const today = new Date().toDateString();
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    if (streak.lastDate === today || streak.lastDate === yesterday) {
+      return streak.days || 0;
+    }
+    return 0;
+  } catch { return 0; }
+}
+
 export default function ProjectsScreen({ projects, onLoad, onNew, onDelete }) {
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const streak = getStreakDays();
 
   function handleDeleteClick(id) {
     setConfirmDeleteId(id);
@@ -60,9 +75,27 @@ export default function ProjectsScreen({ projects, onLoad, onNew, onDelete }) {
           <h2 style={{ fontSize: '18px', fontWeight: '800', letterSpacing: '-0.025em', margin: 0 }}>
             Meine Fächer
           </h2>
-          <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-            {projects.length} {projects.length === 1 ? 'Fach' : 'Fächer'}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {streak >= 1 && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                background: 'rgba(212,168,67,0.10)',
+                border: '1px solid rgba(212,168,67,0.25)',
+                borderRadius: '20px',
+                padding: '4px 10px',
+                fontSize: '13px',
+                fontWeight: '700',
+                color: 'var(--gold)',
+              }}>
+                🔥 {streak}
+              </div>
+            )}
+            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+              {projects.length} {projects.length === 1 ? 'Fach' : 'Fächer'}
+            </span>
+          </div>
         </div>
 
         {/* Projekt-Karten */}

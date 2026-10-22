@@ -169,69 +169,41 @@ export default function SessionSummaryScreen({ block, evaluation, onContinue, on
           </div>
         )}
 
-        {allPerfect ? (
-          <div style={{
-            width: '100%',
-            background: 'linear-gradient(135deg, rgba(212,168,67,0.15) 0%, rgba(61,158,110,0.15) 100%)',
-            border: '1px solid var(--gold)',
-            borderRadius: '16px',
-            padding: '24px',
-            textAlign: 'center',
-          }}>
-            <p style={{ fontSize: '32px', margin: '0 0 8px' }}>✨</p>
-            <p style={{ fontSize: '18px', fontWeight: '700', color: 'var(--gold)', margin: '0 0 6px' }}>
-              Alles verstanden.
-            </p>
-            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: '0', lineHeight: '1.5' }}>
-              Nicht nur abgehakt – wirklich verstanden.<br />
-              Das ist der Unterschied.
-            </p>
-          </div>
-        ) : allDone && (
-          <div style={{
-            width: '100%',
-            background: 'var(--green-soft)',
-            border: '1px solid var(--green)',
-            borderRadius: '14px',
-            padding: '20px',
-            textAlign: 'center',
-          }}>
-            <p style={{
-              fontSize: '18px',
-              fontWeight: '700',
-              color: 'var(--green)',
-              margin: '0',
-            }}>
-              Alle Blöcke geschafft. 🎉
-            </p>
-          </div>
-        )}
-
         {allDone && (
           <div style={{
             width: '100%',
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border)',
-            borderRadius: '14px',
-            padding: '20px',
+            background: allPerfect
+              ? 'linear-gradient(135deg, rgba(212,168,67,0.12) 0%, rgba(61,158,110,0.12) 100%)'
+              : 'var(--green-soft)',
+            border: `1px solid ${allPerfect ? 'var(--gold)' : 'var(--green)'}`,
+            borderRadius: '16px',
+            padding: '24px',
             textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
           }}>
+            <p style={{ fontSize: '28px', margin: '0' }}>
+              {allPerfect ? '✨' : '🎉'}
+            </p>
             <p style={{
-              fontSize: '15px',
-              color: 'var(--text-primary)',
-              margin: '0 0 8px',
-              lineHeight: '1.5',
+              fontSize: '17px',
+              fontWeight: '800',
+              color: allPerfect ? 'var(--gold)' : 'var(--green)',
+              margin: '0',
+              letterSpacing: '-0.02em',
             }}>
-              Du hast alles verstanden.
+              {allPerfect ? 'Alles verstanden.' : 'Alle Blöcke geschafft.'}
             </p>
             <p style={{
               fontSize: '14px',
               color: 'var(--text-secondary)',
               margin: '0',
-              lineHeight: '1.5',
+              lineHeight: '1.55',
             }}>
-              Ich empfehle in 7 Tagen eine kurze Wiederholung –
-              dann bleibt es wirklich sitzen.
+              {allPerfect
+                ? 'Nicht nur abgehakt – wirklich verstanden. Das ist der Unterschied.'
+                : 'In 7 Tagen eine kurze Wiederholung – dann bleibt es wirklich sitzen.'}
             </p>
           </div>
         )}
