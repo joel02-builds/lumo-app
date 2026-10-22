@@ -8,10 +8,10 @@
  *    Deshalb: 3 konkrete Versprechen BEVOR das Formular erscheint.
  *    (Evidence: Nielsen "show value first", Duolingo's "make first step feel obvious")
  *
- * 2. KEIN FEATURE-BINGO
- *    Keine langen Bullet-Listen. Nur das, was für Studenten wirklich relevant ist:
- *    "Ich muss das heute Abend wirklich verstehen."
- *    Lumo's Antwort darauf, in 3 Zeilen.
+ * 2. DEMO-FIRST ONBOARDING (Audit #3)
+ *    "Erst mal ausprobieren" → zeigt den kompletten Lumo-Loop (~60s) bevor das
+ *    Formular erscheint. User sieht: Analyse → Blöcke → Chat → Check → Abschluss.
+ *    Gescriptet, kein echter API-Call. Endet mit CTA zum eigenen Material.
  *
  * 3. DIREKTER ÜBERGANG ZUM NUTZEN
  *    Sobald der User "Los" klickt, erscheint das Formular — kein separater Screen.
@@ -25,7 +25,7 @@
  * – Klarer Fokus: immer nur eine Sache pro Moment
  */
 
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import LumoMascot from '../../components/LumoMascot.jsx';
 import Button from '../../components/Button.jsx';
 import { readFileAsBase64, readFileAsText } from '../../utils/fileReader.js';
@@ -60,6 +60,189 @@ function countWords(text) {
   return trimmed ? trimmed.split(/\s+/).filter(Boolean).length : 0;
 }
 
+// ── Demo-Steps für den interaktiven Onboarding-Walkthrough ─────────────────
+// Jeder Schritt simuliert eine Phase des echten Lumo-Loops.
+// Auto-advance nach DEMO_STEP_MS — User kann auch selbst weiterklicken.
+const DEMO_STEP_MS = 3000;
+
+const DEMO_STEPS = [
+  {
+    id: 'analyze',
+    icon: '⚙️',
+    label: 'Lumo analysiert dein Material',
+    mascot: 'thinking',
+    content: (
+      <div style={{ width: '100%' }}>
+        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '10px', textAlign: 'center' }}>
+          Dein Skript wird gelesen …
+        </p>
+        <div style={{
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border)',
+          borderRadius: '12px',
+          padding: '14px 16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+        }}>
+          {['Neurobiologie – Synaptische Übertragung', '8 Seiten · ~2.400 Wörter', 'Schwierigkeitsgrad: Mittel'].map((line, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--gold)', animation: `lumo-demo-pulse 1.2s ease-in-out ${i * 0.25}s infinite` }} />
+              <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{line}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: 'blocks',
+    icon: '📦',
+    label: 'Lumo zerlegt es in lernbare Blöcke',
+    mascot: 'learning',
+    content: (
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {[
+          { title: 'Was ist eine Synapse?', diff: 'leicht' },
+          { title: 'Neurotransmitter & Rezeptoren', diff: 'mittel' },
+          { title: 'Langzeitpotenzierung (LTP)', diff: 'schwer' },
+        ].map((b, i) => (
+          <div key={i} style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border)',
+            borderRadius: '12px',
+            padding: '12px 14px',
+            animation: `fadeIn 0.35s ease ${i * 0.15}s both`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '16px' }}>📦</span>
+              <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>{b.title}</span>
+            </div>
+            <span style={{
+              fontSize: '11px',
+              fontWeight: '700',
+              color: b.diff === 'schwer' ? '#E07B54' : b.diff === 'mittel' ? 'var(--gold)' : 'var(--green)',
+              background: b.diff === 'schwer' ? 'rgba(224,123,84,0.12)' : b.diff === 'mittel' ? 'rgba(212,168,67,0.12)' : 'rgba(61,158,110,0.12)',
+              borderRadius: '999px',
+              padding: '3px 9px',
+            }}>
+              {b.diff}
+            </span>
+          </div>
+        ))}
+      </div>
+    ),
+  },
+  {
+    id: 'chat',
+    icon: '💬',
+    label: 'Lumo erklärt — du fragst',
+    mascot: 'learning',
+    content: (
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{
+          alignSelf: 'flex-start',
+          maxWidth: '85%',
+          padding: '12px 16px',
+          borderRadius: '4px 16px 16px 16px',
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border)',
+          fontSize: '14px',
+          lineHeight: '1.6',
+          color: 'var(--text-primary)',
+          animation: 'fadeIn 0.3s ease',
+        }}>
+          Ein Neurotransmitter ist ein chemischer Botenstoff, der Signale zwischen Nervenzellen überträgt. Stell dir vor, zwei Neurone reden miteinander — der Transmitter ist die Nachricht.
+        </div>
+        <div style={{
+          alignSelf: 'flex-end',
+          maxWidth: '80%',
+          padding: '12px 16px',
+          borderRadius: '16px 4px 16px 16px',
+          background: 'var(--gold)',
+          color: '#1a1206',
+          fontSize: '14px',
+          fontWeight: '500',
+          animation: 'fadeIn 0.3s ease 0.4s both',
+        }}>
+          Und wie kommt die Nachricht rüber?
+        </div>
+        <div style={{
+          alignSelf: 'flex-start',
+          maxWidth: '85%',
+          padding: '12px 16px',
+          borderRadius: '4px 16px 16px 16px',
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border)',
+          fontSize: '14px',
+          lineHeight: '1.6',
+          color: 'var(--text-primary)',
+          animation: 'fadeIn 0.3s ease 0.9s both',
+        }}>
+          Per Exozytose — Bläschen (Vesikel) mit Transmittern verschmelzen mit der Membran und schütten den Inhalt in den synaptischen Spalt. 🧪
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: 'check',
+    icon: '🧠',
+    label: 'Lumo prüft: Hast du es wirklich?',
+    mascot: 'learning',
+    content: (
+      <div style={{ width: '100%' }}>
+        <div style={{
+          background: 'var(--bg-card)',
+          border: '1px solid rgba(212,168,67,0.3)',
+          borderRadius: '14px',
+          padding: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px',
+        }}>
+          <p style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', margin: 0, lineHeight: '1.4' }}>
+            Erkläre kurz: Was passiert bei der synaptischen Übertragung?
+          </p>
+          <div style={{
+            padding: '10px 14px',
+            borderRadius: '10px',
+            background: 'var(--bg)',
+            border: '1px solid var(--border)',
+            fontSize: '14px',
+            color: 'var(--text-secondary)',
+            lineHeight: '1.5',
+            fontStyle: 'italic',
+          }}>
+            „Ein Signal kommt an, Calcium öffnet sich, Vesikel fusionieren, Transmitter werden ausgeschüttet, und das Nachbarneuron empfängt das Signal über Rezeptoren …"
+          </div>
+          <div style={{
+            padding: '10px 14px',
+            borderRadius: '10px',
+            background: 'rgba(61,158,110,0.08)',
+            border: '1px solid rgba(61,158,110,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}>
+            <span style={{ fontSize: '16px' }}>✓</span>
+            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--green)' }}>Sehr gut — der Mechanismus sitzt.</span>
+          </div>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: 'done',
+    icon: '🎉',
+    label: 'Das war Lumo.',
+    mascot: 'cheer',
+    content: null, // Handled separately
+  },
+];
+
 // Was Lumo konkret tut — gezeigt als kurze visuelle Karten vor dem Formular
 const VALUE_PROPS = [
   {
@@ -83,8 +266,13 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
   // 'hook'      → Identifikationsmoment: benennt den Lernschmerz (1.8s auto-weiter)
   // 'intro'     → Lumo-Einführungsmoment (1.8s auto-weiter)
   // 'value'     → 3 Value Props werden gezeigt
+  // 'demo'      → Interaktiver Walkthrough des Lumo-Loops (~60s) — Demo-First Onboarding
   // 'form'      → Formular erscheint
   const [phase, setPhase] = useState('hook');
+
+  // Demo-Phase State: Schritt-Index + Auto-Advance
+  const [demoStep, setDemoStep] = useState(0);
+  const demoTimerRef = useRef(null);
 
   const [topic, setTopic] = useState('');
   const [fileName, setFileName] = useState('');
@@ -110,6 +298,28 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
     const t = setTimeout(() => setPhase('value'), 1800);
     return () => clearTimeout(t);
   }, [phase]);
+
+  // Demo-Phase: Auto-Advance je Schritt
+  // Letzter Schritt (done) hat kein Auto-Advance — User muss aktiv wählen
+  const advanceDemoStep = useCallback(() => {
+    setDemoStep((s) => {
+      const next = s + 1;
+      return next < DEMO_STEPS.length ? next : s;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (phase !== 'demo') return;
+    const isLastStep = demoStep === DEMO_STEPS.length - 1;
+    if (isLastStep) return; // Kein Auto-Advance auf dem letzten Schritt
+    demoTimerRef.current = setTimeout(advanceDemoStep, DEMO_STEP_MS);
+    return () => clearTimeout(demoTimerRef.current);
+  }, [phase, demoStep, advanceDemoStep]);
+
+  function startDemo() {
+    setDemoStep(0);
+    setPhase('demo');
+  }
 
   function applyMaterialText(rawText) {
     if (rawText.length > MAX_CHARS) {
@@ -342,7 +552,7 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
               Material hochladen →
             </button>
             <button
-              onClick={() => { useDemo(); setPhase('form'); }}
+              onClick={startDemo}
               style={{
                 width: '100%',
                 background: 'transparent',
@@ -359,6 +569,149 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
             </button>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  // ── Phase: DEMO ──
+  // Interaktiver Walkthrough des Lumo-Loops.
+  // Kein echter API-Call — vollständig gescriptet. ~60s.
+  // Ziel: User versteht intuitiv was Lumo tut, bevor er eigenes Material hochlädt.
+  if (phase === 'demo') {
+    const step = DEMO_STEPS[demoStep];
+    const isLastStep = demoStep === DEMO_STEPS.length - 1;
+    const progress = ((demoStep) / (DEMO_STEPS.length - 1)) * 100;
+
+    return (
+      <div className="screen">
+        <div className="screen-content" style={{ gap: '20px', maxWidth: '420px', animation: 'fadeIn 0.3s ease' }}>
+
+          {/* Progress Bar */}
+          <div style={{ width: '100%' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <span style={{ fontSize: '11px', fontWeight: '700', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--gold)' }}>
+                So funktioniert Lumo
+              </span>
+              <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                {demoStep + 1} / {DEMO_STEPS.length}
+              </span>
+            </div>
+            <div style={{ height: '3px', background: 'var(--border)', borderRadius: '999px', overflow: 'hidden' }}>
+              <div style={{
+                height: '100%',
+                width: `${progress}%`,
+                background: 'var(--gold)',
+                borderRadius: '999px',
+                transition: 'width 0.4s ease',
+              }} />
+            </div>
+          </div>
+
+          {/* Mascot + Step Label */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+            <LumoMascot state={step.mascot} size={isLastStep ? 'large' : 'small'} label={isLastStep ? 'Lumo' : ''} />
+            {isLastStep ? (
+              <div style={{ textAlign: 'center' }}>
+                <h2 style={{ fontSize: '24px', fontWeight: '800', margin: '0 0 8px' }}>Das war Lumo.</h2>
+                <p style={{ fontSize: '15px', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.5' }}>
+                  In 60 Sekunden hast du gesehen, wie Lumo aus deinem Skript<br />
+                  eine komplette Lernsession macht — mit Erklärung, Chat und Check.
+                </p>
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center' }}>
+                <span style={{ fontSize: '20px' }}>{step.icon}</span>
+                <p style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)', margin: '6px 0 0' }}>
+                  {step.label}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Step Content */}
+          {!isLastStep && step.content}
+
+          {/* Navigation */}
+          {isLastStep ? (
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button
+                onClick={() => setPhase('form')}
+                style={{
+                  width: '100%',
+                  background: 'var(--gold)',
+                  color: '#1a1206',
+                  border: 'none',
+                  borderRadius: '14px',
+                  padding: '15px',
+                  fontSize: '17px',
+                  fontWeight: '800',
+                  cursor: 'pointer',
+                }}
+              >
+                Eigenes Material hochladen →
+              </button>
+              <button
+                onClick={() => { useDemo(); setPhase('form'); }}
+                style={{
+                  width: '100%',
+                  background: 'transparent',
+                  color: 'var(--text-secondary)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '14px',
+                  padding: '11px',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                }}
+              >
+                Mit Beispiel-Material starten
+              </button>
+            </div>
+          ) : (
+            <div style={{ width: '100%', display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => setPhase('value')}
+                style={{
+                  background: 'none',
+                  border: '1px solid var(--border)',
+                  borderRadius: '12px',
+                  padding: '11px 16px',
+                  fontSize: '14px',
+                  color: 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                ← Zurück
+              </button>
+              <button
+                onClick={() => {
+                  clearTimeout(demoTimerRef.current);
+                  advanceDemoStep();
+                }}
+                style={{
+                  flex: 1,
+                  background: 'var(--gold)',
+                  color: '#1a1206',
+                  border: 'none',
+                  borderRadius: '12px',
+                  padding: '11px',
+                  fontSize: '15px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                }}
+              >
+                Weiter →
+              </button>
+            </div>
+          )}
+        </div>
+
+        <style>{`
+          @keyframes lumo-demo-pulse {
+            0%, 80%, 100% { opacity: 0.4; transform: scale(0.8); }
+            40% { opacity: 1; transform: scale(1.15); }
+          }
+        `}</style>
       </div>
     );
   }
@@ -381,6 +734,8 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
         {/* Thema-Eingabe */}
         <input
           type="text"
+          id="topic-input"
+          aria-label="Lernthema eingeben"
           placeholder="Thema, z. B. Biologie – Zellbiologie"
           value={topic}
           onChange={(e) => setTopic(e.target.value)}
@@ -391,6 +746,8 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
         {/* Material-Eingabe */}
         {!hasPdf && !usingDemo && (
           <textarea
+            id="material-input"
+            aria-label="Lernmaterial einfügen"
             rows={5}
             style={{ width: '100%' }}
             value={materialText}

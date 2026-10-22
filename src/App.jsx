@@ -33,6 +33,7 @@ import OfflineBanner from './components/OfflineBanner.jsx';
 import InstallBanner from './components/InstallBanner.jsx';
 import BetaFeedbackButton from './components/BetaFeedbackButton.jsx';
 import LegalScreen from './screens/LegalScreen.jsx';
+import CookieConsent, { useCookieConsent } from './components/CookieConsent.jsx';
 
 export default function App() {
   const [state, dispatch] = useReducer(appReducer, null, () => createInitialState(loadProject()));
@@ -44,6 +45,17 @@ export default function App() {
 
   // Impressum/Datenschutz — overlay über allem anderen, kein eigener Screen-State nötig
   const [showLegal, setShowLegal] = useState(false);
+
+  // Cookie-Consent — ePrivacy-konform, muss vor Server-Sync angezeigt werden
+  const { consent, accept, decline } = useCookieConsent();
+  const showCookieBanner = consent === null;
+
+  // Datenschutz aus Cookie-Banner heraus öffnen
+  useEffect(() => {
+    function handleLegalEvent() { setShowLegal(true); }
+    window.addEventListener('lumo:show-legal', handleLegalEvent);
+    return () => window.removeEventListener('lumo:show-legal', handleLegalEvent);
+  }, []);
 
   // Storage-Status für Warning Banner
   const [storageLayer, setStorageLayer] = useState(null); // null = noch nicht geprüft
@@ -74,19 +86,23 @@ export default function App() {
           // IDB nicht verfügbar — localStorage-Init reicht
         }
 
-        // Server-State laden und mit lokalem State mergen (Gerätesync)
-        try {
-          const serverResult = await loadServerState();
-          if (!cancelled && serverResult?.state) {
-            const localData = await loadProjectAsync();
-            const merged = mergeStates(localData, serverResult.state);
-            if (merged && JSON.stringify(merged) !== JSON.stringify(localData)) {
-              console.log('[Sync] Server-State übernommen (anderes Gerät/Browser)');
-              dispatch({ type: 'HYDRATE_FROM_STORAGE', payload: merged });
+        // Server-State laden — NUR wenn Cookie-Consent erteilt (ePrivacy)
+        // Consent-Status direkt aus localStorage lesen (nicht aus React-State, da async)
+        const cookieConsent = (() => { try { return localStorage.getItem('lumo_cookie_consent'); } catch { return null; } })();
+        if (cookieConsent === 'accepted') {
+          try {
+            const serverResult = await loadServerState();
+            if (!cancelled && serverResult?.state) {
+              const localData = await loadProjectAsync();
+              const merged = mergeStates(localData, serverResult.state);
+              if (merged && JSON.stringify(merged) !== JSON.stringify(localData)) {
+                console.log('[Sync] Server-State übernommen (anderes Gerät/Browser)');
+                dispatch({ type: 'HYDRATE_FROM_STORAGE', payload: merged });
+              }
             }
+          } catch {
+            // Server nicht erreichbar — kein Problem, lokal läuft alles
           }
-        } catch {
-          // Server nicht erreichbar — kein Problem, lokal läuft alles
         }
       }
 
@@ -156,8 +172,11 @@ export default function App() {
       // IDB-Fehler sind nicht kritisch – localStorage ist der Fallback
     });
 
-    // Server-Sync (debounced, fire-and-forget — App funktioniert ohne)
-    scheduleSyncToServer(snapshot);
+    // Server-Sync — nur bei erteiletem Cookie-Consent (ePrivacy)
+    const cookieConsent = (() => { try { return localStorage.getItem('lumo_cookie_consent'); } catch { return null; } })();
+    if (cookieConsent === 'accepted') {
+      scheduleSyncToServer(snapshot);
+    }
   }, [state.topic, state.fileName, state.goalType, state.goalDate, state.sprintMode, state.blocks, state.recommendedOrder, state.subjectColor, state.learningStyle, state.subjectHistory, state.projects, state.activeProjectId, state.examResult, state.examResultAskedAt, state.blocksAnalyzedTotal, state.sessionsTotal, state.flashcards]);
 
   // ── Abgeleitete Werte — VOR allen useCallbacks, die sie referenzieren ────
@@ -297,6 +316,16 @@ export default function App() {
       {storageLayer === 'localStorage' && <StorageWarningBanner />}
       <InstallBanner />
       <BetaFeedbackButton />
+
+      {/* Cookie-Consent — ePrivacy Directive 2002/58/EC
+          lumo_uid ist kein technisch notwendiger Cookie (App läuft lokal auch ohne).
+          Consent muss vor dem ersten Cookie-Setzen eingeholt werden. */}
+      {showCookieBanner && (
+        <CookieConsent
+          onAccept={accept}
+          onDecline={decline}
+        />
+      )}
 
       {!isWelcomeScreen && (
         <LumoWordmark
