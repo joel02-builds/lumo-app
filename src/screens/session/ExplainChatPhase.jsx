@@ -308,7 +308,7 @@ export default function ExplainChatPhase({ block, depth, onDone, onExit }) {
                 style={{
                   background: 'transparent',
                   color: 'var(--text-secondary)',
-                  border: '1px solid var(--border)',
+                  border: '1.5px solid rgba(255,255,255,0.2)',
                   borderRadius: '12px',
                   padding: '11px 16px',
                   fontSize: '14px',

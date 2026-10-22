@@ -250,8 +250,8 @@ export default function SessionSummaryScreen({ block, evaluation, onContinue, on
             onClick={onPause}
             style={{
               width: '100%',
-              background: 'none',
-              border: '1px solid var(--border)',
+              background: 'transparent',
+              border: '1.5px solid rgba(255,255,255,0.2)',
               borderRadius: '12px',
               padding: '13px',
               fontSize: '15px',

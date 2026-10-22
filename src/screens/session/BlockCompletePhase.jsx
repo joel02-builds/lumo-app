@@ -253,7 +253,7 @@ export default function BlockCompletePhase({ block, result, cards, onContinue, o
             width: '100%',
             background: 'var(--bg-card)',
             color: 'var(--text-secondary)',
-            border: '1px solid var(--border)',
+            border: '1.5px solid rgba(255,255,255,0.2)',
             borderRadius: '12px',
             padding: '12px',
             fontSize: '14px',
@@ -374,12 +374,14 @@ export default function BlockCompletePhase({ block, result, cards, onContinue, o
         <button
           onClick={onPause}
           style={{
-            background: 'none',
-            border: 'none',
+            background: 'transparent',
+            border: '1.5px solid rgba(255,255,255,0.2)',
+            borderRadius: '12px',
             color: 'var(--text-secondary)',
             fontSize: '14px',
             cursor: 'pointer',
-            padding: '8px',
+            padding: '13px',
+            width: '100%',
           }}
         >
           Pause machen

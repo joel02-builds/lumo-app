@@ -195,8 +195,8 @@ export default function SettingsScreen({ onBack, blocksAnalyzedTotal, onShowLega
               onClick={handleDeleteServerData}
               style={{
                 width: '100%',
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border)',
+                background: 'rgba(196, 122, 43, 0.05)',
+                border: '1px solid rgba(196, 122, 43, 0.25)',
                 borderRadius: '14px',
                 padding: '14px 18px',
                 cursor: 'pointer',
@@ -206,9 +206,9 @@ export default function SettingsScreen({ onBack, blocksAnalyzedTotal, onShowLega
                 textAlign: 'left',
               }}
             >
-              <span style={{ fontSize: '20px', color: 'var(--text-secondary)', flexShrink: 0 }}>🗑</span>
+              <span style={{ fontSize: '20px', color: 'var(--amber)', flexShrink: 0 }}>🗑</span>
               <div>
-                <p style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', margin: '0 0 2px' }}>
+                <p style={{ fontSize: '15px', fontWeight: '600', color: 'var(--amber)', margin: '0 0 2px' }}>
                   Serverdaten löschen
                 </p>
                 <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0' }}>
