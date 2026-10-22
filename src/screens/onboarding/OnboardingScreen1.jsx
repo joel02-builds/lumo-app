@@ -317,7 +317,7 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
   // ── Phase: FORM ──
   return (
     <div className="screen">
-      <div className="screen-content" style={{ gap: '18px', maxWidth: '440px', animation: 'fadeIn 0.35s ease' }}>
+      <div className="screen-content" style={{ gap: '14px', maxWidth: '440px', animation: 'fadeIn 0.35s ease' }}>
 
         <div style={{ textAlign: 'center' }}>
           <LumoMascot state="idle" size="small" label="Lumo" />
@@ -414,19 +414,19 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
             <button
               onClick={useDemo}
               style={{
-                background: 'var(--bg-card)',
-                border: '1px dashed var(--gold)',
+                background: 'transparent',
+                border: '1px solid var(--border)',
                 borderRadius: '10px',
                 padding: '8px 14px',
                 fontSize: '13px',
-                fontWeight: '600',
-                color: 'var(--gold)',
+                fontWeight: '500',
+                color: 'var(--text-secondary)',
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
                 flexShrink: 0,
               }}
             >
-              Beispiel ✦
+              Beispiel
             </button>
           )}
         </div>
@@ -445,30 +445,70 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
           </p>
         )}
 
-        <Button onClick={handleNext} disabled={!topic.trim()} style={{ width: '100%' }}>
+        <button
+          onClick={handleNext}
+          disabled={!topic.trim()}
+          style={{
+            width: '100%',
+            background: topic.trim() ? 'var(--gold)' : 'var(--bg-card)',
+            color: topic.trim() ? '#1a1206' : 'var(--text-secondary)',
+            border: 'none',
+            borderRadius: '14px',
+            padding: '15px',
+            fontSize: '17px',
+            fontWeight: '800',
+            cursor: topic.trim() ? 'pointer' : 'not-allowed',
+            letterSpacing: '-0.01em',
+            transition: 'background 0.15s ease, color 0.15s ease',
+          }}
+        >
           Weiter →
-        </Button>
+        </button>
 
-        {/* Legal footer */}
-        {onShowLegal && (
-          <p style={{ fontSize: '11px', color: 'var(--text-secondary)', textAlign: 'center', margin: 0, opacity: 0.45 }}>
+        {/* Back + Legal — beide in einer Zeile, dezent */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          width: '100%',
+          paddingTop: '2px',
+        }}>
+          <button
+            type="button"
+            onClick={() => setPhase('value')}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-secondary)',
+              fontSize: '13px',
+              cursor: 'pointer',
+              padding: 0,
+              opacity: 0.65,
+            }}
+          >
+            ← Was macht Lumo?
+          </button>
+
+          {onShowLegal && (
             <button
               type="button"
               onClick={onShowLegal}
-              style={{ background: 'none', border: 'none', color: 'inherit', fontSize: 'inherit', cursor: 'pointer', padding: 0, textDecoration: 'underline', textUnderlineOffset: '2px' }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--text-secondary)',
+                fontSize: '11px',
+                cursor: 'pointer',
+                padding: 0,
+                opacity: 0.4,
+                textDecoration: 'underline',
+                textUnderlineOffset: '2px',
+              }}
             >
-              Impressum & Datenschutz
+              Impressum
             </button>
-          </p>
-        )}
-
-        <button
-          className="text-link"
-          style={{ fontSize: '13px', opacity: 0.6 }}
-          onClick={() => setPhase('value')}
-        >
-          ← Was macht Lumo?
-        </button>
+          )}
+        </div>
       </div>
     </div>
   );
