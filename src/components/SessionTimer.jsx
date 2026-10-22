@@ -27,16 +27,10 @@ export default function SessionTimer({ seconds, totalCards, completedCards, esti
     return rest === 0 ? `${h} Std.` : `${h} Std. ${rest} Min.`;
   }
 
-  // Kontext: Wie viel ist das im Verhältnis zur Blockschätzung?
-  function getContextLabel(min, est) {
-    if (!est || est <= 0) return null;
-    const ratio = min / est;
-    if (ratio < 0.15) return null; // zu früh, kein Kontext nötig
-    if (ratio < 0.4) return 'gut dabei';
-    if (ratio < 0.6) return 'auf halbem Weg';
-    if (ratio < 0.85) return 'fast geschafft';
-    if (ratio < 1.1) return 'gleich fertig';
-    return null; // überzogen – kein Druck durch Überschreitungs-Anzeige
+  // Kein zeitbasierter Kontext mehr – Zeitschätzungen erzeugen Versagensgefühl
+  // wenn der Nutzer länger braucht. Fortschritt wird über Karten-Fortschritt angezeigt.
+  function getContextLabel(_min, _est) {
+    return null;
   }
 
   // Karten-Fortschritt: diskret, nur wenn verfügbar

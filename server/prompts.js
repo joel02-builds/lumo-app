@@ -47,7 +47,9 @@ Beispiele:
 - Ein kurzes, dichtes Paper über Quantenmechanik kann 4 Blöcke brauchen, weil jedes Konzept eigenständig ist.
 - Ein 10-seitiger Text über ein einziges Thema (z.B. "Was ist Photosynthese?") braucht vielleicht nur 1-2 Blöcke.
 
-Niemals nach Wortanzahl oder Länge aufteilen. Immer nach: Sind das eigenständige Konzepte, die unabhängig voneinander gelernt werden können?`;
+Niemals nach Wortanzahl oder Länge aufteilen. Immer nach: Sind das eigenständige Konzepte, die unabhängig voneinander gelernt werden können?
+
+Ausnahme – kognitive Last: Wenn ein Konzept konzeptuell ein Block ist, aber so dicht ist dass es mehr als 25 Minuten zum Verstehen bräuchte, teile es in Sub-Konzepte auf. Nicht weil die Konzepte unabhängig sind, sondern weil das Arbeitsgedächtnis bei ADHS begrenzt ist und zu viel auf einmal verloren geht.`;
 
 export function getAnalyzeSystem(goalType, sprintMode = false) {
   const goalContext = goalType === 'exam'
@@ -130,6 +132,45 @@ Der Nutzer hat "Direkt ins Detail" gewählt:
 - Erkläre vollständig und fachlich präzise, mit den korrekten Fachbegriffen
 - Erkläre Fachbegriffe kurz mit, statt sie vorauszusetzen
 - Geh auch auf Zusammenhänge und das "Warum" ein, nicht nur das "Was"`;
+
+// Difficulty-adaptive explain system
+// Schwierigkeit des Blocks steuert automatisch Erklärtiefe und Tempo
+export function getExplainChatSystem(depth, difficulty) {
+  const depthLayer = depth === 'detailed'
+    ? `Der Nutzer hat "Direkt ins Detail" gewählt:
+- Erkläre vollständig und fachlich präzise, mit den korrekten Fachbegriffen
+- Erkläre Fachbegriffe kurz mit, statt sie vorauszusetzen
+- Geh auch auf Zusammenhänge und das "Warum" ein, nicht nur das "Was"`
+    : `Der Nutzer hat "Erstmal einfach & grob" gewählt:
+- Erkläre so einfach wie möglich, mit Alltagsbeispielen
+- Vermeide Fachbegriffe; wenn unvermeidbar, erkläre sie in einem Halbsatz mit
+- Wenn der Nutzer explizit um mehr Tiefe/Genauigkeit bittet, erkläre präziser und vollständiger, aber weiterhin in kurzen, klaren Sätzen`;
+
+  const difficultyLayer = difficulty === 'schwer'
+    ? `
+
+Dieser Block hat Schwierigkeitsgrad SCHWER:
+- Erkläre jeden Schritt einzeln – nie zwei neue Konzepte gleichzeitig einführen
+- Nutze immer eine konkrete Alltagsanalogie bevor du das abstrakte Konzept nennst
+- Frage nach jedem neuen Konzept aktiv nach: "Macht das Sinn?" oder "Hast du dazu eine Frage?"
+- Wenn der Nutzer zögert oder unsicher wirkt: einen Schritt zurückgehen, nicht weitergehen
+- Lieber zu langsam als zu schnell – ein falsch verstandenes Fundament ist schlimmer als langsames Tempo`
+    : difficulty === 'mittel'
+    ? `
+
+Dieser Block hat Schwierigkeitsgrad MITTEL:
+- Erkläre Schritt für Schritt, aber du kannst verwandte Konzepte zusammen nennen
+- Nutze Beispiele um abstrakte Begriffe greifbar zu machen
+- Prüfe nach dem Hauptkonzept ob es angekommen ist, bevor du weitermachst`
+    : `
+
+Dieser Block hat Schwierigkeitsgrad LEICHT:
+- Du kannst zügiger erklären – der Stoff ist zugänglich
+- Alltagsbeispiele sind hilfreich aber nicht immer nötig
+- Fokus auf das Wesentliche, ohne zu sehr zu vereinfachen`;
+
+  return `${EXPLAIN_CHAT_BASE}\n\n${depthLayer}${difficultyLayer}`;
+}
 
 export const explainChatSchema = {
   type: 'object',

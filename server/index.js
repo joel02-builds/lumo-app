@@ -9,6 +9,7 @@ import {
   analyzeSchema,
   EXPLAIN_CHAT_SYSTEM_SIMPLE,
   EXPLAIN_CHAT_SYSTEM_DETAILED,
+  getExplainChatSystem,
   explainChatSchema,
   UNDERSTANDING_HINT_SYSTEM,
   understandingHintSchema,
@@ -217,7 +218,7 @@ app.post('/api/analyze', async (req, res) => {
 app.post('/api/explain-chat', async (req, res) => {
   try {
     const { blockTitle, blockContent, difficulty, depth, history } = req.body || {};
-    const system = depth === 'detailed' ? EXPLAIN_CHAT_SYSTEM_DETAILED : EXPLAIN_CHAT_SYSTEM_SIMPLE;
+    const system = getExplainChatSystem(depth, difficulty);
 
     const contextBlock = `Block-Titel: ${blockTitle}\nSchwierigkeit: ${difficulty}\nInhalt:\n${blockContent}`;
     const transcript = (history || [])

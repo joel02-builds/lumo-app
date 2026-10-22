@@ -364,8 +364,21 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
                     }}>
                       {b.title}
                     </div>
-                    <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-                      {statusLabel(b)} · {b.estimatedMinutes || '?'} Min.
+                    <div style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                      {statusLabel(b)}
+                      {b.difficulty && (
+                        <span style={{
+                          fontSize: '10px',
+                          fontWeight: '700',
+                          color: b.difficulty === 'schwer' ? '#E07B54' : b.difficulty === 'mittel' ? 'var(--gold)' : 'var(--green)',
+                          background: b.difficulty === 'schwer' ? 'rgba(224,123,84,0.12)' : b.difficulty === 'mittel' ? 'rgba(212,168,67,0.12)' : 'rgba(61,158,110,0.12)',
+                          borderRadius: '999px',
+                          padding: '1px 7px',
+                          letterSpacing: '0.02em',
+                        }}>
+                          {b.difficulty}
+                        </span>
+                      )}
                     </div>
                   </div>
                   {isNext && (

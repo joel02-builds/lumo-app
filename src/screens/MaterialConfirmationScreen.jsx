@@ -26,12 +26,16 @@ export default function AnalysisResultScreen({ blocks, totalBlocks, recommendedO
 
   useEffect(() => { setEditedBlocks(blocks); }, [blocks]);
 
-  const totalMinutes = blocks.reduce((sum, b) => sum + (b.estimatedMinutes || 0), 0);
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  const timeString = hours > 0
-    ? `ca. ${hours} Std. ${minutes > 0 ? minutes + ' Min.' : ''}`
-    : `ca. ${minutes} Min.`;
+  // Difficulty-Verteilung für Übersicht
+  const difficultyCounts = { schwer: 0, mittel: 0, leicht: 0 };
+  blocks.forEach(b => { if (b.difficulty) difficultyCounts[b.difficulty]++; });
+  const difficultyLabel = difficultyCounts.schwer > 1
+    ? 'anspruchsvoll'
+    : difficultyCounts.schwer === 1 && blocks.length > 2
+    ? 'gemischt'
+    : difficultyCounts.leicht === blocks.length
+    ? 'zugänglich'
+    : 'machbar';
 
   return (
     <div className="screen">
@@ -94,7 +98,7 @@ export default function AnalysisResultScreen({ blocks, totalBlocks, recommendedO
             Lumo hat alles vorbereitet.
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '15px' }}>
-            {totalBlocks} Blöcke · {timeString} Gesamtlernzeit
+            {totalBlocks} {totalBlocks === 1 ? 'Block' : 'Blöcke'} · {difficultyLabel}
           </p>
         </div>
 
@@ -178,8 +182,17 @@ export default function AnalysisResultScreen({ blocks, totalBlocks, recommendedO
                     outline: 'none',
                   }}
                 />
-                <span style={{ fontSize: '12px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-                  {b.estimatedMinutes} Min
+                <span style={{
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  color: b.difficulty === 'schwer' ? '#E07B54' : b.difficulty === 'mittel' ? 'var(--gold)' : 'var(--green)',
+                  background: b.difficulty === 'schwer' ? 'rgba(224,123,84,0.12)' : b.difficulty === 'mittel' ? 'rgba(212,168,67,0.12)' : 'rgba(61,158,110,0.12)',
+                  borderRadius: '999px',
+                  padding: '2px 8px',
+                  whiteSpace: 'nowrap',
+                  letterSpacing: '0.02em',
+                }}>
+                  {b.difficulty}
                 </span>
               </div>
             ))}
@@ -225,8 +238,18 @@ export default function AnalysisResultScreen({ blocks, totalBlocks, recommendedO
                   }}>
                     {b.title}
                   </div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                    {b.estimatedMinutes} Min. · {b.difficulty}
+                  <div style={{ marginTop: '4px' }}>
+                    <span style={{
+                      fontSize: '11px',
+                      fontWeight: '700',
+                      color: b.difficulty === 'schwer' ? '#E07B54' : b.difficulty === 'mittel' ? 'var(--gold)' : 'var(--green)',
+                      background: b.difficulty === 'schwer' ? 'rgba(224,123,84,0.12)' : b.difficulty === 'mittel' ? 'rgba(212,168,67,0.12)' : 'rgba(61,158,110,0.12)',
+                      borderRadius: '999px',
+                      padding: '2px 8px',
+                      letterSpacing: '0.02em',
+                    }}>
+                      {b.difficulty}
+                    </span>
                   </div>
                 </div>
               </div>
