@@ -80,10 +80,11 @@ const VALUE_PROPS = [
 ];
 
 export default function OnboardingScreen1({ onNext, onShowLegal }) {
+  // 'hook'      → Identifikationsmoment: benennt den Lernschmerz (1.8s auto-weiter)
   // 'intro'     → Lumo-Einführungsmoment (1.8s auto-weiter)
   // 'value'     → 3 Value Props werden gezeigt
   // 'form'      → Formular erscheint
-  const [phase, setPhase] = useState('intro');
+  const [phase, setPhase] = useState('hook');
 
   const [topic, setTopic] = useState('');
   const [fileName, setFileName] = useState('');
@@ -95,6 +96,13 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
   const [usingDemo, setUsingDemo] = useState(false);
   const inputRef = useRef(null);
+
+  // Hook-Moment: nach 2.2s automatisch zu Intro
+  useEffect(() => {
+    if (phase !== 'hook') return;
+    const t = setTimeout(() => setPhase('intro'), 2200);
+    return () => clearTimeout(t);
+  }, [phase]);
 
   // Intro-Moment: nach 1.8s automatisch zu Value-Phase
   useEffect(() => {
@@ -190,6 +198,44 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
       return;
     }
     onNext({ topic: topic.trim(), materialText, fileName, fileBase64, fileMediaType });
+  }
+
+  // ── Phase: HOOK ──
+  // Benennt den Schmerz bevor Lumo sich vorstellt.
+  // Ziel: Wiedererkennung in 2 Sekunden — "Das bin ich."
+  if (phase === 'hook') {
+    return (
+      <div className="screen">
+        <div className="screen-content" style={{ gap: '0', justifyContent: 'center', padding: '0 28px' }}>
+          <div style={{ textAlign: 'center', animation: 'fadeIn 0.5s ease' }}>
+            <p style={{
+              fontSize: '13px',
+              fontWeight: '700',
+              letterSpacing: '2px',
+              textTransform: 'uppercase',
+              color: 'var(--gold)',
+              marginBottom: '20px',
+              opacity: 0.8,
+            }}>
+              Kennst du das?
+            </p>
+            <h1 style={{
+              fontSize: '26px',
+              fontWeight: '800',
+              lineHeight: '1.35',
+              letterSpacing: '-0.025em',
+              color: 'var(--text-primary)',
+              margin: 0,
+            }}>
+              Du liest. Du verstehst.<br />
+              <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>
+                Und trotzdem bleibt nichts hängen.
+              </span>
+            </h1>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // ── Phase: INTRO ──
