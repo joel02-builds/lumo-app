@@ -112,7 +112,7 @@ export default function ExplainChatPhase({ block, depth, onDone, onExit }) {
     return (
       <div className="screen">
         <div className="screen-content">
-          <LumoMascot state="learning" label="Lumo" pulseOnce />
+          <LumoMascot state="learning" pulseOnce />
           <p style={{ fontSize: '24px', fontWeight: '700', color: 'var(--text-primary)' }}>
             Gut. Jetzt du.
           </p>
@@ -125,7 +125,7 @@ export default function ExplainChatPhase({ block, depth, onDone, onExit }) {
     return (
       <div className="screen">
         <div className="screen-content">
-          <LumoMascot state="learning" label="Lumo" />
+          <LumoMascot state="learning" />
           <ErrorBanner
             message={error}
             onRetry={() => setAttempt((a) => a + 1)}

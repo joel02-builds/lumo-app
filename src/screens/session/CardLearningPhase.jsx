@@ -345,7 +345,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
     return (
       <div className="screen">
         <div className="screen-content">
-          <LumoMascot state="idle" label="Lumo" />
+          <LumoMascot state="idle" />
           <ErrorBanner message={error} onRetry={() => window.location.reload()} onExit={onExit} />
         </div>
       </div>
@@ -356,7 +356,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
     return (
       <div className="screen">
         <div className="screen-content">
-          <LumoMascot state="thinking" label="Lumo" />
+          <LumoMascot state="thinking" />
           <p style={{ color: 'var(--text-secondary)', fontSize: '16px' }}>
             Ich bereite deinen Block vor …
           </p>
@@ -1218,43 +1218,65 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
           {/* Feedback-Phase */}
           {phase === 'feedback' && (
             <>
-              {/* Micro-Reward Burst – nur bei richtiger Antwort */}
-              {isGoodAnswer && (
+              {/* ── Status-Banner: Richtig / Nochmal ──────────────────────────
+                  Explizites Signal ganz oben — ADHS-Nutzer brauchen klares,
+                  unverwechselbares Feedback ohne Suchen.
+                  ADHS-safe: kein Rot — Amber statt Rot bei falscher Antwort. */}
+              <div style={{
+                width: '100%',
+                borderRadius: '14px',
+                padding: '14px 18px',
+                marginBottom: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                background: isGoodAnswer
+                  ? 'rgba(61, 158, 110, 0.12)'
+                  : 'rgba(196, 122, 43, 0.10)',
+                border: isGoodAnswer
+                  ? '1.5px solid rgba(61, 158, 110, 0.5)'
+                  : '1.5px solid rgba(196, 122, 43, 0.45)',
+                animation: 'fadeIn 0.25s ease',
+                transform: showRewardBurst && isGoodAnswer ? 'scale(1.02)' : 'scale(1)',
+                transition: 'transform 0.25s ease',
+              }}>
                 <div style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  background: isGoodAnswer
+                    ? 'rgba(61, 158, 110, 0.2)'
+                    : 'rgba(196, 122, 43, 0.15)',
+                  border: isGoodAnswer
+                    ? '2px solid var(--green)'
+                    : '2px solid var(--amber)',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px',
-                  marginBottom: '16px',
+                  justifyContent: 'center',
+                  fontSize: '18px',
+                  flexShrink: 0,
                 }}>
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '50%',
-                    background: showRewardBurst
-                      ? 'rgba(61, 158, 110, 0.35)'
-                      : 'rgba(61, 158, 110, 0.15)',
-                    border: '2px solid var(--green)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '20px',
-                    flexShrink: 0,
-                    transform: showRewardBurst ? 'scale(1.2)' : 'scale(1)',
-                    transition: 'transform 0.25s ease, background 0.25s ease',
-                  }}>
-                    ✓
-                  </div>
+                  {isGoodAnswer ? '✓' : '↺'}
+                </div>
+                <div>
                   <p style={{
-                    fontSize: '20px',
+                    fontSize: '16px',
                     fontWeight: '700',
-                    color: 'var(--green)',
-                    margin: '0',
-                    letterSpacing: '-0.3px',
+                    color: isGoodAnswer ? 'var(--green)' : 'var(--amber, #C47A2B)',
+                    margin: '0 0 1px',
                   }}>
-                    {rewardMessage}
+                    {isGoodAnswer ? (rewardMessage || 'Richtig!') : 'Noch nicht ganz'}
+                  </p>
+                  <p style={{
+                    fontSize: '12px',
+                    color: 'var(--text-secondary)',
+                    margin: '0',
+                    opacity: 0.8,
+                  }}>
+                    {isGoodAnswer ? 'Schau dir die Musterantwort an' : 'Vergleiche mit der Musterantwort'}
                   </p>
                 </div>
-              )}
+              </div>
 
               <div style={{
                 background: 'var(--bg-elevated)',
@@ -1290,7 +1312,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                 gap: '12px',
                 alignItems: 'flex-start',
               }}>
-                <LumoMascot state={isGoodAnswer ? 'cheer' : (mood === 'bad' ? 'idle' : 'learning')} label="" size="small" />
+                <LumoMascot state={isGoodAnswer ? 'cheer' : (mood === 'bad' ? 'idle' : 'learning')} size="small" />
                 <p style={{
                   fontSize: '16px',
                   color: isGoodAnswer ? 'var(--green)' : 'var(--text-primary)',

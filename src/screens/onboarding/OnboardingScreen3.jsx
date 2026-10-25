@@ -45,7 +45,7 @@ export default function OnboardingScreen3({ onConfirm, onBack }) {
     return (
       <div className="screen" key="sprint-interstitial">
         <div className="screen-content" style={{ gap: '20px', maxWidth: '400px' }}>
-          <LumoMascot state="cheer" label="Lumo" />
+          <LumoMascot state="cheer" />
           <div style={{ textAlign: 'center' }}>
             <p style={{
               fontSize: '11px',
@@ -145,7 +145,7 @@ export default function OnboardingScreen3({ onConfirm, onBack }) {
     return (
       <div className="screen" key="goal-date">
         <div className="screen-content" style={{ gap: '24px', maxWidth: '400px' }}>
-          <LumoMascot state="idle" label="Lumo" />
+          <LumoMascot state="idle" />
           <div style={{ textAlign: 'center' }}>
             <h1 style={{ fontSize: '22px', marginBottom: '8px' }}>Wann ist der Termin?</h1>
             <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.5', margin: '0' }}>
@@ -235,7 +235,7 @@ export default function OnboardingScreen3({ onConfirm, onBack }) {
         ← Zurück
       </button>
       <div className="screen-content" style={{ gap: '28px', maxWidth: '400px' }}>
-        <LumoMascot state="idle" label="Lumo" />
+        <LumoMascot state="idle" />
 
         <div style={{ textAlign: 'center' }}>
           <h1 style={{ fontSize: '24px', lineHeight: '1.3', marginBottom: '10px' }}>

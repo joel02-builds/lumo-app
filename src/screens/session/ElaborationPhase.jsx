@@ -104,7 +104,7 @@ export default function ElaborationPhase({ block, onDone, onSkip }) {
     <div className="screen">
       <div className="screen-content" style={{ gap: '20px', maxWidth: '440px' }}>
 
-        <LumoMascot state="thinking" label="Lumo" />
+        <LumoMascot state="thinking" />
 
         <div style={{ textAlign: 'center' }}>
           <div style={{
@@ -170,7 +170,7 @@ export default function ElaborationPhase({ block, onDone, onSkip }) {
               width: '100%',
               background: hasSomeText ? color : 'var(--bg-card)',
               color: hasSomeText ? '#1a1206' : 'var(--text-secondary)',
-              border: hasSomeText ? 'none' : '1px solid var(--border)',
+              border: hasSomeText ? 'none' : '1.5px solid rgba(255,255,255,0.2)',
               borderRadius: '12px',
               padding: '14px',
               fontSize: '16px',

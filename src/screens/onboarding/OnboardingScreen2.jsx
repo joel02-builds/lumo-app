@@ -110,7 +110,7 @@ export default function OnboardingScreen2({ onNext, onBack }) {
         ← Zurück
       </button>
       <div className="screen-content">
-        <LumoMascot state="idle" label="Lumo" />
+        <LumoMascot state="idle" />
         <h1>Was lernst du gerade?</h1>
         <input
           type="text"

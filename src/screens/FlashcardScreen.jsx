@@ -612,7 +612,7 @@ export default function FlashcardScreen({ flashcards, onUpdateFlashcard, onRemov
     return (
       <div className="screen">
         <div className="screen-content" style={{ gap: '24px', maxWidth: '400px' }}>
-          <LumoMascot state={goodRate >= 70 ? 'first-complete' : 'learning'} label="Lumo" />
+          <LumoMascot state={goodRate >= 70 ? 'first-complete' : 'learning'} />
           <div style={{ textAlign: 'center' }}>
             <h1 style={{ fontSize: '26px', marginBottom: '8px' }}>
               {goodRate >= 70 ? 'Starke Session.' : 'Session beendet.'}

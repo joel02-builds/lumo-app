@@ -164,7 +164,6 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHis
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', width: '100%' }}>
 
           <LumoMascot
-            label="Lumo"
             state={
               allDone
                 ? 'complete'

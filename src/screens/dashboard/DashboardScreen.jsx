@@ -168,7 +168,7 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
       )}
       <div className="screen-content" style={{ maxWidth: '560px', gap: '20px' }}>
 
-        <LumoMascot state={allDone ? 'complete' : 'idle'} label="Lumo" />
+        <LumoMascot state={allDone ? 'complete' : 'idle'} />
 
         {(() => {
           const streak = getStreakDays();
@@ -819,7 +819,9 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
             onClick={() => onStartBlock(next.id)}
             style={{ width: '100%', maxWidth: '560px', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}
           >
-            Weiter mit „{next.title}" →
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+              Weiter mit „{next.title}" →
+            </span>
           </Button>
         </div>
       )}

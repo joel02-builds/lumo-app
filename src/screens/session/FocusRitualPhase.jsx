@@ -51,7 +51,7 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
                   value: 'tired',
                   color: 'var(--text-secondary)',
                   bg: 'var(--bg-card)',
-                  border: 'var(--border)',
+                  border: 'rgba(255,255,255,0.15)',
                 },
                 {
                   emoji: '😰',

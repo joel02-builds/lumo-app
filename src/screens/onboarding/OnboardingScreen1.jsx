@@ -465,7 +465,7 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
     return (
       <div className="screen">
         <div className="screen-content" style={{ gap: '20px' }}>
-          <LumoMascot state="cheer" size="large" label="Lumo" glowPulse />
+          <LumoMascot state="cheer" size="large" glowPulse />
           <div style={{ textAlign: 'center', animation: 'fadeIn 0.5s ease' }}>
             <h1 style={{ fontSize: '30px', fontWeight: '800', lineHeight: '1.2', marginBottom: '10px', letterSpacing: '-0.03em' }}>
               Hallo. Ich bin Lumo.
@@ -490,7 +490,7 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
     return (
       <div className="screen">
         <div className="screen-content" style={{ gap: '22px', maxWidth: '460px', animation: 'fadeIn 0.4s ease' }}>
-          <LumoMascot state="idle" size="medium" label="Lumo" />
+          <LumoMascot state="idle" size="medium" />
 
           <div style={{ textAlign: 'center' }}>
             <h1 style={{ fontSize: '24px', lineHeight: '1.3', fontWeight: '800', letterSpacing: '-0.025em' }}>
@@ -752,7 +752,7 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
       <div className="screen-content" style={{ gap: '16px', maxWidth: '460px', animation: 'fadeIn 0.35s ease' }}>
 
         <div style={{ textAlign: 'center' }}>
-          <LumoMascot state="idle" size="medium" label="Lumo" />
+          <LumoMascot state="idle" size="medium" />
           <h1 style={{ fontSize: '22px', fontWeight: '800', marginTop: '14px', marginBottom: '6px', lineHeight: '1.25', letterSpacing: '-0.025em' }}>
             Was lernst du gerade?
           </h1>

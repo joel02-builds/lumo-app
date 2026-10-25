@@ -78,7 +78,7 @@ export default function SettingsScreen({ onBack, blocksAnalyzedTotal, onShowLega
 
   return (
     <div className="screen" style={{ justifyContent: 'flex-start', paddingTop: '60px' }}>
-      <div className="screen-content" style={{ maxWidth: '480px', gap: '16px' }}>
+      <div className="screen-content" style={{ maxWidth: '480px', gap: '16px', paddingBottom: '40px' }}>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
           <button onClick={onBack} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: '14px', cursor: 'pointer' }}>
@@ -220,8 +220,8 @@ export default function SettingsScreen({ onBack, blocksAnalyzedTotal, onShowLega
         </div>
 
         {blocksAnalyzedTotal > 0 && (
-          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', textAlign: 'center', margin: '8px 0 0' }}>
-            {blocksAnalyzedTotal} Blöcke insgesamt gelernt
+          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', textAlign: 'center', margin: '8px 0 0', opacity: 0.6 }}>
+            {blocksAnalyzedTotal} {blocksAnalyzedTotal === 1 ? 'Lernsession' : 'Lernsessions'} abgeschlossen
           </p>
         )}
 
