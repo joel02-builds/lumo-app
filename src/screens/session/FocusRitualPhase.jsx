@@ -74,6 +74,9 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
               ].map(({ emoji, label, sub, value, color, bg, border }) => (
                 <button
                   key={value}
+                  className="lumo-mood-tile"
+                  data-selected={mood === value ? 'true' : undefined}
+                  data-other={mood && mood !== value ? 'true' : undefined}
                   onClick={() => { setMood(value); onMoodSet?.(value); }}
                   style={{
                     background: bg,
@@ -85,7 +88,6 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
                     flexDirection: 'column',
                     alignItems: 'flex-start',
                     gap: '4px',
-                    transition: 'all 0.15s ease',
                     textAlign: 'left',
                   }}
                 >

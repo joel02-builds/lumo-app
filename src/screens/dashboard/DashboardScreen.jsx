@@ -177,7 +177,8 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
             wirksamer als distale Ziele. "1 Block heute" besser als "8 Blöcke irgendwann".
             ADHS: Ohne Grenze entsteht Either/All-or-Nothing-Denken → Aufschub. */}
         {!allDone && total > 0 && (
-          <div style={{
+          <div className="lumo-card-reveal" style={{
+            '--delay': '0.08s',
             background: 'rgba(212,168,67,0.06)',
             border: '1px solid rgba(212,168,67,0.18)',
             borderRadius: '14px',
@@ -462,14 +463,14 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
 
         {/* Block Liste */}
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {safeBlocks.map((b) => {
+          {safeBlocks.map((b, idx) => {
             const isNext = next && b.id === next.id;
             const isDone = b.status === 'completed';
             const isExpanded = expandedBlock === b.id;
             const color = getBlockColor(b);
 
             return (
-              <div key={b.id} style={{ width: '100%' }}>
+              <div key={b.id} className="lumo-card-reveal" style={{ width: '100%', '--delay': `${0.12 + idx * 0.05}s` }}>
                 <button
                   onClick={() => setExpandedBlock(isExpanded ? null : b.id)}
                   style={{

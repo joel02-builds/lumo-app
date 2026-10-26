@@ -122,19 +122,25 @@ export default function LumoMascot({
   const [imgVisible, setImgVisible] = useState(true);
   const [currentSrc, setCurrentSrc] = useState(src);
   const [imgError, setImgError] = useState(false);
+  const [transitioning, setTransitioning] = useState(false);
   const prevSrc = useRef(src);
 
-  // Sanfter Übergang wenn state sich ändert
+  // Sanfter Übergang wenn state sich ändert:
+  // scale(0.88) + fade out → Bild wechseln → scale(1.05) + fade in → settle
   useEffect(() => {
     if (src === prevSrc.current) return;
     prevSrc.current = src;
+    setTransitioning(true); // → scale raus
     setImgVisible(false);
-    setImgError(false); // neuen State → neues Bild versuchen
-    const t = setTimeout(() => {
+    setImgError(false);
+    const t1 = setTimeout(() => {
       setCurrentSrc(src);
       setImgVisible(true);
-    }, 150);
-    return () => clearTimeout(t);
+    }, 180);
+    const t2 = setTimeout(() => {
+      setTransitioning(false); // → spring zurück
+    }, 280);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [src]);
 
   // Animations-Logik je nach State
@@ -177,9 +183,14 @@ export default function LumoMascot({
           style={{
             objectFit: 'contain',
             opacity: imgVisible ? 1 : 0,
+            transform: transitioning
+              ? 'scale(0.88)'
+              : imgVisible
+              ? 'scale(1)'
+              : 'scale(0.92)',
             animation: imageAnimation,
             filter: imageFilter,
-            transition: 'opacity 0.15s ease, filter 0.3s ease',
+            transition: 'opacity 0.18s ease, transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease',
           }}
           onError={() => {
             // SVG-Fallback aktivieren statt display:none
@@ -192,7 +203,8 @@ export default function LumoMascot({
           width: px,
           height: px,
           opacity: imgVisible ? 1 : 0,
-          transition: 'opacity 0.15s ease',
+          transform: transitioning ? 'scale(0.88)' : imgVisible ? 'scale(1)' : 'scale(0.92)',
+          transition: 'opacity 0.18s ease, transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1)',
         }}>
           <LumoSvgFallback size={px} state={state} />
         </div>

@@ -70,8 +70,15 @@
   transform: translateY(-2px);
 }
 .lumo-btn--primary:active:not(:disabled) {
-  transform: translateY(0) scale(0.98);
+  animation: lumo-btn-spring 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   box-shadow: var(--shadow-gold);
+}
+
+@keyframes lumo-btn-spring {
+  0%   { transform: translateY(0) scale(0.94); }
+  55%  { transform: translateY(-3px) scale(1.04); }
+  80%  { transform: translateY(-1px) scale(1.01); }
+  100% { transform: translateY(0) scale(1); }
 }
 
 .lumo-btn--secondary {
@@ -87,6 +94,10 @@
   border-color: rgba(212, 168, 67, 0.5);
   background: rgba(212, 168, 67, 0.05);
   transform: translateY(-1px);
+}
+.lumo-btn--secondary:active:not(:disabled) {
+  transform: scale(0.97);
+  transition-duration: 0.08s;
 }
 
 /* "Ich hab's verstanden" vor Ablauf der Lesezeit: inaktiv und zurückhaltend. */
