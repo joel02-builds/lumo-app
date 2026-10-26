@@ -629,25 +629,16 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'flex-start',
-        padding: '32px 24px',
-        paddingTop: '10vh',
+        padding: '32px 28px',
+        paddingTop: '8vh',
         gap: '24px',
       }}>
 
-        {/* Die Karte */}
+        {/* Die Karte — kein Box-Container, Text atmet frei */}
         <div style={{
           width: '100%',
           maxWidth: 'min(640px, 100%)',
-          background: 'var(--bg-card)',
-          borderLeft: `1px solid ${phase === 'answering' || phase === 'feedback' ? 'transparent' : 'rgba(212, 168, 67, 0.25)'}`,
-          borderRight: `1px solid ${phase === 'answering' || phase === 'feedback' ? 'transparent' : 'rgba(212, 168, 67, 0.25)'}`,
-          borderBottom: `1px solid ${phase === 'answering' || phase === 'feedback' ? 'transparent' : 'rgba(212, 168, 67, 0.25)'}`,
-          borderTop: `4px solid ${subjectColor}`,
-          borderRadius: '20px',
-          padding: 'clamp(20px, 5vw, 36px) clamp(16px, 4vw, 40px)',
-          boxShadow: phase === 'reading'
-            ? '0 0 60px rgba(212, 168, 67, 0.12), 0 12px 48px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.4)'
-            : '0 12px 48px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.4)',
+          padding: '0 4px',
           transition: 'all 0.3s ease',
           opacity: animating ? 0 : 1,
           transform: animating ? 'translateY(8px)' : 'translateY(0)',
@@ -765,12 +756,22 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
           {/* Konzept-Label */}
           <div style={{
             fontSize: '11px',
-            fontWeight: '700',
-            letterSpacing: '1.5px',
+            fontWeight: '600',
+            letterSpacing: '0.06em',
             textTransform: 'uppercase',
             color: subjectColor,
-            marginBottom: '16px',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
           }}>
+            <span style={{
+              display: 'inline-block',
+              width: '6px', height: '6px',
+              borderRadius: '50%',
+              background: subjectColor,
+              flexShrink: 0,
+            }} />
             {currentCard?.concept || ''}
           </div>
 
@@ -882,11 +883,12 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                   </div>
                 )}
                 <p style={{
-                  fontSize: '19px',
-                  lineHeight: '1.65',
+                  fontSize: 'clamp(20px, 5.5vw, 26px)',
+                  lineHeight: '1.55',
                   color: 'var(--text-primary)',
                   margin: '0 0 8px',
                   fontWeight: '400',
+                  letterSpacing: '-0.01em',
                 }}>
                   <HighlightedText
                     text={alternativeExplanation || currentCard?.explanation || ''}
