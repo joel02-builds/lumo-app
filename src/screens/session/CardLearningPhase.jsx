@@ -44,6 +44,25 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
   const [rewardMessage, setRewardMessage] = useState('');
   const [showRewardBurst, setShowRewardBurst] = useState(false);
 
+  // ── Spaced Repetition: In-Session Wiederholung ────────────────────────────
+  // Evidenz: Cepeda et al. 2006 (Psych. Bulletin) – spaced practice > massed;
+  //          Karpicke & Roediger 2008 – Retrieval practice mit Wiederholung
+  //          festigt deutlich besser als reines Lesen.
+  //
+  // Lumo-Ansatz: Keine Anki-artige Kälte, kein "X Karten falsch".
+  // Stattdessen: Karten die nicht vollständig sitzen melden sich kurz zurück —
+  // wie ein Konzept das noch einmal nachfragt, bevor es sich verabschiedet.
+  //
+  // Max. 1 In-Session-Wiederholung pro Karte (kein endless loop).
+  // Framing: "Noch kurz zurück" — nicht "Fehler".
+  const [weakCardQueue, setWeakCardQueue] = useState([]);   // Cards mit isGoodAnswer=false
+  const [repeatMode, setRepeatMode] = useState(false);      // true = wir sind in der Wiederholungsrunde
+  const [repeatIndex, setRepeatIndex] = useState(0);        // aktueller Index in weakCardQueue
+  const [repeatAnswer, setRepeatAnswer] = useState('');
+  const [repeatFeedback, setRepeatFeedback] = useState(null);
+  const [repeatIsGood, setRepeatIsGood] = useState(false);
+  const [repeatSending, setRepeatSending] = useState(false);
+
   // Micro-Reward Pool – variable-ratio für dopaminerge Verstärkung
   // Mood-adaptiv: Ton passt sich dem emotionalen Zustand an
   //
@@ -195,6 +214,12 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
         setRewardMessage(REWARD_MESSAGES[Math.floor(Math.random() * REWARD_MESSAGES.length)]);
         setShowRewardBurst(true);
         setTimeout(() => setShowRewardBurst(false), 600);
+      } else {
+        // Karte für In-Session-Wiederholung vormerken (max. 1x pro Karte)
+        setWeakCardQueue((q) => {
+          const alreadyQueued = q.some((c) => c.concept === currentCard.concept);
+          return alreadyQueued ? q : [...q, currentCard];
+        });
       }
       setPhase('feedback');
     } catch (err) {
@@ -210,6 +235,11 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
         setRewardMessage(REWARD_MESSAGES[Math.floor(Math.random() * REWARD_MESSAGES.length)]);
         setShowRewardBurst(true);
         setTimeout(() => setShowRewardBurst(false), 600);
+      } else {
+        setWeakCardQueue((q) => {
+          const alreadyQueued = q.some((c) => c.concept === currentCard.concept);
+          return alreadyQueued ? q : [...q, currentCard];
+        });
       }
       setPhase('feedback');
     } finally {
@@ -250,54 +280,95 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
     setSpeaking(true);
   }
 
+  // Gemeinsames Reset der Karten-State-Felder nach jeder Karte
+  function resetCardState() {
+    setAnswer('');
+    setFeedback(null);
+    setHint('');
+    setHintLoading(false);
+    setClickedCheck(false);
+    setAlternativeExplanation('');
+    setReexplaining(false);
+    setActiveTerm(null);
+    setTermExplanation('');
+    setNoteOpen(false);
+    setNoteText('');
+    setPretestAnswer('');
+    setPretestDone(false);
+    setWhyAnswer('');
+    setWhyMode(false);
+    setWhyFeedback('');
+    setShowYoutube(false);
+    setAnimating(false);
+  }
+
   function handleNext() {
     setAnimating(true);
     window.speechSynthesis?.cancel();
     setSpeaking(false);
     setTimeout(() => {
       if (isLast) {
-        setPhase('final-recall');
-        setAnswer('');
-        setFeedback(null);
-        setHint('');
-        setHintLoading(false);
-        setClickedCheck(false);
-        setAlternativeExplanation('');
-        setReexplaining(false);
-        setActiveTerm(null);
-        setTermExplanation('');
-        setNoteOpen(false);
-        setNoteText('');
-        setPretestAnswer('');
-        setPretestDone(false);
-        setWhyAnswer('');
-        setWhyMode(false);
-        setWhyFeedback('');
-        setShowYoutube(false);
-        setAnimating(false);
+        // Wenn es schwache Karten gibt → Übergangsscreen zur Wiederholung
+        // (weakCardQueue wird über setState gesetzt, daher über funktionales Update prüfen)
+        setWeakCardQueue((currentQueue) => {
+          if (currentQueue.length > 0) {
+            setRepeatMode(true);
+            setRepeatIndex(0);
+            setRepeatAnswer('');
+            setRepeatFeedback(null);
+            setRepeatIsGood(false);
+            setPhase('repeat-bridge');
+          } else {
+            setPhase('final-recall');
+          }
+          return currentQueue;
+        });
+        resetCardState();
       } else {
         setCurrentIndex((i) => i + 1);
         setPhase('reading');
-        setAnswer('');
-        setFeedback(null);
-        setHint('');
-        setHintLoading(false);
-        setClickedCheck(false);
-        setAlternativeExplanation('');
-        setReexplaining(false);
-        setActiveTerm(null);
-        setTermExplanation('');
-        setNoteOpen(false);
-        setNoteText('');
-        setPretestAnswer('');
-        setPretestDone(false);
-        setWhyAnswer('');
-        setWhyMode(false);
-        setWhyFeedback('');
-        setShowYoutube(false);
-        setAnimating(false);
+        resetCardState();
       }
     }, 300);
+  }
+
+  // ── Wiederholungs-Handlers ──────────────────────────────────────────────
+
+  async function handleRepeatSubmit() {
+    if (!repeatAnswer.trim() || repeatSending) return;
+    const repeatCard = weakCardQueue[repeatIndex];
+    setRepeatSending(true);
+    try {
+      const result = await lumoApi.evaluateCardAnswer({
+        concept: repeatCard.concept,
+        explanation: repeatCard.explanation,
+        question: repeatCard.question,
+        userAnswer: repeatAnswer,
+      });
+      setRepeatFeedback(result.feedback);
+      setRepeatIsGood(result.isGood);
+    } catch {
+      const words = repeatAnswer.trim().split(/\s+/).length;
+      const isGood = words >= 8;
+      setRepeatFeedback(isGood ? 'Das klingt richtig.' : 'Beschreib es etwas ausführlicher.');
+      setRepeatIsGood(isGood);
+    } finally {
+      setRepeatSending(false);
+    }
+  }
+
+  function handleRepeatNext() {
+    const isRepeatLast = repeatIndex >= weakCardQueue.length - 1;
+    if (isRepeatLast) {
+      // Wiederholung abgeschlossen → final-recall
+      setRepeatMode(false);
+      setPhase('final-recall');
+    } else {
+      setRepeatIndex((i) => i + 1);
+      setRepeatAnswer('');
+      setRepeatFeedback(null);
+      setRepeatIsGood(false);
+    }
   }
 
   async function handleTermClick(term) {
@@ -360,6 +431,270 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
           <p style={{ color: 'var(--text-secondary)', fontSize: '16px' }}>
             Ich bereite deinen Block vor …
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Spaced Repetition: Übergangsscreen ──────────────────────────────────
+  // Zeigt sich nach dem letzten Hauptkarten-Durchlauf, wenn schwache Karten
+  // vorhanden sind. Kein Fokus auf Fehler — Fokus auf "nochmal kurz hinschauen".
+  if (phase === 'repeat-bridge') {
+    const count = weakCardQueue.length;
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '40px 24px',
+        background: 'var(--bg)',
+        gap: '28px',
+      }}>
+        <LumoMascot state="idle" />
+        <div style={{ textAlign: 'center', maxWidth: '480px' }}>
+          <h2 style={{
+            fontFamily: "'Instrument Serif', Georgia, serif",
+            fontStyle: 'italic',
+            fontWeight: 400,
+            fontSize: '26px',
+            letterSpacing: '-0.01em',
+            lineHeight: 1.25,
+            marginBottom: '12px',
+          }}>
+            {count === 1
+              ? 'Ein Konzept möchte kurz nochmal.'
+              : `${count} Konzepte melden sich nochmal.`}
+          </h2>
+          <p style={{
+            color: 'var(--text-secondary)',
+            fontSize: '15px',
+            lineHeight: 1.6,
+          }}>
+            Kurz hinschauen — dann bist du wirklich durch.
+          </p>
+        </div>
+        <button
+          onClick={() => {
+            setRepeatIndex(0);
+            setRepeatAnswer('');
+            setRepeatFeedback(null);
+            setRepeatIsGood(false);
+            setPhase('repeat-card');
+          }}
+          style={{
+            background: 'var(--gold)',
+            color: '#1a1206',
+            border: 'none',
+            borderRadius: '14px',
+            padding: '16px 32px',
+            fontSize: '16px',
+            fontWeight: '700',
+            cursor: 'pointer',
+            width: '100%',
+            maxWidth: '320px',
+          }}
+        >
+          Okay, kurz nochmal →
+        </button>
+        <button
+          onClick={() => {
+            setRepeatMode(false);
+            setPhase('final-recall');
+          }}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--text-secondary)',
+            fontSize: '14px',
+            cursor: 'pointer',
+            padding: '4px',
+          }}
+        >
+          Lieber überspringen
+        </button>
+      </div>
+    );
+  }
+
+  // ── Spaced Repetition: Wiederholungs-Karten-Screen ───────────────────────
+  // Zeigt schwache Karten nochmal — nur Frage + Eingabe, kein Reading.
+  // Kein sichtbarer Zähler "Karte X von Y falsch" — nur sanfte Fortschrittsanzeige.
+  if (phase === 'repeat-card' && repeatMode && weakCardQueue.length > 0) {
+    const repeatCard = weakCardQueue[repeatIndex];
+    const repeatProgress = (repeatIndex + 1) / weakCardQueue.length;
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: 'var(--bg)',
+      }}>
+        {/* Mini-Header */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '16px 20px 0',
+          flexShrink: 0,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{
+              fontSize: '11px',
+              fontWeight: '700',
+              letterSpacing: '1.2px',
+              textTransform: 'uppercase',
+              color: 'var(--gold)',
+            }}>
+              Kurze Wiederholung
+            </div>
+          </div>
+          {/* Fortschrittsbalken — kein Zähler */}
+          <div style={{
+            height: '3px',
+            borderRadius: '2px',
+            background: 'var(--bg-elevated)',
+            width: '80px',
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              height: '100%',
+              borderRadius: '2px',
+              background: `var(--gold)`,
+              width: `${repeatProgress * 100}%`,
+              transition: 'width 0.3s ease',
+            }} />
+          </div>
+        </div>
+
+        {/* Karten-Inhalt */}
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          padding: '24px 20px 32px',
+          gap: '20px',
+          maxWidth: '600px',
+          width: '100%',
+          margin: '0 auto',
+        }}>
+          {/* Frage */}
+          <div style={{
+            background: 'var(--bg-card)',
+            borderRadius: '16px',
+            padding: '20px 20px',
+            border: '1px solid var(--border)',
+          }}>
+            <p style={{
+              fontSize: '11px',
+              fontWeight: '700',
+              letterSpacing: '1px',
+              textTransform: 'uppercase',
+              color: `${subjectColor}`,
+              margin: '0 0 10px',
+            }}>
+              {repeatCard.concept}
+            </p>
+            <p style={{
+              fontSize: '16px',
+              lineHeight: 1.55,
+              color: 'var(--text-primary)',
+              margin: 0,
+              fontWeight: '500',
+            }}>
+              {repeatCard.question}
+            </p>
+          </div>
+
+          {/* Feedback nach Antwort */}
+          {repeatFeedback && (
+            <div style={{
+              background: repeatIsGood ? 'var(--green-soft)' : 'rgba(212,168,67,0.08)',
+              border: `1px solid ${repeatIsGood ? 'var(--green)' : 'rgba(212,168,67,0.3)'}`,
+              borderRadius: '14px',
+              padding: '16px 20px',
+            }}>
+              <p style={{
+                fontSize: '15px',
+                color: 'var(--text-primary)',
+                margin: 0,
+                lineHeight: 1.55,
+              }}>
+                {repeatFeedback}
+              </p>
+            </div>
+          )}
+
+          {/* Eingabe oder Weiter-Button */}
+          {!repeatFeedback ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <textarea
+                value={repeatAnswer}
+                onChange={(e) => setRepeatAnswer(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && repeatAnswer.trim()) {
+                    handleRepeatSubmit();
+                  }
+                }}
+                placeholder="Deine Antwort …"
+                rows={3}
+                autoFocus
+                style={{
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  resize: 'none',
+                  fontSize: '16px',
+                  borderRadius: '12px',
+                  lineHeight: '1.6',
+                  background: 'var(--bg-card)',
+                  border: '1.5px solid var(--input-border)',
+                  color: 'var(--text-primary)',
+                  padding: '14px 16px',
+                  outline: 'none',
+                  fontFamily: 'inherit',
+                }}
+              />
+              <button
+                onClick={handleRepeatSubmit}
+                disabled={!repeatAnswer.trim() || repeatSending}
+                style={{
+                  width: '100%',
+                  background: repeatAnswer.trim() ? 'var(--gold)' : 'transparent',
+                  color: repeatAnswer.trim() ? '#1a1206' : 'var(--text-secondary)',
+                  border: repeatAnswer.trim() ? 'none' : '1.5px dashed rgba(255,255,255,0.15)',
+                  borderRadius: '12px',
+                  padding: '15px',
+                  fontSize: '16px',
+                  fontWeight: '700',
+                  cursor: repeatAnswer.trim() && !repeatSending ? 'pointer' : 'default',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {repeatSending ? 'Lumo prüft …' : 'Antworten'}
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={handleRepeatNext}
+              style={{
+                width: '100%',
+                background: 'var(--gold)',
+                color: '#1a1206',
+                border: 'none',
+                borderRadius: '12px',
+                padding: '15px',
+                fontSize: '16px',
+                fontWeight: '700',
+                cursor: 'pointer',
+              }}
+            >
+              {repeatIndex >= weakCardQueue.length - 1
+                ? 'Fertig ✓'
+                : 'Weiter →'}
+            </button>
+          )}
         </div>
       </div>
     );
