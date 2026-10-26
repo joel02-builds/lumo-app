@@ -9,6 +9,14 @@ export default function SettingsScreen({ onBack, blocksAnalyzedTotal, onShowLega
   const [deletingServer, setDeletingServer] = useState(false);
   const [confirmDeleteServer, setConfirmDeleteServer] = useState(false);
 
+  function handleResetOnboarding() {
+    try {
+      localStorage.removeItem('lumo_onboarding_done');
+      localStorage.removeItem('lumo_cookie_consent');
+    } catch {}
+    window.location.reload();
+  }
+
   async function handleImport(e) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -121,6 +129,43 @@ export default function SettingsScreen({ onBack, blocksAnalyzedTotal, onShowLega
         )}
 
         <input ref={importRef} type="file" accept=".json" style={{ display: 'none' }} onChange={handleImport} />
+
+        {/* ── Beta-only: Onboarding zurücksetzen ────────────────────────────
+            Nur für die Testphase. Vor Public-Launch entfernen. */}
+        <div style={{
+          width: '100%',
+          borderTop: '1px solid var(--border)',
+          paddingTop: '16px',
+          marginTop: '4px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+        }}>
+          <p style={{ fontSize: '11px', fontWeight: '700', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--gold)', margin: '0', opacity: 0.7 }}>
+            🧪 Beta
+          </p>
+          <button
+            onClick={handleResetOnboarding}
+            style={{
+              width: '100%',
+              background: 'rgba(212,168,67,0.06)',
+              border: '1px solid rgba(212,168,67,0.25)',
+              borderRadius: '14px',
+              padding: '16px 18px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '14px',
+              textAlign: 'left',
+            }}
+          >
+            <span style={{ fontSize: '20px', color: 'var(--gold)', flexShrink: 0 }}>↩</span>
+            <div>
+              <p style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', margin: '0 0 2px' }}>Onboarding neu starten</p>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0' }}>Setzt das Onboarding zurück — Lernfortschritt bleibt erhalten.</p>
+            </div>
+          </button>
+        </div>
 
         {/* ── DSGVO Art. 17: Recht auf Löschung ─────────────────────────────
             Server-Daten löschen — lumo_uid Cookie + gespeicherter Fortschritt.
