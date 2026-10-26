@@ -66,7 +66,7 @@ function getBreakIntervalSeconds(block) {
 
 // Owns the full flow for exactly one block. Mount with key={block.id} from
 // the parent so a new block always starts with a clean phase state.
-export default function SessionScreen({ block, blocks, goalType, sprintMode, learningStyle, onRecordCompletion, onSaveCards, onTrackSubject, onAddFlashcards, onSaveCardResults, onPause, onHeaderVisibilityChange }) {
+export default function SessionScreen({ block, blocks, flashcards, goalType, sprintMode, learningStyle, onRecordCompletion, onSaveCards, onTrackSubject, onAddFlashcards, onSaveCardResults, onPause, onHeaderVisibilityChange }) {
   const [phase, setPhase] = useState(PHASES.FOCUS_RITUAL);
   const [depth, setDepth] = useState('simple');
   const [result, setResult] = useState(null);
@@ -221,6 +221,7 @@ export default function SessionScreen({ block, blocks, goalType, sprintMode, lea
         block={block}
         evaluation={result}
         allBlocks={blocks}
+        flashcards={flashcards}
         sessionMinutes={Math.round((Date.now() - sessionStartTime) / 60000)}
         onContinue={onPause}
         onPause={onPause}

@@ -492,6 +492,7 @@ export default function App() {
           key={currentBlock.id}
           block={currentBlock}
           blocks={state.blocks}
+          flashcards={state.flashcards}
           goalType={state.goalType}
           sprintMode={state.sprintMode}
           learningStyle={state.learningStyle}

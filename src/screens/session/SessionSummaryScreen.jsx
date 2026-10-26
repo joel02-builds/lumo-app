@@ -2,6 +2,46 @@ import { useMemo } from 'react';
 import LumoMascot from '../../components/LumoMascot.jsx';
 import { getBlockColor } from '../../utils/subjectColors.js';
 
+// Berechnet wann die Karten eines Blocks das nächste Mal fällig sind.
+// Gibt Median-Intervall in Tagen zurück, oder null wenn keine Daten.
+// Evidenz: Bjork & Bjork (1992) "Desirable Difficulties" – das Wissen,
+// dass eine Wiederholung kommt, verbessert das initiale Encoding.
+// "Prospective Memory Effect": Nutzer lernen anders (tiefer) wenn sie
+// wissen wann das nächste Review stattfindet.
+function getNextReviewDays(flashcards, blockId) {
+  if (!flashcards?.length || !blockId) return null;
+  const blockCards = flashcards.filter(c => {
+    const bid = c.blockId || c.block_id;
+    return bid === blockId && c.status !== 'mastered';
+  });
+  if (!blockCards.length) return null;
+
+  const now = Date.now();
+  const intervals = blockCards
+    .map(c => {
+      // FSRS-Daten bevorzugen, Fallback auf SM-2 nextReview
+      const due = c.fsrs?.due ? new Date(c.fsrs.due) : c.nextReview ? new Date(c.nextReview) : null;
+      if (!due) return null;
+      return Math.max(0, Math.round((due - now) / 86400000));
+    })
+    .filter(d => d !== null);
+
+  if (!intervals.length) return null;
+  // Median statt Mittelwert – robuster gegen Ausreißer
+  const sorted = [...intervals].sort((a, b) => a - b);
+  return sorted[Math.floor(sorted.length / 2)];
+}
+
+function formatNextReview(days) {
+  if (days === 0) return 'morgen früh';
+  if (days === 1) return 'morgen';
+  if (days <= 3) return `in ${days} Tagen`;
+  if (days <= 7) return `in ${days} Tagen`;
+  if (days <= 14) return `in etwa einer Woche`;
+  if (days <= 30) return `in etwa zwei Wochen`;
+  return `in ${Math.round(days / 7)} Wochen`;
+}
+
 // Sleep-Consolidation Hinweise – Walker 2009, Stickgold 2005
 // Hippocampus konsolidiert Gedächtnisspuren während des Schlafs.
 // Ton: ruhig, kein Fachjargon, kein Imperativ ("Du musst jetzt schlafen"),
@@ -25,7 +65,7 @@ function isEvening() {
   return h >= 18 || h < 5;
 }
 
-export default function SessionSummaryScreen({ block, evaluation, onContinue, onPause, allBlocks, sessionMinutes }) {
+export default function SessionSummaryScreen({ block, evaluation, onContinue, onPause, allBlocks, flashcards, sessionMinutes }) {
   const subjectColor = getBlockColor(block);
   const completedCount = allBlocks?.filter(b => b.status === 'completed').length || 0;
   const totalCount = allBlocks?.length || 0;
@@ -40,6 +80,18 @@ export default function SessionSummaryScreen({ block, evaluation, onContinue, on
 
   const isGood = evaluation?.status === 'sicher';
   const isUnsure = evaluation?.status === 'unsicher';
+
+  // FSRS Next-Review: Wann kommen diese Karten das nächste Mal?
+  // Bjork & Bjork (1992): Prospective Memory Effect – Wissen um nächstes Review
+  // verbessert initiales Encoding (tiefere Verarbeitung, geringere Vergessensrate).
+  const nextReviewDays = useMemo(
+    () => getNextReviewDays(flashcards, block?.id),
+    [flashcards, block?.id]
+  );
+  const blockCardCount = useMemo(
+    () => flashcards?.filter(c => (c.blockId || c.block_id) === block?.id && c.status !== 'mastered').length || 0,
+    [flashcards, block?.id]
+  );
 
   return (
     <div className="screen">
@@ -101,6 +153,41 @@ export default function SessionSummaryScreen({ block, evaluation, onContinue, on
               lineHeight: '1.5',
             }}>
               {evaluation.summaryText}
+            </p>
+          </div>
+        )}
+
+        {/* FSRS Next-Review Hinweis – Bjork & Bjork (1992) Prospective Memory Effect
+            Dezente Information: wann kommen diese Karten das nächste Mal?
+            Kein Druck, keine Mahnung – nur eine ruhige Aussage über den Plan.
+            Erscheint nur wenn echte FSRS-Daten vorhanden sind (blockCardCount > 0). */}
+        {nextReviewDays !== null && blockCardCount > 0 && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            padding: '10px 16px',
+            background: `${subjectColor}0d`,
+            border: `1px solid ${subjectColor}28`,
+            borderRadius: '12px',
+            width: '100%',
+          }}>
+            <span style={{ fontSize: '14px', opacity: 0.7 }}>🔁</span>
+            <p style={{
+              fontSize: '13px',
+              color: 'var(--text-secondary)',
+              margin: '0',
+              lineHeight: '1.4',
+            }}>
+              <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>
+                {blockCardCount} {blockCardCount === 1 ? 'Karte' : 'Karten'}
+              </span>
+              {' '}kommen{' '}
+              <span style={{ fontWeight: '600', color: subjectColor }}>
+                {formatNextReview(nextReviewDays)}
+              </span>
+              {' '}wieder.
             </p>
           </div>
         )}
