@@ -221,7 +221,7 @@ export default function SettingsScreen({ onBack, blocksAnalyzedTotal, onShowLega
 
         {blocksAnalyzedTotal > 0 && (
           <p style={{ fontSize: '12px', color: 'var(--text-secondary)', textAlign: 'center', margin: '8px 0 0', opacity: 0.6 }}>
-            {blocksAnalyzedTotal} {blocksAnalyzedTotal === 1 ? 'Lernsession' : 'Lernsessions'} abgeschlossen
+            {blocksAnalyzedTotal} {blocksAnalyzedTotal === 1 ? 'Block' : 'Blöcke'} analysiert
           </p>
         )}
 

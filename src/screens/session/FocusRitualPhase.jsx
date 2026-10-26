@@ -49,9 +49,9 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
                   label: 'Müde',
                   sub: 'Wenig Energie',
                   value: 'tired',
-                  color: 'var(--text-secondary)',
-                  bg: 'var(--bg-card)',
-                  border: 'rgba(255,255,255,0.15)',
+                  color: 'rgb(120,170,230)',
+                  bg: 'rgba(100,149,237,0.07)',
+                  border: 'rgba(100,149,237,0.3)',
                 },
                 {
                   emoji: '😰',

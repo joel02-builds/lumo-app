@@ -168,9 +168,9 @@ export default function ElaborationPhase({ block, onDone, onSkip }) {
             onClick={handleSubmit}
             style={{
               width: '100%',
-              background: hasSomeText ? color : 'var(--bg-card)',
-              color: hasSomeText ? '#1a1206' : 'var(--text-secondary)',
-              border: hasSomeText ? 'none' : '1.5px solid rgba(255,255,255,0.2)',
+              background: hasSomeText ? color : 'rgba(212,168,67,0.12)',
+              color: hasSomeText ? '#1a1206' : 'rgba(212,168,67,0.9)',
+              border: hasSomeText ? 'none' : '1.5px solid rgba(212,168,67,0.35)',
               borderRadius: '12px',
               padding: '14px',
               fontSize: '16px',
