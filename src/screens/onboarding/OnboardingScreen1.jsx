@@ -285,12 +285,7 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
   const [usingDemo, setUsingDemo] = useState(false);
   const inputRef = useRef(null);
 
-  // Hook-Moment: nach 2.2s automatisch zu Intro
-  useEffect(() => {
-    if (phase !== 'hook') return;
-    const t = setTimeout(() => setPhase('intro'), 2200);
-    return () => clearTimeout(t);
-  }, [phase]);
+  // Hook-Moment: kein Auto-Advance — User klickt selbst auf "Das will ich →"
 
   // Intro-Moment: nach 1.8s automatisch zu Value-Phase
   useEffect(() => {
@@ -411,51 +406,164 @@ export default function OnboardingScreen1({ onNext, onShowLegal }) {
   }
 
   // ── Phase: HOOK ──
-  // Benennt den Schmerz bevor Lumo sich vorstellt.
-  // Ziel: Wiedererkennung in 2 Sekunden — "Das bin ich."
+  // Chaos-Screen: Lumo-Mascot zentriert, schwebende farbige Task-Tags im Hintergrund,
+  // Instrument Serif italic Headline, ambient glow.
+  // Auto-advance nach 3s ODER Klick auf CTA → 'intro'.
   if (phase === 'hook') {
     return (
-      <div className="screen">
-        <div className="screen-content" style={{ gap: '0', justifyContent: 'center', padding: '0 28px' }}>
-          <div style={{ textAlign: 'center', animation: 'fadeIn 0.6s ease' }}>
-            <p style={{
-              fontSize: '12px',
-              fontWeight: '700',
-              letterSpacing: '2.5px',
-              textTransform: 'uppercase',
-              color: 'var(--gold)',
-              marginBottom: '24px',
-              opacity: 0.75,
-            }}>
-              Kennst du das?
-            </p>
-            <h1 style={{
-              fontSize: '28px',
-              fontWeight: '800',
-              lineHeight: '1.4',
-              letterSpacing: '-0.03em',
-              color: 'var(--text-primary)',
-              margin: 0,
-            }}>
-              Du hast alles.<br />
-              <span style={{
-                color: 'var(--text-secondary)',
-                fontWeight: '400',
-                fontSize: '20px',
-                letterSpacing: '-0.015em',
-              }}>
-                Skript, Folien, Mitschriften&nbsp;…
-              </span><br />
-              <span style={{
-                color: 'var(--text-secondary)',
-                fontWeight: '600',
-                fontSize: '24px',
-              }}>
-                Aber wo fängst du an?
-              </span>
-            </h1>
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'var(--bg, #0E0C09)',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        {/* ── Ambient Glow ── */}
+        <div style={{
+          position: 'absolute',
+          top: '-20%',
+          left: '-15%',
+          width: '60%',
+          height: '60%',
+          background: 'radial-gradient(ellipse at center, rgba(212,168,67,0.12) 0%, transparent 70%)',
+          pointerEvents: 'none',
+          animation: 'lumo-glow-a 8s ease-in-out infinite alternate',
+        }} />
+        <div style={{
+          position: 'absolute',
+          bottom: '-20%',
+          right: '-15%',
+          width: '55%',
+          height: '55%',
+          background: 'radial-gradient(ellipse at center, rgba(212,146,46,0.08) 0%, transparent 70%)',
+          pointerEvents: 'none',
+          animation: 'lumo-glow-b 10s ease-in-out infinite alternate',
+        }} />
+
+        {/* ── Floating Task Tags ── */}
+        {[
+          { label: 'Prüfung Montag', color: '#e05252', bg: 'rgba(224,82,82,0.13)', left: '5%',  top: '8%',  animName: 'lf1' },
+          { label: 'Folie 47 ??',    color: '#d4924a', bg: 'rgba(212,146,74,0.13)', right: '4%', top: '14%', animName: 'lf2' },
+          { label: 'Skript 80 S.',   color: '#5b8fd4', bg: 'rgba(91,143,212,0.13)', left: '2%',  top: '32%', animName: 'lf3' },
+          { label: 'Zusammenfassung?', color: '#6bbf8a', bg: 'rgba(107,191,138,0.13)', right: '3%', top: '40%', animName: 'lf4' },
+          { label: 'Klausur in 3T.', color: '#e05252', bg: 'rgba(224,82,82,0.10)', left: '6%',  bottom: '28%', animName: 'lf5' },
+          { label: 'Mitschrift lesen', color: '#d4924a', bg: 'rgba(212,146,74,0.10)', right: '5%', bottom: '22%', animName: 'lf6' },
+          { label: 'Karteikarten?',  color: '#5b8fd4', bg: 'rgba(91,143,212,0.10)', left: '8%',  bottom: '12%', animName: 'lf7' },
+          { label: 'Wo anfangen …',  color: 'rgba(240,234,224,0.35)', bg: 'rgba(240,234,224,0.06)', right: '7%', bottom: '10%', animName: 'lf8' },
+          { label: 'Alles verstehen?', color: '#6bbf8a', bg: 'rgba(107,191,138,0.10)', right: '6%', top: '68%', animName: 'lf9' },
+        ].map((t) => (
+          <div
+            key={t.animName}
+            style={{
+              position: 'absolute',
+              left: t.left,
+              right: t.right,
+              top: t.top,
+              bottom: t.bottom,
+              background: t.bg,
+              border: `1px solid ${t.color}`,
+              borderRadius: '999px',
+              padding: '6px 14px',
+              fontSize: '13px',
+              fontWeight: '600',
+              color: t.color,
+              whiteSpace: 'nowrap',
+              animation: `${t.animName} 5s ease-in-out infinite`,
+              pointerEvents: 'none',
+              opacity: 0.85,
+            }}
+          >
+            {t.label}
           </div>
+        ))}
+
+        {/* ── Mascot + Headline ── */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '0',
+          zIndex: 1,
+          animation: 'fadeIn 0.7s ease',
+          padding: '0 28px',
+          maxWidth: '360px',
+          width: '100%',
+        }}>
+          <LumoMascot state="idle" size="large" glowPulse />
+
+          <h1 style={{
+            fontFamily: '"Instrument Serif", "Georgia", serif',
+            fontStyle: 'italic',
+            fontSize: 'clamp(26px, 6vw, 34px)',
+            fontWeight: '400',
+            lineHeight: '1.25',
+            textAlign: 'center',
+            color: 'var(--text-primary, #F0EAE0)',
+            margin: '20px 0 10px',
+            letterSpacing: '-0.01em',
+            textWrap: 'balance',
+          }}>
+            Kopf voll.<br />
+            Überblick verloren.<br />
+            Wo fängst du an?
+          </h1>
+
+          <p style={{
+            fontSize: '15px',
+            color: 'var(--text-secondary, #8a8070)',
+            textAlign: 'center',
+            margin: '0 0 28px',
+            lineHeight: '1.5',
+          }}>
+            Lumo entscheidet das für dich.
+          </p>
+
+          <button
+            onClick={() => setPhase('intro')}
+            style={{
+              background: 'linear-gradient(135deg, #e0b34a 0%, var(--gold, #D4924A) 60%, #c8952e 100%)',
+              color: '#1a1206',
+              border: 'none',
+              borderRadius: '14px',
+              padding: '15px 32px',
+              fontSize: '17px',
+              fontWeight: '800',
+              cursor: 'pointer',
+              boxShadow: '0 4px 24px rgba(212,168,67,0.4)',
+              letterSpacing: '-0.01em',
+              animation: 'lumo-cta-in 0.6s cubic-bezier(0.23,1,0.32,1) 0.4s both',
+              transition: 'filter 0.15s ease, transform 0.15s ease',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(1.1)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+            onMouseLeave={e => { e.currentTarget.style.filter = ''; e.currentTarget.style.transform = ''; }}
+          >
+            Das will ich →
+          </button>
         </div>
+
+        {/* ── Keyframes ── */}
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap');
+
+          @keyframes lf1 { 0%,100%{transform:translate(0,0) rotate(-2deg)} 50%{transform:translate(6px,-10px) rotate(1deg)} }
+          @keyframes lf2 { 0%,100%{transform:translate(0,0) rotate(1deg)} 50%{transform:translate(-8px,8px) rotate(-2deg)} }
+          @keyframes lf3 { 0%,100%{transform:translate(0,0) rotate(-1deg)} 50%{transform:translate(5px,-7px) rotate(2deg)} }
+          @keyframes lf4 { 0%,100%{transform:translate(0,0) rotate(2deg)} 50%{transform:translate(-6px,9px) rotate(-1deg)} }
+          @keyframes lf5 { 0%,100%{transform:translate(0,0) rotate(1deg)} 50%{transform:translate(7px,-6px) rotate(-2deg)} }
+          @keyframes lf6 { 0%,100%{transform:translate(0,0) rotate(-2deg)} 50%{transform:translate(-5px,8px) rotate(1deg)} }
+          @keyframes lf7 { 0%,100%{transform:translate(0,0) rotate(1deg)} 50%{transform:translate(8px,-5px) rotate(-1deg)} }
+          @keyframes lf8 { 0%,100%{transform:translate(0,0) rotate(-1deg)} 50%{transform:translate(-7px,6px) rotate(2deg)} }
+          @keyframes lf9 { 0%,100%{transform:translate(0,0) rotate(2deg)} 50%{transform:translate(5px,-9px) rotate(-1deg)} }
+          @keyframes lumo-glow-a { 0%{opacity:0.6;transform:scale(1)} 100%{opacity:1;transform:scale(1.15)} }
+          @keyframes lumo-glow-b { 0%{opacity:0.5;transform:scale(1.1)} 100%{opacity:0.9;transform:scale(0.9)} }
+          @keyframes lumo-cta-in {
+            from { opacity: 0; transform: translateY(12px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+          }
+        `}</style>
       </div>
     );
   }
