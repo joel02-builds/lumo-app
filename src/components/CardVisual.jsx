@@ -123,5 +123,116 @@ export default function CardVisual({ visual_type, visual_data, subjectColor }) {
     );
   }
 
+  // Analogy – abstraktes Konzept ↔ konkretes Bild (Mayer Multimedia Learning)
+  // Zeigt Konzept und Analogie als zwei Hälften, verbunden durch ein ≈ Symbol
+  if (visual_type === 'analogy') {
+    return (
+      <div style={{ ...baseStyle, padding: '0' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr' }}>
+          {/* Konzept-Seite */}
+          <div style={{ padding: '14px 16px' }}>
+            <p style={{
+              fontSize: '10px', fontWeight: '700', color: color,
+              margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '1.2px',
+            }}>
+              {visual_data.concept_label || 'Konzept'}
+            </p>
+            <p style={{ fontSize: '13px', color: 'var(--text-primary)', margin: '0', lineHeight: '1.5' }}>
+              {visual_data.concept_description}
+            </p>
+          </div>
+          {/* Verbindungs-Symbol */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '0 4px',
+            borderLeft: `1px solid ${color}33`,
+            borderRight: `1px solid ${color}33`,
+          }}>
+            <span style={{
+              fontSize: '18px', color: color, opacity: 0.6,
+              fontFamily: 'serif', lineHeight: 1,
+            }}>≈</span>
+          </div>
+          {/* Analogie-Seite */}
+          <div style={{ padding: '14px 16px', background: `${color}08`, borderRadius: '0 9px 9px 0' }}>
+            <p style={{
+              fontSize: '10px', fontWeight: '700', color: 'var(--text-secondary)',
+              margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '1.2px',
+            }}>
+              {visual_data.analogy_label || 'Stell dir vor …'}
+            </p>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0', lineHeight: '1.5', fontStyle: 'italic' }}>
+              {visual_data.analogy_description}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Spectrum – Konzept auf einem Kontinuum (kein Entweder/Oder)
+  // Zeigt eine Linie von links nach rechts mit verorteten Markern
+  if (visual_type === 'spectrum') {
+    const markers = visual_data.markers || [];
+    return (
+      <div style={baseStyle}>
+        {visual_data.description && (
+          <p style={{
+            fontSize: '11px', color: 'var(--text-secondary)', margin: '0 0 14px',
+            fontStyle: 'italic', lineHeight: '1.4',
+          }}>
+            {visual_data.description}
+          </p>
+        )}
+        {/* Spektrum-Linie */}
+        <div style={{ position: 'relative', padding: '0 0 28px' }}>
+          {/* Track */}
+          <div style={{
+            height: '4px', borderRadius: '2px',
+            background: `linear-gradient(to right, ${color}44, ${color})`,
+            position: 'relative',
+          }}>
+            {/* Marker-Punkte auf der Linie */}
+            {markers.map((m, i) => (
+              <div key={i} style={{
+                position: 'absolute',
+                left: `${Math.max(0, Math.min(100, m.position || 50))}%`,
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: '10px', height: '10px', borderRadius: '50%',
+                background: color,
+                border: '2px solid var(--bg-elevated)',
+                boxShadow: `0 0 6px ${color}66`,
+              }} />
+            ))}
+          </div>
+          {/* Marker-Labels unter der Linie */}
+          {markers.map((m, i) => (
+            <div key={i} style={{
+              position: 'absolute',
+              left: `${Math.max(0, Math.min(100, m.position || 50))}%`,
+              top: '12px',
+              transform: 'translateX(-50%)',
+              fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '600',
+              whiteSpace: 'nowrap',
+              textAlign: 'center',
+            }}>
+              {m.label}
+            </div>
+          ))}
+        </div>
+        {/* Achsenbeschriftung */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0' }}>
+          <p style={{ fontSize: '11px', color: `${color}88`, margin: '0', fontWeight: '600' }}>
+            {visual_data.left_label}
+          </p>
+          <p style={{ fontSize: '11px', color: color, margin: '0', fontWeight: '600' }}>
+            {visual_data.right_label}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return null;
 }

@@ -282,14 +282,17 @@ Deine Aufgabe:
    - question: Eine Verständnisfrage die echtes Nachdenken erfordert – kein reines Abrufen.
      Bevorzuge: "Warum...?", "Was würde passieren wenn...?", "Wie würdest du erklären...?", "Worin liegt der Unterschied zwischen...?"
      Vermeide: "Was ist...?", "Nenne...", "Definiere..." – das prüft Auswendiglernen, kein Verständnis.
-4. Entscheide für jede Karte ob ein Visual hilft – wähle es nach der Struktur des Konzepts:
-   - visual_type: 'none' wenn Text ausreicht
-   - visual_type: 'comparison' für A vs B Vergleiche (visual_data: left_label, right_label, items als Unterschiede) – wähle wenn zwei Konzepte gegenübergestellt werden müssen um verstanden zu werden
-   - visual_type: 'timeline' für zeitliche Abfolgen (visual_data: items als chronologische Punkte) – wähle wenn Reihenfolge bedeutungsgebend ist
-   - visual_type: 'cause_effect' für Ursache → Wirkung (visual_data: items[0] = Ursache, items[1] = Wirkung) – wähle wenn Kausalität der Kern des Konzepts ist
-   - visual_type: 'list' für Aufzählungen die als Bullets klarer sind (visual_data: title, items) – nur wenn die Items eigenständig wichtig sind, nicht als Dekoration
-   - visual_type: 'process' für Schritte/Prozesse (visual_data: steps) – wähle wenn die Reihenfolge der Schritte verstanden werden muss
-   Setze visual_type auf 'none' wenn unsicher – ein Visual das nichts erklärt was der Text nicht auch erklärt ist kein Visual sondern Lärm.
+4. Entscheide für jede Karte ob ein Visual hilft – nach Mayer's Multimedia Learning: ein Visual hilft nur wenn es Information zeigt die der Text NICHT zeigt. Ein Visual das denselben Text nochmal als Bullets wiederholt ist Lärm.
+   Wähle den Visual-Typ nach der Struktur des Konzepts:
+   - visual_type: 'comparison' wenn das Konzept NUR durch Gegenüberstellung verstanden werden kann (z.B. Kurzzeitgedächtnis vs. Langzeitgedächtnis, klassisch vs. operante Konditionierung). visual_data: { left_label, right_label, items: [Unterschiede als kurze Phrasen] }
+   - visual_type: 'timeline' wenn die zeitliche Reihenfolge selbst bedeutungsgebend ist (z.B. Gedächtniskonsolidierung, Entwicklungsphasen). visual_data: { items: [chronologische Punkte] }
+   - visual_type: 'cause_effect' wenn das Konzept eine klare Kausalstruktur hat die sich nicht in 1 Satz beschreiben lässt (z.B. Stress → Kortisol → Hippocampusschäden). visual_data: { items: [Ursache, Wirkung] }
+   - visual_type: 'process' wenn eine Abfolge von Schritten verstanden werden muss (z.B. Signalübertragung an der Synapse, Encoding → Storage → Retrieval). visual_data: { steps: [Schritt 1, 2, 3, ...] }
+   - visual_type: 'analogy' wenn das Konzept abstrakt ist und eine Analogie es sofort zugänglich macht (z.B. Arbeitsgedächtnis = Schreibtisch, Neuron = Kabel mit Schalter). visual_data: { concept_label: 'Das Konzept', analogy_label: 'Die Analogie', concept_description: 'kurz', analogy_description: 'kurz' } – wähle diesen Typ für abstrakte Konzepte aus Neurowissenschaft, Psychologie, Kognitionswissenschaft
+   - visual_type: 'spectrum' wenn ein Konzept auf einem Kontinuum existiert, kein Entweder/Oder ist (z.B. Aktivierungsniveaus, Stressreaktionen, Bewusstseinszustände). visual_data: { left_label, right_label, description: 'was das Spektrum beschreibt', markers: [{ label, position }] wobei position 0–100 ist }
+   - visual_type: 'list' für eigenständige Aufzählungen wo die Items gleichwertig sind (z.B. 5 Merkmale von ADHS, 7 Schritte einer Methode). visual_data: { title, items }
+   - visual_type: 'none' wenn der Text das Konzept bereits vollständig vermittelt.
+   Faustregel: Mindestens jede zweite Karte (außer Überblick) sollte einen Visual-Typ haben. Wenn du 'none' wählst, begründe es dir selbst – wenn der Grund nur "reicht so" ist, wähle einen Visual-Typ.
 5. Beginne mit einer Überblick-Karte (concept: "Überblick") die in 2 Sätzen erklärt:
    (1) Worum geht es in diesem Block – nicht als Liste, als eine zusammenhängende Aussage.
    (2) Warum ist das wichtig oder wie hängt es mit dem größeren Thema zusammen.
@@ -369,7 +372,7 @@ export const cardSchema = {
           question: { type: 'string' },
           visual_type: {
             type: 'string',
-            enum: ['none', 'comparison', 'timeline', 'cause_effect', 'list', 'process']
+            enum: ['none', 'comparison', 'timeline', 'cause_effect', 'list', 'process', 'analogy', 'spectrum']
           },
           visual_data: {
             type: 'object',
@@ -384,6 +387,24 @@ export const cardSchema = {
               steps: {
                 type: 'array',
                 items: { type: 'string' }
+              },
+              // analogy
+              concept_label: { type: 'string' },
+              analogy_label: { type: 'string' },
+              concept_description: { type: 'string' },
+              analogy_description: { type: 'string' },
+              // spectrum
+              description: { type: 'string' },
+              markers: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    label: { type: 'string' },
+                    position: { type: 'number' }
+                  },
+                  additionalProperties: false
+                }
               }
             },
             additionalProperties: false
