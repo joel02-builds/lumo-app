@@ -1,9 +1,29 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import LumoMascot from '../components/LumoMascot.jsx';
 import Button from '../components/Button.jsx';
 import { getRecommendedBlock } from '../utils/blockProgress.js';
+import { getDueCards } from '../utils/fsrs.js';
 
-function getBlocksDueToday(blocks) {
+// FSRS-gestützte Fälligkeitserkennung: gruppiert fällige Karten nach Block.
+// Gibt { blockId: dueCount } zurück, nur für Blöcke mit ≥1 fälliger Karte.
+// Evidenz: Cepeda et al. (2006) – optimale Review-Zeitpunkte verbessern
+// Retention signifikant gegenüber fixen Intervallen. FSRS berechnet
+// individuell angepasste Intervalle pro Karte; dieser Screen macht das
+// erstmals sichtbar statt einer groben Confidence-Heuristik.
+function getDueCardsByBlock(flashcards) {
+  if (!flashcards?.length) return {};
+  const due = getDueCards(flashcards);
+  const byBlock = {};
+  for (const card of due) {
+    const bid = card.blockId || card.block_id;
+    if (!bid) continue;
+    byBlock[bid] = (byBlock[bid] || 0) + 1;
+  }
+  return byBlock;
+}
+
+// Fallback: naive heuristische Fälligkeit (nur verwendet wenn keine FSRS-Daten vorhanden)
+function getBlocksDueTodayHeuristic(blocks) {
   const now = new Date();
   return blocks.filter(b => {
     if (b.status !== 'completed') return false;
@@ -69,7 +89,7 @@ function getLernzeitHinweis() {
   return { show: false, text: '' };
 }
 
-export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHistory, goalType, goalDate, sprintMode, examResult, examResultAskedAt, onStartBlock, onGoToDashboard, onNewProject, onAskExamResult }) {
+export default function WelcomeBackScreen({ blocks, flashcards, recommendedOrder, subjectHistory, goalType, goalDate, sprintMode, examResult, examResultAskedAt, onStartBlock, onGoToDashboard, onNewProject, onAskExamResult }) {
   const safeBlocks = (blocks || []).filter(Boolean);
   const total = safeBlocks.length;
   const completed = safeBlocks.filter((b) => b.status === 'completed').length;
@@ -151,8 +171,23 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHis
     : sprintDaysUntil === 1 ? 'morgen'
     : `in ${sprintDaysUntil} Tagen`;
 
-  // Due-Pile: Nur ohne Abwesenheit zeigen
-  const dueBlocks = absenceInfo ? [] : getBlocksDueToday(safeBlocks);
+  // Due-Pile: FSRS-gestützt (Cepeda 2006), Fallback auf Heuristik wenn keine Karten vorhanden
+  // Nur ohne Abwesenheit zeigen – bei Rückkehr nach Pause zählt erstmal Wiedereinstieg
+  const dueCardsByBlock = useMemo(
+    () => absenceInfo ? {} : getDueCardsByBlock(flashcards),
+    [flashcards, absenceInfo]
+  );
+  const hasFsrsData = flashcards?.some(c => c.stability > 0 || c.difficulty > 0);
+  // Blocks mit fälligen FSRS-Karten (primär) oder heuristische Fälligkeit (Fallback)
+  const dueBlocks = useMemo(() => {
+    if (absenceInfo) return [];
+    if (hasFsrsData) {
+      // FSRS-Modus: nur Blöcke mit tatsächlich fälligen Karten
+      return safeBlocks.filter(b => b.status === 'completed' && dueCardsByBlock[b.id] > 0);
+    }
+    // Fallback: alte Heuristik für Nutzer ohne FSRS-Daten
+    return getBlocksDueTodayHeuristic(safeBlocks);
+  }, [safeBlocks, dueCardsByBlock, hasFsrsData, absenceInfo]);
   const lernzeitHinweis = getLernzeitHinweis();
 
   return (
@@ -349,7 +384,11 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHis
           </button>
         )}
 
-        {/* Due-Pile – nur ohne Abwesenheit, und erst nach dem Haupt-CTA */}
+        {/* Due-Pile – FSRS-gestützt, nur ohne Abwesenheit, nach dem Haupt-CTA
+            Evidenz: Cepeda et al. 2006 – Spacing-Effekt: Karten zum optimalen
+            Zeitpunkt zu wiederholen verdoppelt die Retentionsrate gegenüber
+            Massed Practice. Die Karten-Anzahl gibt konkretes Gewicht: nicht
+            "irgendwas ist fällig", sondern "7 Karten brauchen dich". */}
         {dueBlocks.length > 0 && (
           <div style={{
             width: '100%',
@@ -361,35 +400,63 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHis
             flexDirection: 'column',
             gap: '10px',
           }}>
-            <p style={{
-              fontSize: '11px',
-              fontWeight: '700',
-              letterSpacing: '1.5px',
-              textTransform: 'uppercase',
-              color: 'var(--text-secondary)',
-              margin: '0',
-            }}>
-              Auch fällig
-            </p>
-            {dueBlocks.slice(0, 2).map(b => (
-              <button
-                key={b.id}
-                onClick={() => onStartBlock(b.id)}
-                style={{
-                  background: 'var(--bg-elevated)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '10px',
-                  padding: '11px 14px',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  color: 'var(--text-secondary)',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                }}
-              >
-                {b.title} →
-              </button>
-            ))}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <p style={{
+                fontSize: '11px',
+                fontWeight: '700',
+                letterSpacing: '1.5px',
+                textTransform: 'uppercase',
+                color: 'var(--text-secondary)',
+                margin: '0',
+              }}>
+                Auch fällig
+              </p>
+              {hasFsrsData && (
+                <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: '0', opacity: 0.6 }}>
+                  {Object.values(dueCardsByBlock).reduce((s, n) => s + n, 0)} Karten
+                </p>
+              )}
+            </div>
+            {dueBlocks.slice(0, 2).map(b => {
+              const cardCount = dueCardsByBlock[b.id];
+              return (
+                <button
+                  key={b.id}
+                  onClick={() => onStartBlock(b.id)}
+                  style={{
+                    background: 'var(--bg-elevated)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '10px',
+                    padding: '11px 14px',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '8px',
+                  }}
+                >
+                  <span style={{ color: 'var(--text-secondary)', fontSize: '14px', fontWeight: '500' }}>
+                    {b.title}
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                    {cardCount > 0 && (
+                      <span style={{
+                        fontSize: '11px',
+                        fontWeight: '700',
+                        color: 'var(--gold)',
+                        background: 'rgba(212,168,67,0.12)',
+                        borderRadius: '6px',
+                        padding: '2px 7px',
+                      }}>
+                        {cardCount} {cardCount === 1 ? 'Karte' : 'Karten'}
+                      </span>
+                    )}
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>→</span>
+                  </span>
+                </button>
+              );
+            })}
             {dueBlocks.length > 2 && (
               <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '0', textAlign: 'center' }}>
                 + {dueBlocks.length - 2} weitere

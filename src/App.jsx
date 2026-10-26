@@ -374,6 +374,7 @@ export default function App() {
       {state.screen === SCREENS.WELCOME_BACK && (
         <WelcomeBackScreen
           blocks={state.blocks}
+          flashcards={state.flashcards}
           recommendedOrder={state.recommendedOrder}
           subjectHistory={state.subjectHistory}
           goalType={state.goalType}
