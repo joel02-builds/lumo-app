@@ -1,8 +1,8 @@
 :root {
-  --bg: #0C1519;
-  --bg-elevated: #131E24;
-  --bg-card: #192530;
-  --bg-card-bright: #1F2E3C;
+  --bg: #0E0C09;
+  --bg-elevated: #161310;
+  --bg-card: #1C1814;
+  --bg-card-bright: #231F1A;
   --gold: #D4A843;
   --gold-soft: rgba(212, 168, 67, 0.12);
   --gold-light: #FFE8A0;
@@ -58,6 +58,17 @@ h3 {
   line-height: 1.25;
   margin: 0;
   letter-spacing: -0.025em;
+}
+
+/* Emotional key moments in screen-content use Instrument Serif —
+   matches the onboarding typography for visual consistency. */
+.screen-content h1 {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 28px;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
 }
 
 h1 {
