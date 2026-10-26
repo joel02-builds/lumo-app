@@ -55,6 +55,10 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
   //
   // Max. 1 In-Session-Wiederholung pro Karte (kein endless loop).
   // Framing: "Noch kurz zurück" — nicht "Fehler".
+  // Session→FSRS Bridge: Ergebnis jeder Karte tracken (concept → isGood)
+  // Wird am Ende an onDone übergeben → SessionScreen → App.jsx → FSRS Update
+  const [answerResults, setAnswerResults] = useState({}); // { [concept]: boolean }
+
   const [weakCardQueue, setWeakCardQueue] = useState([]);   // Cards mit isGoodAnswer=false
   const [repeatMode, setRepeatMode] = useState(false);      // true = wir sind in der Wiederholungsrunde
   const [repeatIndex, setRepeatIndex] = useState(0);        // aktueller Index in weakCardQueue
@@ -210,6 +214,8 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
       });
       setFeedback(result.feedback);
       setIsGoodAnswer(result.isGood);
+      // Track per-card result for Session→FSRS Bridge
+      setAnswerResults((prev) => ({ ...prev, [currentCard.concept]: result.isGood }));
       if (result.isGood) {
         setRewardMessage(REWARD_MESSAGES[Math.floor(Math.random() * REWARD_MESSAGES.length)]);
         setShowRewardBurst(true);
@@ -231,6 +237,8 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
         : 'Beschreib es etwas ausführlicher.'
       );
       setIsGoodAnswer(isGood);
+      // Track per-card result for Session→FSRS Bridge (fallback path)
+      setAnswerResults((prev) => ({ ...prev, [currentCard.concept]: isGood }));
       if (isGood) {
         setRewardMessage(REWARD_MESSAGES[Math.floor(Math.random() * REWARD_MESSAGES.length)]);
         setShowRewardBurst(true);
@@ -849,7 +857,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
               </p>
             </div>
             <button
-              onClick={onDone}
+              onClick={() => onDone(answerResults)}
               style={{
                 width: '100%',
                 background: 'var(--gold)',

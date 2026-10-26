@@ -66,7 +66,7 @@ function getBreakIntervalSeconds(block) {
 
 // Owns the full flow for exactly one block. Mount with key={block.id} from
 // the parent so a new block always starts with a clean phase state.
-export default function SessionScreen({ block, blocks, goalType, sprintMode, learningStyle, onRecordCompletion, onSaveCards, onTrackSubject, onAddFlashcards, onPause, onHeaderVisibilityChange }) {
+export default function SessionScreen({ block, blocks, goalType, sprintMode, learningStyle, onRecordCompletion, onSaveCards, onTrackSubject, onAddFlashcards, onSaveCardResults, onPause, onHeaderVisibilityChange }) {
   const [phase, setPhase] = useState(PHASES.FOCUS_RITUAL);
   const [depth, setDepth] = useState('simple');
   const [result, setResult] = useState(null);
@@ -125,7 +125,14 @@ export default function SessionScreen({ block, blocks, goalType, sprintMode, lea
   // würden dadurch jede Sekunde abgebrochen und neu gestartet, bevor sie je
   // ablaufen können. Stabile Referenzen sind hier kein Stil, sondern nötig.
   const handleExplainDone = useCallback(() => setPhase(PHASES.CHECK), []);
-  const handleCardsDone = useCallback(() => setPhase(PHASES.CHECK), []);
+  const handleCardsDone = useCallback((answerResults) => {
+    // Session→FSRS Bridge: Lernergebnisse an App weitergeben, damit FSRS-Karten
+    // aktualisiert werden (isGood=true → Rating.Good, false → Rating.Again)
+    if (answerResults && Object.keys(answerResults).length > 0) {
+      onSaveCardResults?.(answerResults);
+    }
+    setPhase(PHASES.CHECK);
+  }, [onSaveCardResults]);
   const handleCheckDone = useCallback((r) => {
     setResult(r);
     setPhase(PHASES.COMPLETE);

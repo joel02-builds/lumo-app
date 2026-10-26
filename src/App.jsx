@@ -34,6 +34,7 @@ import InstallBanner from './components/InstallBanner.jsx';
 import BetaFeedbackButton from './components/BetaFeedbackButton.jsx';
 import LegalScreen from './screens/LegalScreen.jsx';
 import CookieConsent, { useCookieConsent } from './components/CookieConsent.jsx';
+import { calculateNextReview } from './utils/fsrs.js';
 
 export default function App() {
   const [state, dispatch] = useReducer(appReducer, null, () => createInitialState(loadProject()));
@@ -295,6 +296,42 @@ export default function App() {
     dispatch({ type: 'BLOCK_FINISHED', blockId: currentBlock?.id, ...result });
   }, [currentBlock?.id]);
 
+  // Session→FSRS Bridge
+  // ─────────────────────────────────────────────────────────────────────────
+  // Nach einer Lernsession gibt CardLearningPhase die Ergebnisse jeder Karte
+  // weiter: { [concept]: isGood }. Hier suchen wir die passenden Flashcards
+  // im State und aktualisieren ihre FSRS-Werte.
+  //
+  // Rating-Mapping (FSRS-6):
+  //   isGood=true  → Quality 2 (Good)  → normale Wiederholung
+  //   isGood=false → Quality 0 (Again) → Intervall verkürzen
+  //
+  // Matching: concept-String case-insensitive, weil Karten manchmal
+  // leicht unterschiedlich formatiert sein können.
+  const handleSaveCardResults = useCallback((answerResults) => {
+    if (!answerResults || !state.flashcards?.length) return;
+    const updates = [];
+    for (const [concept, isGood] of Object.entries(answerResults)) {
+      const conceptLower = concept.toLowerCase().trim();
+      const card = state.flashcards.find(
+        (c) => (c.concept || c.front || '').toLowerCase().trim() === conceptLower
+      );
+      if (!card) continue;
+      try {
+        const quality = isGood ? 2 : 0; // Good=2, Again=0
+        const updated = calculateNextReview(card, quality);
+        updates.push({ id: card.id, updates: updated });
+      } catch {
+        // FSRS-Fehler still ignorieren – kein Loop-Stopper
+      }
+    }
+    if (updates.length > 0) {
+      updates.forEach(({ id, updates: u }) => {
+        dispatch({ type: 'UPDATE_FLASHCARD', payload: { id, updates: u } });
+      });
+    }
+  }, [state.flashcards]);
+
   const handleExamResultDone = useCallback((result) => {
     dispatch({ type: 'SET_EXAM_RESULT', payload: result });
     dispatch({ type: 'RETURN_TO_DASHBOARD' });
@@ -460,6 +497,7 @@ export default function App() {
           onTrackSubject={(subject) => dispatch({ type: 'TRACK_SUBJECT', payload: subject })}
           onAddFlashcards={(cards) => dispatch({ type: 'ADD_FLASHCARDS', payload: cards })}
           onRecordCompletion={handleRecordCompletion}
+          onSaveCardResults={handleSaveCardResults}
           onSaveCards={(cards) => dispatch({ type: 'SAVE_BLOCK_CARDS', payload: { blockId: currentBlock.id, cards } })}
           onPause={() => dispatch({ type: 'RETURN_TO_DASHBOARD' })}
           onHeaderVisibilityChange={setSessionHasOwnHeader}

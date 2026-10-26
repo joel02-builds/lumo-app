@@ -1,8 +1,160 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import LumoMascot from '../../components/LumoMascot.jsx';
 
+// ─── Huberman Focus Protocol (in-session breath primer) ───────────────────
+//
+// Evidenz:
+//   Spiegel & Huberman (2023) – Physiological sigh (double-inhale + long
+//   exhale) rapidly downregulates stress / activates parasympathetic tone.
+//   Huberman (2021) – 30–60s visual focus on a stationary point activates
+//   the superior colliculus → elevated sustained attention.
+//
+// Lumo-Umsetzung:
+//   1. Ein einzelner Atemzug (doppelter Einatem + langer Ausatem) als
+//      animierter Kreis – skippable, dauert ~10 s.
+//   2. Kein Fokuspunkt-Timer (würde auf Mobile nicht funktionieren); statt-
+//      dessen die Atemübung als Proxy für Aufmerksamkeitsprimer.
+//   3. Nur angezeigt wenn mood ≠ overwhelmed (zu viele Schritte = mehr Stress).
+// ──────────────────────────────────────────────────────────────────────────
+
+function BreathPrimer({ onDone, onSkip }) {
+  // Phasen: idle → inhale1 → inhale2 → exhale → done
+  const [breathPhase, setBreathPhase] = useState('idle');
+  const [cycleCount, setCycleCount] = useState(0);
+  const timerRef = useRef(null);
+
+  const TOTAL_CYCLES = 1; // Ein Zug reicht für den Primer-Effekt
+
+  // Automatischer Ablauf: start → inhale1 (1.5s) → inhale2 (1s) → exhale (4s) → done
+  useEffect(() => {
+    if (breathPhase === 'idle') {
+      timerRef.current = setTimeout(() => setBreathPhase('inhale1'), 600);
+    } else if (breathPhase === 'inhale1') {
+      timerRef.current = setTimeout(() => setBreathPhase('inhale2'), 1500);
+    } else if (breathPhase === 'inhale2') {
+      timerRef.current = setTimeout(() => setBreathPhase('exhale'), 1000);
+    } else if (breathPhase === 'exhale') {
+      timerRef.current = setTimeout(() => {
+        const next = cycleCount + 1;
+        setCycleCount(next);
+        if (next >= TOTAL_CYCLES) {
+          setBreathPhase('done');
+        } else {
+          setBreathPhase('inhale1');
+        }
+      }, 4500);
+    } else if (breathPhase === 'done') {
+      timerRef.current = setTimeout(onDone, 800);
+    }
+    return () => clearTimeout(timerRef.current);
+  }, [breathPhase, cycleCount, onDone]);
+
+  const circleScale =
+    breathPhase === 'inhale1' ? 1.12
+    : breathPhase === 'inhale2' ? 1.22
+    : breathPhase === 'exhale' ? 0.88
+    : breathPhase === 'done' ? 1
+    : 1;
+
+  const label =
+    breathPhase === 'idle' ? 'Gleich geht\'s los …'
+    : breathPhase === 'inhale1' ? 'Einatmen …'
+    : breathPhase === 'inhale2' ? '… nochmal kurz'
+    : breathPhase === 'exhale' ? 'Langsam ausatmen …'
+    : 'Gut.';
+
+  return (
+    <div style={{
+      width: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: '32px',
+      padding: '8px 0',
+    }}>
+      {/* Titel */}
+      <div style={{ textAlign: 'center' }}>
+        <h1 style={{ fontSize: '20px', marginBottom: '6px', fontFamily: 'inherit', fontStyle: 'normal', fontWeight: '700' }}>
+          Ein Atemzug vor dem Start
+        </h1>
+        <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+          Doppelter Einatem · langer Ausatem · Fokus an.
+        </p>
+      </div>
+
+      {/* Animated breath circle */}
+      <div style={{ position: 'relative', width: '120px', height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {/* Outer glow ring */}
+        <div style={{
+          position: 'absolute',
+          width: '120px',
+          height: '120px',
+          borderRadius: '50%',
+          border: '2px solid rgba(212,168,67,0.18)',
+          transition: 'transform 0.5s ease, opacity 0.5s ease',
+          transform: `scale(${breathPhase === 'exhale' ? 0.82 : 1.15})`,
+          opacity: breathPhase === 'exhale' ? 0.3 : 0.7,
+        }} />
+        {/* Main circle */}
+        <div style={{
+          width: '80px',
+          height: '80px',
+          borderRadius: '50%',
+          background: breathPhase === 'done'
+            ? 'var(--green-soft)'
+            : 'rgba(212,168,67,0.12)',
+          border: `2px solid ${breathPhase === 'done' ? 'var(--green)' : 'var(--gold)'}`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'transform 0.5s cubic-bezier(0.34,1.2,0.64,1), background 0.4s ease, border-color 0.4s ease',
+          transform: `scale(${circleScale})`,
+          boxShadow: breathPhase === 'exhale'
+            ? 'none'
+            : `0 0 24px rgba(212,168,67,${breathPhase === 'inhale2' ? '0.35' : '0.18'})`,
+        }}>
+          <span style={{ fontSize: '24px', userSelect: 'none' }}>
+            {breathPhase === 'done' ? '✓' : breathPhase === 'exhale' ? '○' : '●'}
+          </span>
+        </div>
+      </div>
+
+      {/* Phase label */}
+      <p style={{
+        fontSize: '18px',
+        fontWeight: '600',
+        color: breathPhase === 'done' ? 'var(--green)' : 'var(--text-primary)',
+        textAlign: 'center',
+        transition: 'color 0.3s ease',
+        minHeight: '28px',
+      }}>
+        {label}
+      </p>
+
+      {/* Skip – immer sichtbar (ADHS-Sicherheitsnetz) */}
+      <button
+        onClick={onSkip}
+        style={{
+          background: 'none',
+          border: 'none',
+          color: 'var(--text-secondary)',
+          fontSize: '13px',
+          cursor: 'pointer',
+          padding: '4px',
+          textDecoration: 'underline',
+          textUnderlineOffset: '3px',
+          marginTop: '-16px',
+        }}
+      >
+        Überspringen
+      </button>
+    </div>
+  );
+}
+
 export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStats, onMoodSet, sprintMode }) {
-  const [ready, setReady] = useState(false);
+  // step: 'mood' → 'breath' → 'ready'
+  const [step, setStep] = useState('mood');
   const [mood, setMood] = useState(null);
 
   const completedCount = allBlocks?.filter(b => b.status === 'completed').length || 0;
@@ -12,11 +164,23 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
   const isFirstBlock = completedCount === 0;
   const isReturning = completedCount > 0;
 
+  // Nach Mood-Wahl: Breath-Primer zeigen? Nur wenn kein Overwhelm und kein Skip
+  const handleMoodSelect = (value) => {
+    setMood(value);
+    onMoodSet?.(value);
+    if (value === 'overwhelmed') {
+      // Bei Overwhelm direkt weiter – weniger Schritte = besser
+      setStep('ready');
+    } else {
+      setStep('breath');
+    }
+  };
+
   return (
     <div className="screen">
       <div className="screen-content" style={{ gap: '20px', maxWidth: '400px', width: '100%' }}>
 
-        {!mood ? (
+        {step === 'mood' ? (
           /* ── Mood-Check (Pekrun 2006 Academic Emotions) ──────────────────
              4 konkrete Lernzustände statt 3 abstrakter Emojis.
              Pekrun unterscheidet aktivierende vs. deaktivierende Emotionen.
@@ -77,7 +241,7 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
                   className="lumo-mood-tile"
                   data-selected={mood === value ? 'true' : undefined}
                   data-other={mood && mood !== value ? 'true' : undefined}
-                  onClick={() => { setMood(value); onMoodSet?.(value); }}
+                  onClick={() => handleMoodSelect(value)}
                   style={{
                     background: bg,
                     border: `1px solid ${border}`,
@@ -99,7 +263,7 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
             </div>
             {/* Hick's Law: Skip ist prominent, nicht versteckt */}
             <button
-              onClick={() => { setMood('good'); onMoodSet?.('good'); }}
+              onClick={() => handleMoodSelect('good')}
               style={{
                 background: 'none',
                 border: 'none',
@@ -114,6 +278,16 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
               Überspringen – einfach starten
             </button>
           </div>
+        ) : step === 'breath' ? (
+          /* ── Huberman Focus Protocol (Physiological Sigh Primer) ──────────
+             Evidenz: Spiegel & Huberman 2023 – ein doppelter Einatem +
+             langer Ausatem aktiviert schnell den Parasympathikus und
+             verbessert Fokus vor kognitiver Arbeit.
+             Lumo-Umsetzung: Animierter Kreis, ~8s, vollständig skippable. */
+          <BreathPrimer
+            onDone={() => setStep('ready')}
+            onSkip={() => setStep('ready')}
+          />
         ) : (
           <>
             {/* Gap 8: Mood-responsiver LumoMascot statt hardcoded "idle".
