@@ -417,6 +417,7 @@ export default function App() {
       {state.screen === SCREENS.SETTINGS && (
         <SettingsScreen
           onBack={() => dispatch({ type: 'RETURN_TO_DASHBOARD' })}
+          onResetOnboarding={() => dispatch({ type: 'RESET_TO_ONBOARDING' })}
           blocksAnalyzedTotal={state.blocksAnalyzedTotal}
           onShowLegal={() => setShowLegal(true)}
         />

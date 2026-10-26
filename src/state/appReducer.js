@@ -256,6 +256,12 @@ export function appReducer(state, action) {
     case 'VIEW_SETTINGS':
       return { ...state, screen: SCREENS.SETTINGS };
 
+    // [BETA] Onboarding neu starten ohne Datenverlust — vor Public-Launch entfernen
+    case 'RESET_TO_ONBOARDING':
+      try { localStorage.removeItem('lumo_onboarding_done'); } catch {}
+      try { localStorage.removeItem('lumo_cookie_consent'); } catch {}
+      return { ...state, screen: SCREENS.ONBOARDING, onboardingStep: 1 };
+
     case 'ADD_FLASHCARDS': {
       const newCards = action.payload.filter(
         newCard => !state.flashcards.find(existing => existing.id === newCard.id)

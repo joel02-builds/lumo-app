@@ -2,7 +2,7 @@ import { exportProject, importProject, exportProgressReport } from '../utils/pro
 import { deleteServerState } from '../utils/serverSync.js';
 import { useRef, useState } from 'react';
 
-export default function SettingsScreen({ onBack, blocksAnalyzedTotal, onShowLegal }) {
+export default function SettingsScreen({ onBack, blocksAnalyzedTotal, onShowLegal, onResetOnboarding }) {
   const importRef = useRef(null);
   const [importing, setImporting] = useState(false);
   const [message, setMessage] = useState('');
@@ -10,11 +10,7 @@ export default function SettingsScreen({ onBack, blocksAnalyzedTotal, onShowLega
   const [confirmDeleteServer, setConfirmDeleteServer] = useState(false);
 
   function handleResetOnboarding() {
-    try {
-      localStorage.removeItem('lumo_onboarding_done');
-      localStorage.removeItem('lumo_cookie_consent');
-    } catch {}
-    window.location.reload();
+    onResetOnboarding?.();
   }
 
   async function handleImport(e) {
