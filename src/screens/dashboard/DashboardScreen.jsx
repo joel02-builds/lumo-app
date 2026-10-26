@@ -170,6 +170,51 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
 
         <LumoMascot state={allDone ? 'complete' : 'idle'} />
 
+        {/* Gap 5 – "Heute X Blöcke — das ist genug"
+            Konkurrenz-Lücke: Kein Wettbewerber kommuniziert eine explizite tägliche Norm.
+            Problem: User sehen 8 offene Blöcke und fühlen sich verpflichtet, alle zu machen.
+            Evidenz: Goal-setting theory (Locke & Latham) zeigt: proximale, spezifische Ziele
+            wirksamer als distale Ziele. "1 Block heute" besser als "8 Blöcke irgendwann".
+            ADHS: Ohne Grenze entsteht Either/All-or-Nothing-Denken → Aufschub. */}
+        {!allDone && total > 0 && (
+          <div style={{
+            background: 'rgba(212,168,67,0.06)',
+            border: '1px solid rgba(212,168,67,0.18)',
+            borderRadius: '14px',
+            padding: '14px 18px',
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '14px',
+          }}>
+            <div style={{
+              fontSize: '32px',
+              fontWeight: '800',
+              color: 'var(--gold)',
+              lineHeight: '1',
+              flexShrink: 0,
+              minWidth: '44px',
+              textAlign: 'center',
+            }}>
+              1
+            </div>
+            <div>
+              <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 2px', lineHeight: '1.3' }}>
+                {completed === 0
+                  ? 'Heute reicht ein Block.'
+                  : completed >= 1 && completed < total
+                  ? 'Du hast heute schon geliefert.'
+                  : 'Stark — du bist durch für heute.'}
+              </p>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0', lineHeight: '1.5' }}>
+                {completed === 0
+                  ? `${total} ${total === 1 ? 'Block' : 'Blöcke'} insgesamt — mach so viel du magst. Aber einer ist genug.`
+                  : `${completed} von ${total} erledigt. Jeder weitere Block ist ein Bonus.`}
+              </p>
+            </div>
+          </div>
+        )}
+
         {(() => {
           const streak = getStreakDays();
           if (streak < 1) return null;

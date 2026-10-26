@@ -271,22 +271,38 @@ export default function WelcomeBackScreen({ blocks, recommendedOrder, subjectHis
 
         {/* ── SEKUNDÄRE INFOS: alles was nicht für den Start nötig ist ── */}
 
-        {/* Abwesenheits-Adaption – kommt NACH dem CTA, nicht davor */}
+        {/* Gap 2 – "Pause ohne Strafe"
+            Konkurrenz-Lücke: Anki bricht Streak ab und zeigt sofort massive Review-Piles.
+            Kein Konkurrent kommuniziert explizit, dass Pausen in Ordnung sind.
+            ADHS-Evidenz: Shaming/Streak-Verlust triggert Vermeidungsverhalten
+            (Barkley 1997: emotionale Dysregulation → Rückzug statt Wiedereinstieg).
+            Lösung: Normalisieren statt Beschämen. Kein "du hast X Tage verpasst". */}
         {absenceInfo && (
           <div style={{
             width: '100%',
             background: absenceInfo.isLong ? 'rgba(61, 158, 110, 0.07)' : 'rgba(212, 168, 67, 0.06)',
             border: `1px solid ${absenceInfo.isLong ? 'rgba(61, 158, 110, 0.25)' : 'rgba(212, 168, 67, 0.2)'}`,
             borderRadius: '14px',
-            padding: '14px 18px',
+            padding: '16px 18px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
           }}>
-            <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', margin: '0 0 4px', lineHeight: '1.4' }}>
-              {absenceInfo.message} Ich habe deinen Plan angepasst.
-            </p>
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0', lineHeight: '1.5' }}>
+            <p style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', margin: '0', lineHeight: '1.4' }}>
               {absenceInfo.isLong
-                ? 'Kein Stress. Ein Block reicht heute.'
-                : 'Fang einfach an – ich zeige dir wo es weitergeht.'}
+                ? 'Pausen gehören dazu.'
+                : 'Du bist zurück. Das zählt.'}
+            </p>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0', lineHeight: '1.6' }}>
+              {absenceInfo.isLong
+                ? `${absenceInfo.days} Tage Pause — kein Problem. Ich habe einen sanften Wiedereinstieg vorbereitet. Ein Block reicht heute.`
+                : `${absenceInfo.days} Tage weg — ganz normal. Ich zeige dir genau wo es weitergeht.`}
+            </p>
+            {/* Explizit kein Streak-Druck kommunizieren */}
+            <p style={{ fontSize: '12px', color: absenceInfo.isLong ? 'var(--green)' : 'var(--text-secondary)', margin: '0', fontStyle: 'italic', opacity: 0.8 }}>
+              {absenceInfo.isLong
+                ? '✓ Kein Streak-Verlust zählt hier. Nur das Lernen.'
+                : 'Regelmäßigkeit entsteht über Zeit — nicht über perfekte Serien.'}
             </p>
           </div>
         )}

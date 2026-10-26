@@ -94,12 +94,30 @@ export default function AnalysisResultScreen({ blocks, totalBlocks, recommendedO
               Farbe für dieses Fach
             </p>
           </div>
-          <h1 style={{ fontSize: '26px', marginBottom: '8px', lineHeight: '1.2' }}>
+          {/* Gap 1: Explizites "X Blöcke bereit" mit normalisierendem Framing.
+              Konkurrenz zeigt nur eine Block-Liste – kein Gefühl für Machbarkeit.
+              Wir kommunizieren aktiv: "Das schaffst du." */}
+          <div style={{
+            background: 'rgba(212,168,67,0.08)',
+            border: '1px solid rgba(212,168,67,0.25)',
+            borderRadius: '16px',
+            padding: '16px 20px',
+            marginBottom: '4px',
+          }}>
+            <div style={{ fontSize: '36px', fontWeight: '800', color: 'var(--gold)', lineHeight: '1.1', marginBottom: '4px' }}>
+              {totalBlocks} {totalBlocks === 1 ? 'Block' : 'Blöcke'} bereit
+            </div>
+            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: '0', lineHeight: '1.5' }}>
+              {totalBlocks === 1
+                ? 'Einer reicht. Fang einfach an.'
+                : totalBlocks <= 3
+                ? `${difficultyLabel} — das schaffst du locker.`
+                : `${difficultyLabel} · mach so viel du magst.`}
+            </p>
+          </div>
+          <h1 style={{ fontSize: '22px', marginBottom: '0', lineHeight: '1.2' }}>
             Lumo hat alles vorbereitet.
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '15px' }}>
-            {totalBlocks} {totalBlocks === 1 ? 'Block' : 'Blöcke'} · {difficultyLabel}
-          </p>
         </div>
 
         <button

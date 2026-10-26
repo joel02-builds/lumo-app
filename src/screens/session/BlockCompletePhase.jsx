@@ -118,19 +118,13 @@ export default function BlockCompletePhase({ block, result, cards, onContinue, o
   }, [isGood, status]);
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '40px 24px',
+    <div className="screen" style={{
       background: isGood
-        ? 'radial-gradient(ellipse at center, rgba(212,168,67,0.08) 0%, var(--bg) 70%)'
-        : 'var(--bg)',
-      gap: '28px',
+        ? 'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(212,168,67,0.09) 0%, transparent 70%), radial-gradient(ellipse at center, rgba(212,168,67,0.05) 0%, var(--bg) 70%)'
+        : undefined,
       transition: 'background 0.6s ease',
     }}>
+    <div className="screen-content" style={{ gap: '20px', maxWidth: '400px' }}>
 
       {/* Lumo – größer als normal */}
       <div style={{
@@ -147,7 +141,7 @@ export default function BlockCompletePhase({ block, result, cards, onContinue, o
       </div>
 
       {/* Hauptnachricht */}
-      <div style={{ textAlign: 'center', maxWidth: '360px' }}>
+      <div style={{ textAlign: 'center', width: '100%' }}>
         {isGood && (
           <div style={{
             fontSize: '48px',
@@ -201,7 +195,6 @@ export default function BlockCompletePhase({ block, result, cards, onContinue, o
       {!isGood && result?.uncertainPoints?.length > 0 && (
         <div style={{
           width: '100%',
-          maxWidth: '360px',
           background: 'var(--bg-card)',
           border: '1px solid var(--border)',
           borderLeft: `3px solid var(--gold)`,
@@ -246,7 +239,7 @@ export default function BlockCompletePhase({ block, result, cards, onContinue, o
       )}
 
       {/* Lernzettel – aufklappbar */}
-      <div style={{ width: '100%', maxWidth: '360px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
         <button
           onClick={() => setShowLernzettel(v => !v)}
           style={{
@@ -272,7 +265,6 @@ export default function BlockCompletePhase({ block, result, cards, onContinue, o
       {!isGood && (
         <div style={{
           width: '100%',
-          maxWidth: '360px',
           background: 'rgba(212, 168, 67, 0.06)',
           border: '1px solid rgba(212, 168, 67, 0.2)',
           borderRadius: '12px',
@@ -289,7 +281,6 @@ export default function BlockCompletePhase({ block, result, cards, onContinue, o
       {isLastSprintBlock && (
         <div style={{
           width: '100%',
-          maxWidth: '360px',
           background: 'rgba(212, 168, 67, 0.07)',
           border: '1px solid rgba(212, 168, 67, 0.3)',
           borderRadius: '16px',
@@ -363,7 +354,6 @@ export default function BlockCompletePhase({ block, result, cards, onContinue, o
       {/* Buttons */}
       <div style={{
         width: '100%',
-        maxWidth: '360px',
         display: 'flex',
         flexDirection: 'column',
         gap: '10px',
@@ -388,6 +378,7 @@ export default function BlockCompletePhase({ block, result, cards, onContinue, o
         </button>
       </div>
 
+    </div>
     </div>
   );
 }

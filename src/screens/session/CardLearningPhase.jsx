@@ -1324,6 +1324,43 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                 </p>
               </div>
 
+              {/* Gap 4 – "Warum war das falsch? Lumo erklärt es nochmal."
+                  Konkurrenz-Lücke: Kein Tool erklärt beim falschen Antworten aktiv den Grund.
+                  Anki/Quizlet: zeigt nur Musterantwort. Kein "warum"-Kontext.
+                  Evidenz: Feedback-Elaboration (Butler & Winne 1995) zeigt, dass elaboriertes
+                  Feedback (mit Erklärung des Fehlers) > korrigierendes Feedback (nur richtige Antwort).
+                  Fix: Bei falschem Antworten eine "Lumo erklärt den Grund" Sektion einfügen.
+                  Das feedback-Feld IST schon die Erklärung — aber begraben unter dem Mascot.
+                  Wir machen es zu einem expliziten, betitelten Lernmoment. */}
+              {!isGoodAnswer && feedback && (
+                <div style={{
+                  background: 'rgba(196,122,43,0.06)',
+                  border: '1px solid rgba(196,122,43,0.2)',
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  marginBottom: '8px',
+                }}>
+                  <p style={{
+                    fontSize: '11px',
+                    fontWeight: '700',
+                    letterSpacing: '1.2px',
+                    textTransform: 'uppercase',
+                    color: 'var(--amber, #C47A2B)',
+                    margin: '0 0 8px',
+                  }}>
+                    Das hätte ich wissen müssen
+                  </p>
+                  <p style={{
+                    fontSize: '14px',
+                    color: 'var(--text-primary)',
+                    margin: '0',
+                    lineHeight: '1.6',
+                  }}>
+                    {feedback}
+                  </p>
+                </div>
+              )}
+
               {isGoodAnswer && currentCard?.why_question && !whyMode && !whyFeedback && (
                 <div style={{
                   background: `${subjectColor}11`,

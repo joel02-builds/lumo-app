@@ -114,7 +114,40 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
           </div>
         ) : (
           <>
-            <LumoMascot state="idle" />
+            {/* Gap 8: Mood-responsiver LumoMascot statt hardcoded "idle".
+                Evidenz: Pekrun 2006 – Emotionen formen kognitive Ressourcen.
+                Mascot-State spiegelt den Mood zurück = emotionale Validierung.
+                focused → cheer (aktivierend spiegeln)
+                tired/stressed/overwhelmed → thinking (nicht-urteilend, ruhig)
+                good/skip → idle (neutral) */}
+            <LumoMascot state={
+              mood === 'focused' ? 'cheer'
+              : (mood === 'tired' || mood === 'stressed' || mood === 'overwhelmed') ? 'thinking'
+              : 'idle'
+            } />
+
+            {/* Gap 6: Expliziter Session-Confirmation-Satz als erster Text.
+                Konkurrenz-Lücke: Kein Tool sagt "alright — heute machen wir's kurz".
+                Evidenz: Autonomy-support (Deci & Ryan SDT) → kurze, direkte Bestätigung
+                des Mood als Legitimation für angepasste Session.
+                Gap 6 = der Satz der fehlt: "Passt. Dann heute kurz und fokussiert." */}
+            <div style={{ textAlign: 'center', width: '100%' }}>
+              <p style={{
+                fontSize: '18px',
+                fontWeight: '700',
+                color: mood === 'focused' ? 'var(--green)'
+                      : mood === 'tired' || mood === 'stressed' || mood === 'overwhelmed' ? 'var(--text-primary)'
+                      : 'var(--text-primary)',
+                margin: '0 0 4px',
+                lineHeight: '1.3',
+              }}>
+                {mood === 'focused' && '⚡ Alright — heute gehen wir rein.'}
+                {mood === 'tired' && 'Passt. Dann heute kurz und einfach.'}
+                {mood === 'stressed' && 'Verstanden. Ich halte es übersichtlich.'}
+                {mood === 'overwhelmed' && 'Kein Problem — Schritt für Schritt.'}
+                {(mood === 'good' || mood === 'skip' || !mood) && 'Alles klar. Ich hab alles vorbereitet.'}
+              </p>
+            </div>
 
             {/* ── Mood-spezifische Session-Anpassung (Pekrun 2006) ───────────
                 Aktivierende Emotionen → volle Tiefe
@@ -126,12 +159,8 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
                 borderRadius: '12px',
                 padding: '14px 18px',
                 textAlign: 'left',
+                width: '100%',
               }}>
-                <p style={{ fontSize: '14px', color: 'var(--text-primary)', margin: '0 0 8px', fontWeight: '600' }}>
-                  {mood === 'tired' && 'Session angepasst für wenig Energie:'}
-                  {mood === 'stressed' && 'Session angepasst für viel Druck:'}
-                  {mood === 'overwhelmed' && 'Session vereinfacht — ein Schritt nach dem anderen:'}
-                </p>
                 <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0', lineHeight: '1.8' }}>
                   {mood === 'tired' && '✓ Kürzere Erklärungen · ✓ Einfachere Fragen · ✓ Kein Zeitdruck'}
                   {mood === 'stressed' && '✓ Ein Block, dann Pause · ✓ Kein Recall-Druck · ✓ Du bestimmst das Tempo'}
@@ -140,8 +169,8 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
               </div>
             )}
             {mood === 'focused' && (
-              <p style={{ fontSize: '14px', color: 'var(--green)', textAlign: 'center', margin: '0', fontWeight: '500' }}>
-                ⚡ Volle Tiefe — ich gehe heute mehr ins Detail.
+              <p style={{ fontSize: '13px', color: 'var(--green)', textAlign: 'center', margin: '-8px 0 0', fontWeight: '500' }}>
+                Volle Tiefe — ich gehe heute mehr ins Detail.
               </p>
             )}
 
@@ -231,7 +260,12 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
               )}
             </div>
 
-            {/* Lücken aus letzter Session */}
+            {/* Gap 7 – "Letzte Session hattest du Probleme mit:" Framing.
+                Konkurrenz-Lücke: Tools zeigen Lücken als anonyme Listen ohne Kontext.
+                Problem: "Noch unsicher" triggert Scham. Keine Verbindung zur letzten Session.
+                Evidenz: Episodisches Gedächtnis (Tulving) – Erinnerung an letztes Mal
+                aktiviert Kontinuität statt Neubewertung. "Letztes Mal" = persönlich, spezifisch.
+                Fix: Explizite Verbindung zur letzten Lernsession herstellen. */}
             {isReturning && hasGaps && (
               <div style={{
                 width: '100%',
@@ -249,9 +283,14 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
                   margin: '0 0 10px',
                 }}>
                   {(mood === 'tired' || mood === 'overwhelmed')
-                    ? 'Kommen nochmal – aber nicht heute'
-                    : gapBlocks.some(b => b.confidence === 'grosse_luecken') ? 'Noch nicht sicher' : 'Noch unsicher'}
+                    ? 'Heute nicht — nächstes Mal'
+                    : 'Letzte Session — noch offen'}
                 </p>
+                {!(mood === 'tired' || mood === 'overwhelmed') && (
+                  <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '0 0 10px', lineHeight: '1.5' }}>
+                    Letztes Mal hattest du damit noch Schwierigkeiten:
+                  </p>
+                )}
                 {gapBlocks.slice(0, (mood === 'tired' || mood === 'overwhelmed') ? 1 : 2).map(b => (
                   <p key={b.id} style={{
                     fontSize: '14px',
