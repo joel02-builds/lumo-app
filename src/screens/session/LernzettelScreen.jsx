@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import LumoMascot from '../../components/LumoMascot.jsx';
+import { SkeletonLernzettel } from '../../components/SkeletonLoader.jsx';
 import { lumoApi } from '../../api/lumo.js';
 
 export default function LernzettelScreen({ block, cards, goalType, onDone, subjectColor, onShowConceptMap }) {
@@ -71,12 +71,9 @@ export default function LernzettelScreen({ block, cards, goalType, onDone, subje
 
   if (loading) {
     return (
-      <div className="screen">
-        <div className="screen-content">
-          <LumoMascot state="thinking" />
-          <p style={{ color: 'var(--text-secondary)', fontSize: '16px' }}>
-            Ich fasse das gerade für dich zusammen …
-          </p>
+      <div className="screen" style={{ justifyContent: 'flex-start', paddingTop: '40px' }}>
+        <div className="screen-content" style={{ maxWidth: '560px', alignItems: 'flex-start' }}>
+          <SkeletonLernzettel />
         </div>
       </div>
     );

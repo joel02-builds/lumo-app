@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { lumoApi } from '../api/lumo.js';
+import { SkeletonLine } from './SkeletonLoader.jsx';
 
 export default function YoutubePanel({ concept, blockTitle, onClose, subjectColor }) {
   const [data, setData] = useState(null);
@@ -51,9 +52,13 @@ export default function YoutubePanel({ concept, blockTitle, onClose, subjectColo
       </div>
 
       {loading && (
-        <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: '0', textAlign: 'center' }}>
-          Lumo sucht das beste Video …
-        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {/* Video-Thumbnail-Placeholder */}
+          <SkeletonLine width="100%" height="0" style={{ paddingBottom: '56.25%', borderRadius: '12px' }} />
+          {/* Titel + Kanal-Text */}
+          <SkeletonLine width="80%" height="14px" borderRadius="4px" />
+          <SkeletonLine width="55%" height="12px" borderRadius="4px" />
+        </div>
       )}
 
       {/* Eingebettetes Video */}

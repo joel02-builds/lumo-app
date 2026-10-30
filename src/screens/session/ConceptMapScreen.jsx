@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import LumoMascot from '../../components/LumoMascot.jsx';
+import { SkeletonConceptMap } from '../../components/SkeletonLoader.jsx';
 import ConceptMap from '../../components/ConceptMap.jsx';
 import { lumoApi } from '../../api/lumo.js';
 import { getBlockColor } from '../../utils/subjectColors.js';
@@ -24,12 +24,9 @@ export default function ConceptMapScreen({ block, cards, onDone }) {
 
   if (loading) {
     return (
-      <div className="screen">
-        <div className="screen-content">
-          <LumoMascot state="thinking" />
-          <p style={{ color: 'var(--text-secondary)', fontSize: '16px' }}>
-            Ich zeige dir wie alles zusammenhängt …
-          </p>
+      <div className="screen" style={{ justifyContent: 'flex-start', paddingTop: '40px' }}>
+        <div className="screen-content" style={{ maxWidth: '560px' }}>
+          <SkeletonConceptMap />
         </div>
       </div>
     );

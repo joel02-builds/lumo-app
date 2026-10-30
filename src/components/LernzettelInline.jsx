@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { lumoApi } from '../api/lumo.js';
 import { getBlockColor } from '../utils/subjectColors.js';
+import { SkeletonLine } from './SkeletonLoader.jsx';
 
 export default function LernzettelInline({ block, cards }) {
   const [lernzettel, setLernzettel] = useState(null);
@@ -19,9 +20,24 @@ export default function LernzettelInline({ block, cards }) {
   }, [block.id]);
 
   if (loading) return (
-    <p style={{ color: 'var(--text-secondary)', fontSize: '14px', textAlign: 'center', padding: '12px 0', margin: 0 }}>
-      Ich fasse zusammen …
-    </p>
+    <div style={{
+      width: '100%',
+      background: 'rgba(255,255,255,0.02)',
+      borderRadius: '12px',
+      border: '1px solid rgba(255,255,255,0.06)',
+      borderTop: `3px solid rgba(212,168,67,0.2)`,
+      padding: '16px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '10px',
+    }}>
+      {[100, 88, 76, 92].map((w, i) => (
+        <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+          <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'rgba(212,168,67,0.15)', flexShrink: 0, marginTop: '7px' }} />
+          <SkeletonLine width={`${w}%`} height="14px" borderRadius="4px" style={{ flex: 1 }} />
+        </div>
+      ))}
+    </div>
   );
 
   if (!lernzettel) return null;

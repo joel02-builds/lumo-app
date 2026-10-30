@@ -229,4 +229,122 @@ export function SkeletonCardScreen() {
   );
 }
 
+/**
+ * Skeleton für LernzettelScreen — imitiert Keyword-Punkte + Merksatz
+ * Zeigt die Content-Struktur während die KI den Lernzettel generiert.
+ */
+export function SkeletonLernzettel() {
+  injectShimmerCSS();
+  return (
+    <div style={{
+      width: '100%',
+      maxWidth: '560px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '20px',
+      alignItems: 'flex-start',
+    }}>
+      {/* Überschrift */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+        <SkeletonLine width="80px" height="10px" borderRadius="4px" />
+        <SkeletonLine width="60%" height="22px" borderRadius="6px" />
+      </div>
+
+      {/* Punkte-Karte */}
+      <div style={{
+        width: '100%',
+        background: 'rgba(255,255,255,0.02)',
+        borderRadius: '16px',
+        border: '1px solid rgba(255,255,255,0.06)',
+        borderTop: '4px solid rgba(212,168,67,0.2)',
+        padding: '20px 24px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '18px',
+      }}>
+        {[100, 85, 92, 78].map((w, i) => (
+          <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+            <div style={{
+              width: '6px', height: '6px', borderRadius: '50%',
+              background: 'rgba(212,168,67,0.15)', flexShrink: 0, marginTop: '8px',
+            }} />
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <SkeletonLine width="90px" height="14px" borderRadius="4px" />
+              <SkeletonLine width={`${w}%`} height="14px" borderRadius="4px" />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Merksatz-Box */}
+      <div style={{
+        width: '100%',
+        background: 'rgba(212,168,67,0.04)',
+        border: '2px solid rgba(212,168,67,0.15)',
+        borderRadius: '12px',
+        padding: '18px 20px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '10px',
+      }}>
+        <SkeletonLine width="80px" height="10px" borderRadius="4px" />
+        <SkeletonLine width="85%" height="18px" borderRadius="4px" />
+        <SkeletonLine width="70%" height="18px" borderRadius="4px" />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Skeleton für ConceptMapScreen — imitiert ein Knotendiagramm
+ */
+export function SkeletonConceptMap() {
+  injectShimmerCSS();
+  return (
+    <div style={{
+      width: '100%',
+      maxWidth: '560px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '20px',
+    }}>
+      {/* Überschrift */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+        <SkeletonLine width="100px" height="10px" borderRadius="4px" />
+        <SkeletonLine width="55%" height="20px" borderRadius="6px" />
+        <SkeletonLine width="40%" height="13px" borderRadius="4px" />
+      </div>
+
+      {/* Diagramm-Fläche */}
+      <div style={{
+        width: '100%',
+        background: 'rgba(255,255,255,0.02)',
+        borderRadius: '16px',
+        border: '1px solid rgba(255,255,255,0.06)',
+        borderTop: '4px solid rgba(212,168,67,0.2)',
+        padding: '28px 24px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px',
+        alignItems: 'center',
+      }}>
+        {/* Zentral-Knoten */}
+        <SkeletonLine width="140px" height="40px" borderRadius="20px" />
+        {/* Verbindungslinien-Simulation */}
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          {['100px', '120px', '90px', '110px'].map((w, i) => (
+            <SkeletonLine key={i} width={w} height="34px" borderRadius="17px" />
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          {['80px', '105px', '95px'].map((w, i) => (
+            <SkeletonLine key={i} width={w} height="30px" borderRadius="15px" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default SkeletonLine;
