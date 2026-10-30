@@ -6,6 +6,7 @@ import HighlightedText from '../../components/HighlightedText.jsx';
 import { lumoApi } from '../../api/lumo.js';
 import YoutubePanel from '../../components/YoutubePanel.jsx';
 import { getBlockColor } from '../../utils/subjectColors.js';
+import { SkeletonCardScreen } from '../../components/SkeletonLoader.jsx';
 
 export default function CardLearningPhase({ block, goalType, mood, learningStyle, elapsedSeconds, onDone, onExit, onAskFreely, onCardsReady, onCardProgress }) {
   const subjectColor = getBlockColor(block);
@@ -432,16 +433,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
   }
 
   if (phase === 'loading') {
-    return (
-      <div className="screen">
-        <div className="screen-content">
-          <LumoMascot state="thinking" />
-          <p style={{ color: 'var(--text-secondary)', fontSize: '16px' }}>
-            Ich bereite deinen Block vor …
-          </p>
-        </div>
-      </div>
-    );
+    return <SkeletonCardScreen />;
   }
 
   // ── Spaced Repetition: Übergangsscreen ──────────────────────────────────
