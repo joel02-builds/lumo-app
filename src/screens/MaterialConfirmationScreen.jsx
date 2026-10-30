@@ -200,18 +200,25 @@ export default function AnalysisResultScreen({ blocks, totalBlocks, recommendedO
                     outline: 'none',
                   }}
                 />
-                <span style={{
-                  fontSize: '11px',
-                  fontWeight: '700',
-                  color: b.difficulty === 'schwer' ? 'var(--amber)' : b.difficulty === 'mittel' ? 'var(--gold)' : 'var(--green)',
-                  background: b.difficulty === 'schwer' ? 'var(--amber-soft)' : b.difficulty === 'mittel' ? 'rgba(212,168,67,0.12)' : 'rgba(61,158,110,0.12)',
-                  borderRadius: '999px',
-                  padding: '2px 8px',
-                  whiteSpace: 'nowrap',
-                  letterSpacing: '0.02em',
-                }}>
-                  {b.difficulty}
-                </span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', alignItems: 'flex-end', flexShrink: 0 }}>
+                  <span style={{
+                    fontSize: '11px',
+                    fontWeight: '700',
+                    color: b.difficulty === 'schwer' ? 'var(--amber)' : b.difficulty === 'mittel' ? 'var(--gold)' : 'var(--green)',
+                    background: b.difficulty === 'schwer' ? 'var(--amber-soft)' : b.difficulty === 'mittel' ? 'rgba(212,168,67,0.12)' : 'rgba(61,158,110,0.12)',
+                    borderRadius: '999px',
+                    padding: '2px 8px',
+                    whiteSpace: 'nowrap',
+                    letterSpacing: '0.02em',
+                  }}>
+                    {b.difficulty}
+                  </span>
+                  {b.estimatedMinutes && (
+                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                      ~{b.estimatedMinutes} Min
+                    </span>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -248,15 +255,34 @@ export default function AnalysisResultScreen({ blocks, totalBlocks, recommendedO
                 }}>
                   {i + 1}
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{
                     fontSize: '15px',
                     fontWeight: i === 0 ? '600' : '400',
                     color: 'var(--text-primary)',
+                    marginBottom: b.subtopics?.length ? '6px' : '0',
                   }}>
                     {b.title}
                   </div>
-                  <div style={{ marginTop: '4px' }}>
+                  {/* Subtopics — zeigen was den Nutzer erwartet */}
+                  {b.subtopics?.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '6px' }}>
+                      {b.subtopics.map((s, si) => (
+                        <span key={si} style={{
+                          fontSize: '11px',
+                          color: 'var(--text-secondary)',
+                          background: 'var(--bg-elevated)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '999px',
+                          padding: '2px 7px',
+                          whiteSpace: 'nowrap',
+                        }}>
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div>
                     <span style={{
                       fontSize: '11px',
                       fontWeight: '700',
@@ -268,6 +294,15 @@ export default function AnalysisResultScreen({ blocks, totalBlocks, recommendedO
                     }}>
                       {b.difficulty}
                     </span>
+                    {b.estimatedMinutes && (
+                      <span style={{
+                        fontSize: '11px',
+                        color: 'var(--text-secondary)',
+                        marginLeft: '6px',
+                      }}>
+                        ~{b.estimatedMinutes} Min
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

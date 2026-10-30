@@ -42,6 +42,7 @@ Deine Aufgabe:
 6. Empfehle eine sinnvolle Reihenfolge (Block-IDs)
 7. Fülle "content" mit einer kompakten Zusammenfassung des Stoffs dieses Blocks (2-6 Sätze), die als Grundlage für spätere Erklärungen dient
 8. Bestimme das Fach (subject) – ein einziges Wort auf Deutsch, kleingeschrieben: biologie, chemie, physik, mathematik, geschichte, psychologie, wirtschaft, informatik, sprachen, medizin, jura – oder ein anderes passendes Fach.
+9. Erstelle für jeden Block 2–4 "subtopics" – kurze Schlüsselbegriffe (1-3 Wörter) die dem Nutzer auf einen Blick zeigen was ihn in diesem Block erwartet. Keine vollständigen Sätze, nur Begriffe wie "Mitose", "Zellkern", "DNA-Replikation".
 
 WICHTIG – Wie du Blöcke aufteilst:
 Entscheide die Anzahl der Blöcke ausschließlich nach konzeptueller Eigenständigkeit – nicht nach Textlänge oder Seitenanzahl.
@@ -93,8 +94,9 @@ export const analyzeSchema = {
           difficulty: { type: 'string', enum: ['leicht', 'mittel', 'schwer'] },
           estimatedMinutes: { type: 'integer' },
           content: { type: 'string' },
+          subtopics: { type: 'array', items: { type: 'string' } },
         },
-        required: ['id', 'title', 'difficulty', 'estimatedMinutes', 'content'],
+        required: ['id', 'title', 'difficulty', 'estimatedMinutes', 'content', 'subtopics'],
         additionalProperties: false,
       },
     },
