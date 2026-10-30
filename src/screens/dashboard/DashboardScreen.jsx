@@ -142,25 +142,34 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
 
   return (
     <div className="screen" style={{ justifyContent: 'flex-start', paddingTop: 'clamp(20px, 8vw, 80px)' }}>
+      {/* P2-UX-10: fixed statt absolute → bleibt beim Scrollen sichtbar */}
       {onSettings && (
         <button
           onClick={onSettings}
-          aria-label="Einstellungen"
+          aria-label="Einstellungen öffnen"
+          title="Einstellungen"
           style={{
-            position: 'absolute',
-            top: '16px',
+            position: 'fixed',
+            top: 'calc(16px + env(safe-area-inset-top, 0px))',
             right: '16px',
-            background: 'none',
-            border: 'none',
+            background: 'var(--bg-elevated)',
+            border: '1px solid var(--border)',
+            borderRadius: '10px',
             color: 'var(--text-secondary)',
             cursor: 'pointer',
             padding: '8px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            zIndex: 40,
+            transition: 'color 0.15s, background 0.15s',
           }}
+          onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.background = 'var(--bg-card)'; }}
+          onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-secondary)'; e.currentTarget.style.background = 'var(--bg-elevated)'; }}
+          onFocus={e => { e.currentTarget.style.outline = '2px solid var(--gold)'; e.currentTarget.style.outlineOffset = '2px'; }}
+          onBlur={e => { e.currentTarget.style.outline = 'none'; }}
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="3" />
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
           </svg>
@@ -448,8 +457,13 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
 
             return (
               <div key={b.id} className="lumo-card-reveal" style={{ width: '100%', '--delay': `${0.12 + idx * 0.05}s` }}>
+                {/* P1-A11Y-01: aria-expanded + aria-controls für Screenreader-Kontext */}
                 <button
                   onClick={() => setExpandedBlock(isExpanded ? null : b.id)}
+                  aria-expanded={isExpanded}
+                  aria-controls={`block-detail-${b.id}`}
+                  aria-label={`${b.title} – ${statusLabel(b)}${isNext ? ' – Nächster Block' : ''}`}
+                  title={isNext ? 'Empfohlener nächster Block – klicken für Details' : 'Details anzeigen'}
                   style={{
                     width: '100%',
                     background: isNext ? 'var(--bg-card)' : 'var(--bg-elevated)',
@@ -529,9 +543,9 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
                   </span>
                 </button>
 
-                {/* Ausgeklappter Inhalt */}
+                {/* Ausgeklappter Inhalt — id für aria-controls */}
                 {isExpanded && (
-                  <div style={{
+                  <div id={`block-detail-${b.id}`} role="region" aria-label={`Details: ${b.title}`} style={{
                     background: 'var(--bg-card)',
                     border: '1px solid var(--border)',
                     borderTop: 'none',
@@ -699,6 +713,8 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
         {flashcardsCount > 0 && (
           <button
             onClick={onViewFlashcards}
+            aria-label={dueCount > 0 ? `${dueCount} Karteikarten heute fällig – jetzt wiederholen` : `${flashcardsCount} Karteikarten wiederholen`}
+            title={dueCount > 0 ? 'Fällige Karten mit Spaced Repetition wiederholen' : 'Alle Karteikarten verwalten'}
             style={{
               width: '100%',
               background: dueCount > 0 ? 'rgba(212,168,67,0.07)' : 'var(--bg-card)',
@@ -748,6 +764,8 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
         {onViewWeakSpots && (
           <button
             onClick={onViewWeakSpots}
+            aria-label={weakCount > 0 ? `${weakCount} Blöcke zum Wiederholen – Schwachstellen ansehen` : 'Lernstand ansehen'}
+            title={weakCount > 0 ? 'Unsichere Themen gezielt wiederholen' : 'Vollständigen Lernstand anzeigen'}
             style={{
               width: '100%',
               background: weakCount > 0 ? 'rgba(212,168,67,0.07)' : 'var(--bg-elevated)',

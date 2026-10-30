@@ -87,8 +87,22 @@ const COOKIE_NAME = 'lumo_uid';
 const COOKIE_MAX_AGE = 365 * 24 * 60 * 60 * 1000; // 1 Jahr
 
 const app = express();
+
+// P0-SEC-01: CORS Whitelist statt origin:true (any-origin war ein Sicherheitsproblem)
+const ALLOWED_ORIGINS = [
+  process.env.FRONTEND_URL,
+  'http://localhost:5173',
+  'http://localhost:4173',
+  'https://lumo-app-pbgc.onrender.com',
+].filter(Boolean);
+
 app.use(cors({
-  origin: true,
+  origin: (origin, callback) => {
+    // Direkte Server-zu-Server-Requests (kein Origin-Header) zulassen
+    if (!origin) return callback(null, true);
+    if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS: Origin ${origin} not allowed`));
+  },
   credentials: true, // für Cookie-Handling nötig
 }));
 app.use(cookieParser());
