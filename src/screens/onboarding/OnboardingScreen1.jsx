@@ -90,6 +90,17 @@ export default function OnboardingScreen1({ onNext }) {
     }, 280);
   }, [phase]);
 
+  // P2-UX-13: Back-Navigation — Nutzer können im Onboarding rückwärts navigieren.
+  // Vorwärts-Only-Flow war ein UX-Blocker: wer in S2 eine falsche Auswahl trifft
+  // oder die Intro-Demo nochmal sehen will, war bisher gefangen. Zurück ist immer
+  // eine natürliche Erwartung in einem Step-Flow.
+  const PHASE_ORDER = ['s0', 's1', 's2', 's3', 'form'];
+  const goBack = useCallback(() => {
+    const idx = PHASE_ORDER.indexOf(phase);
+    if (idx > 0) goTo(PHASE_ORDER[idx - 1]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, goTo]);
+
   // ── Progress per Phase ─────────────────────────────────────────────────────
   const progressMap = { s0: 20, s1: 40, s2: 65, s3: 85, form: 100 };
   const progress = progressMap[phase] || 20;
@@ -236,6 +247,22 @@ export default function OnboardingScreen1({ onNext }) {
       cursor: pointer; padding: 4px 0;
     }
     .ob-skip:hover { color: #F0EAE0; }
+
+    /* ── Back (P2-UX-13) — symmetrisch zum Skip, linke Seite ── */
+    .ob-back {
+      position: fixed;
+      top: calc(env(safe-area-inset-top, 0px) + 14px);
+      left: max(20px, env(safe-area-inset-left, 0px));
+      z-index: 50; background: none; border: none;
+      color: rgba(240,234,224,0.55); font-size: 13px; font-family: inherit;
+      cursor: pointer; padding: 4px 0;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .ob-back:hover { color: #F0EAE0; }
+    .ob-back:focus-visible {
+      outline: 2px solid rgba(212,146,74,0.7);
+      outline-offset: 2px; border-radius: 4px;
+    }
 
     /* ── Screen base ── */
     .ob-screen {
@@ -630,6 +657,16 @@ export default function OnboardingScreen1({ onNext }) {
       <div className="ob-prog">
         <div className="ob-prog-fill" style={{ width: `${progress}%` }} />
       </div>
+
+      {/* Back — sichtbar ab S1 (S0 hat kein Zurück); im Form zurück zu S3 */}
+      {phase !== 's0' && (
+        <button className="ob-back" onClick={goBack} aria-label="Zurück">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <path d="M13 8H3M7 4l-4 4 4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          Zurück
+        </button>
+      )}
 
       {/* Skip (nur in S0-S3 sichtbar, nicht im Form) */}
       {phase !== 'form' && (

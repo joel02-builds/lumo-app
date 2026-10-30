@@ -8,8 +8,17 @@ export default function SettingsScreen({ onBack, blocksAnalyzedTotal, onShowLega
   const [message, setMessage] = useState('');
   const [deletingServer, setDeletingServer] = useState(false);
   const [confirmDeleteServer, setConfirmDeleteServer] = useState(false);
+  // P1-UX-02: Zweistufige Bestätigung für Onboarding-Reset (wie bei Serverdaten-Löschen).
+  // Ohne Bestätigung würde ein Tipp auf "Onboarding neu starten" sofort Daten löschen —
+  // besonders kritisch weil der Button neben anderen Einstellungen liegt.
+  const [confirmResetOnboarding, setConfirmResetOnboarding] = useState(false);
 
   function handleResetOnboarding() {
+    if (!confirmResetOnboarding) {
+      setConfirmResetOnboarding(true);
+      return;
+    }
+    setConfirmResetOnboarding(false);
     onResetOnboarding?.();
   }
 
@@ -140,27 +149,80 @@ export default function SettingsScreen({ onBack, blocksAnalyzedTotal, onShowLega
           <p style={{ fontSize: '11px', fontWeight: '700', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--gold)', margin: '0', opacity: 0.7 }}>
             🧪 Beta
           </p>
-          <button
-            onClick={handleResetOnboarding}
-            style={{
-              width: '100%',
-              background: 'rgba(212,168,67,0.06)',
-              border: '1px solid rgba(212,168,67,0.25)',
-              borderRadius: '14px',
-              padding: '16px 18px',
-              cursor: 'pointer',
+          {confirmResetOnboarding ? (
+            <div style={{
+              background: 'rgba(212,168,67,0.08)',
+              border: '1px solid rgba(212,168,67,0.3)',
+              borderRadius: '12px',
+              padding: '14px 16px',
               display: 'flex',
-              alignItems: 'center',
-              gap: '14px',
-              textAlign: 'left',
-            }}
-          >
-            <span style={{ fontSize: '20px', color: 'var(--gold)', flexShrink: 0 }}>↩</span>
-            <div>
-              <p style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', margin: '0 0 2px' }}>Onboarding neu starten</p>
-              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0' }}>Setzt das Onboarding zurück — Lernfortschritt bleibt erhalten.</p>
+              flexDirection: 'column',
+              gap: '10px',
+            }}>
+              <p style={{ fontSize: '14px', color: 'var(--text-primary)', margin: 0, fontWeight: '600' }}>
+                Onboarding wirklich neu starten?
+              </p>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.5' }}>
+                Deine Lernblöcke und dein Fortschritt bleiben erhalten.
+                Nur das Onboarding wird zurückgesetzt.
+              </p>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={handleResetOnboarding}
+                  style={{
+                    flex: 1,
+                    background: 'var(--gold)',
+                    color: '#1a1206',
+                    border: 'none',
+                    borderRadius: '10px',
+                    padding: '10px',
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Ja, zurücksetzen
+                </button>
+                <button
+                  onClick={() => setConfirmResetOnboarding(false)}
+                  style={{
+                    flex: 1,
+                    background: 'var(--bg-card)',
+                    color: 'var(--text-secondary)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '10px',
+                    padding: '10px',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Abbrechen
+                </button>
+              </div>
             </div>
-          </button>
+          ) : (
+            <button
+              onClick={handleResetOnboarding}
+              style={{
+                width: '100%',
+                background: 'rgba(212,168,67,0.06)',
+                border: '1px solid rgba(212,168,67,0.25)',
+                borderRadius: '14px',
+                padding: '16px 18px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '14px',
+                textAlign: 'left',
+              }}
+            >
+              <span style={{ fontSize: '20px', color: 'var(--gold)', flexShrink: 0 }}>↩</span>
+              <div>
+                <p style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', margin: '0 0 2px' }}>Onboarding neu starten</p>
+                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0' }}>Setzt das Onboarding zurück — Lernfortschritt bleibt erhalten.</p>
+              </div>
+            </button>
+          )}
         </div>
 
         {/* ── DSGVO Art. 17: Recht auf Löschung ─────────────────────────────
