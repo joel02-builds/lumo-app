@@ -493,6 +493,8 @@ export default function App() {
           blocksAnalyzedTotal={state.blocksAnalyzedTotal}
           flashcardsCount={state.flashcards.length}
           onViewFlashcards={handleViewFlashcards}
+          subjectColor={state.subjectColor}
+          onSetSubjectColor={(color) => dispatch({ type: 'SET_SUBJECT_COLOR', payload: color })}
         />
       )}
 

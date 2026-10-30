@@ -147,9 +147,9 @@ input::placeholder {
      Layer 3 (unten): Dunkle Eck-Vignette — lässt Content "schweben"
      ADHS-sicher: kein Animation, kein Flackern, nur ruhige Tiefe */
   background:
-    radial-gradient(ellipse 100% 45% at 50% 0%, rgba(212, 168, 67, 0.11) 0%, rgba(212, 168, 67, 0.04) 55%, transparent 80%),
-    radial-gradient(ellipse 65% 50% at 50% 45%, rgba(212, 168, 67, 0.055) 0%, transparent 65%),
-    radial-gradient(ellipse 100% 100% at 50% 100%, rgba(0,0,0,0.3) 0%, transparent 60%),
+    radial-gradient(ellipse 100% 45% at 50% 0%, rgba(212, 168, 67, 0.24) 0%, rgba(212, 168, 67, 0.09) 55%, transparent 80%),
+    radial-gradient(ellipse 65% 50% at 50% 45%, rgba(212, 168, 67, 0.13) 0%, transparent 65%),
+    radial-gradient(ellipse 100% 100% at 50% 100%, rgba(0,0,0,0.45) 0%, transparent 60%),
     var(--bg);
 }
 

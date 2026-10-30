@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import LumoMascot from '../../components/LumoMascot.jsx';
 import Button from '../../components/Button.jsx';
 import { getRecommendedBlock } from '../../utils/blockProgress.js';
-import { getBlockColor } from '../../utils/subjectColors.js';
+import { getBlockColor, SUBJECT_COLORS } from '../../utils/subjectColors.js';
 import { getRemainingFreeBlocks, isFreeLimitReached, isApproachingLimit } from '../../utils/planLimits.js';
 import { lumoApi } from '../../api/lumo.js';
 import { getDueCards } from '../../utils/fsrs.js';
@@ -86,9 +86,10 @@ function BlockDot({ block, subjectColor }) {
   );
 }
 
-export default function DashboardScreen({ blocks, recommendedOrder, goalType, goalDate, sprintMode, onStartBlock, onNewProject, onViewWeakSpots, onViewProjects, onSettings, blocksAnalyzedTotal, flashcardsCount, onViewFlashcards, flashcards, projects }) {
+export default function DashboardScreen({ blocks, recommendedOrder, goalType, goalDate, sprintMode, onStartBlock, onNewProject, onViewWeakSpots, onViewProjects, onSettings, blocksAnalyzedTotal, flashcardsCount, onViewFlashcards, flashcards, projects, subjectColor, onSetSubjectColor }) {
   const safeBlocks = (blocks || []).filter(Boolean);
   const [expandedBlock, setExpandedBlock] = useState(null);
+  const [showColorPicker, setShowColorPicker] = useState(false);
   const next = getRecommendedBlock(safeBlocks, recommendedOrder || []);
 
   // Fällige SR-Karten berechnen (FSRS-6)
@@ -142,6 +143,96 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
 
   return (
     <div className="screen" style={{ justifyContent: 'flex-start', paddingTop: 'clamp(20px, 8vw, 80px)' }}>
+      {/* Fachfarbe-Picker — kleiner Farbkreis oben-links */}
+      {onSetSubjectColor && (
+        <div style={{
+          position: 'fixed',
+          top: 'calc(16px + env(safe-area-inset-top, 0px))',
+          left: '16px',
+          zIndex: 40,
+        }}>
+          <button
+            onClick={() => setShowColorPicker(p => !p)}
+            aria-label="Fachfarbe ändern"
+            title="Fachfarbe ändern"
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '50%',
+              background: projectColor,
+              border: '2.5px solid rgba(255,255,255,0.22)',
+              cursor: 'pointer',
+              padding: 0,
+              outline: 'none',
+              boxShadow: `0 0 14px ${projectColor}55`,
+              transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.08)'; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+            onFocus={e => { e.currentTarget.style.outline = '2px solid var(--gold)'; e.currentTarget.style.outlineOffset = '2px'; }}
+            onBlur={e => { e.currentTarget.style.outline = 'none'; }}
+          />
+          {showColorPicker && (
+            <>
+              {/* Backdrop — schließt Picker bei Klick außerhalb */}
+              <div
+                onClick={() => setShowColorPicker(false)}
+                style={{ position: 'fixed', inset: 0, zIndex: -1 }}
+              />
+              <div style={{
+                position: 'absolute',
+                top: '44px',
+                left: '0',
+                background: 'var(--bg-elevated)',
+                border: '1px solid var(--border)',
+                borderRadius: '14px',
+                padding: '14px',
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '8px',
+                width: '188px',
+                boxShadow: 'var(--shadow-elevated)',
+                zIndex: 50,
+              }}>
+                <p style={{
+                  width: '100%', margin: '0 0 6px',
+                  fontSize: '11px', color: 'var(--text-secondary)',
+                  fontWeight: '600', letterSpacing: '0.6px',
+                  textTransform: 'uppercase',
+                }}>
+                  Fachfarbe
+                </p>
+                {Object.entries(SUBJECT_COLORS)
+                  .filter(([k]) => k !== 'default')
+                  .map(([key, c]) => (
+                    <button
+                      key={key}
+                      onClick={() => { onSetSubjectColor(c); setShowColorPicker(false); }}
+                      title={key}
+                      style={{
+                        width: '28px',
+                        height: '28px',
+                        borderRadius: '50%',
+                        background: c,
+                        border: c === projectColor ? '2.5px solid white' : '2px solid transparent',
+                        cursor: 'pointer',
+                        padding: 0,
+                        outline: 'none',
+                        transform: c === projectColor ? 'scale(1.2)' : 'scale(1)',
+                        transition: 'transform 0.12s ease',
+                        boxShadow: c === projectColor ? `0 0 8px ${c}` : 'none',
+                      }}
+                      onMouseEnter={e => { if (c !== projectColor) e.currentTarget.style.transform = 'scale(1.12)'; }}
+                      onMouseLeave={e => { if (c !== projectColor) e.currentTarget.style.transform = 'scale(1)'; }}
+                    />
+                  ))
+                }
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       {/* P2-UX-10: fixed statt absolute → bleibt beim Scrollen sichtbar */}
       {onSettings && (
         <button
@@ -563,7 +654,34 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
                     flexDirection: 'column',
                     gap: '14px',
                   }}>
-                    {/* Subtopics — Was erwartet mich in diesem Block */}
+                    {/* Lerninhalt-Vorschau — was steckt wirklich in diesem Block */}
+                    {b.content && (
+                      <div>
+                        <p style={{
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          letterSpacing: '0.8px',
+                          textTransform: 'uppercase',
+                          color: 'var(--text-secondary)',
+                          margin: '0 0 8px',
+                        }}>
+                          Lerninhalt
+                        </p>
+                        <p style={{
+                          fontSize: '13px',
+                          color: 'rgba(242,239,233,0.72)',
+                          lineHeight: '1.65',
+                          margin: '0',
+                          wordBreak: 'break-word',
+                        }}>
+                          {b.content.trim().length > 320
+                            ? b.content.trim().slice(0, 300).trimEnd() + '…'
+                            : b.content.trim()}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Subtopics — thematische Übersicht des Blocks */}
                     {b.subtopics?.length > 0 && (
                       <div>
                         <p style={{
@@ -632,8 +750,8 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
                       </div>
                     )}
 
-                    {/* Fallback wenn weder Subtopics noch Cards */}
-                    {!b.subtopics?.length && !b.cards?.length && (
+                    {/* Fallback wenn weder Content noch Subtopics noch Cards */}
+                    {!b.content && !b.subtopics?.length && !b.cards?.length && (
                       <p style={{
                         fontSize: '13px',
                         color: 'var(--text-secondary)',
