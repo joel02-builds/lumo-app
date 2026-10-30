@@ -31,5 +31,8 @@
     "concurrently": "latest",
     "vite": "latest",
     "vite-plugin-pwa": "^2.0.0"
+  },
+  "overrides": {
+    "deepmerge": "4.1.0"
   }
 }

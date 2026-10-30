@@ -265,8 +265,11 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
               </div>
             </div>
             {dueCount > 0 && (
-              <div
+              /* P1-A11Y-01: div→button für Tastatur- und Screenreader-Zugänglichkeit */
+              <button
                 onClick={onViewFlashcards}
+                aria-label={`${dueCount} Karteikarten fällig – jetzt wiederholen`}
+                title="Fällige Karten mit Spaced Repetition wiederholen"
                 style={{
                   flex: 1,
                   background: 'rgba(212,168,67,0.1)',
@@ -276,7 +279,12 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
                   textAlign: 'center',
                   cursor: 'pointer',
                   position: 'relative',
+                  /* Reset button defaults */
+                  fontFamily: 'inherit',
+                  outline: 'none',
                 }}
+                onFocus={e => { e.currentTarget.style.outline = '2px solid var(--gold)'; e.currentTarget.style.outlineOffset = '2px'; }}
+                onBlur={e => { e.currentTarget.style.outline = 'none'; }}
               >
                 <div style={{ fontSize: '28px', fontWeight: '800', color: 'var(--gold)', lineHeight: '1' }}>
                   {dueCount}
@@ -285,7 +293,7 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
                   Karten fällig
                 </div>
                 {/* Pulsierender Dot als Aufmerksamkeits-Signal */}
-                <div style={{
+                <div aria-hidden="true" style={{
                   position: 'absolute',
                   top: '8px',
                   right: '8px',
@@ -295,7 +303,7 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
                   background: 'var(--gold)',
                   animation: 'lumo-pulse 2s ease-in-out infinite',
                 }} />
-              </div>
+              </button>
             )}
           </div>
         )}
