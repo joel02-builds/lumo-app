@@ -58,6 +58,25 @@ export default function App() {
     return () => window.removeEventListener('lumo:show-legal', handleLegalEvent);
   }, []);
 
+  // --dvh: Dynamic Viewport Height — korrigiert iOS-Bug wo 100vh die Tastatur
+  // überlappt. visualViewport liefert die tatsächlich sichtbare Höhe.
+  // Fallback: CSS dvh-Unit (iOS 15.4+) über --dvh: 100dvh in :root.
+  useEffect(() => {
+    function updateDvh() {
+      const h = window.visualViewport?.height ?? window.innerHeight;
+      document.documentElement.style.setProperty('--dvh', `${h}px`);
+    }
+    updateDvh();
+    window.visualViewport?.addEventListener('resize', updateDvh);
+    window.visualViewport?.addEventListener('scroll', updateDvh);
+    window.addEventListener('resize', updateDvh);
+    return () => {
+      window.visualViewport?.removeEventListener('resize', updateDvh);
+      window.visualViewport?.removeEventListener('scroll', updateDvh);
+      window.removeEventListener('resize', updateDvh);
+    };
+  }, []);
+
   // Storage-Status für Warning Banner
   const [storageLayer, setStorageLayer] = useState(null); // null = noch nicht geprüft
   const idbHydrated = useRef(false);

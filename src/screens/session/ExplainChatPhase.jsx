@@ -139,7 +139,7 @@ export default function ExplainChatPhase({ block, depth, onDone, onExit }) {
 
   return (
     <div style={{
-      height: '100vh',
+      height: 'var(--dvh, 100dvh)',
       display: 'flex',
       flexDirection: 'column',
       background: 'var(--bg)',

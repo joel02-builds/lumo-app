@@ -443,7 +443,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
     const count = weakCardQueue.length;
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: 'var(--dvh, 100dvh)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -527,7 +527,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
 
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: 'var(--dvh, 100dvh)',
         display: 'flex',
         flexDirection: 'column',
         background: 'var(--bg)',
@@ -703,7 +703,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
   if (phase === 'final-recall') {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: 'var(--dvh, 100dvh)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -872,7 +872,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
 
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: 'var(--dvh, 100dvh)',
       display: 'flex',
       flexDirection: 'column',
       background: 'var(--bg)',

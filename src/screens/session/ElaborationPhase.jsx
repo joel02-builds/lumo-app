@@ -57,9 +57,14 @@ export default function ElaborationPhase({ block, onDone, onSkip }) {
   const textareaRef = useRef(null);
   const question = getElaborationQuestion(block?.title);
 
-  // Auto-Fokus auf Textarea
+  // Auto-Fokus auf Textarea — scrollIntoView verhindert iOS-Layout-Shift
   useEffect(() => {
-    const t = setTimeout(() => textareaRef.current?.focus(), 400);
+    const t = setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        textareaRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    }, 400);
     return () => clearTimeout(t);
   }, []);
 

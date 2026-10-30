@@ -158,7 +158,7 @@ export function SkeletonCardScreen() {
   injectShimmerCSS();
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: 'var(--dvh, 100dvh)',
       display: 'flex',
       flexDirection: 'column',
       background: 'var(--bg)',
