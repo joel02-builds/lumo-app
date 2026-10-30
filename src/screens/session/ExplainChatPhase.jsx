@@ -446,6 +446,20 @@ export default function ExplainChatPhase({ block, depth, onDone, onExit }) {
         >
           {canFinish ? "Ich hab's verstanden" : 'Lies erstmal in Ruhe …'}
         </button>
+        {/* P3-UX-03: Hinweis wie der Button entsperrt wird — ohne ihn wissen
+            Nutzer nicht, ob sie warten sollen oder eine Frage stellen müssen.
+            canFinish = timeUp (20s) || hasAskedQuestion. */}
+        {!canFinish && !loading && (
+          <p style={{
+            fontSize: '12px',
+            color: 'var(--text-secondary)',
+            textAlign: 'center',
+            margin: '6px 0 0',
+            opacity: 0.65,
+          }}>
+            Stell eine Frage — oder warte kurz, dann entsperrt es sich.
+          </p>
+        )}
       </div>
 
       <NotesPanel blockId={block.id} />

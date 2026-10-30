@@ -51,6 +51,21 @@ export default function ExamResultScreen({ project, onDone, onDismiss }) {
           >
             Weiter lernen
           </button>
+          {/* P3-UX-02: Nutzer kann das Ergebnis korrigieren, falls er die
+              falsche Note gewählt hat – Back-Button zeigt Notenauswahl neu. */}
+          <button
+            onClick={() => setSubmitted(false)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-secondary)',
+              fontSize: '13px',
+              cursor: 'pointer',
+              padding: '4px',
+            }}
+          >
+            ← Anderes Ergebnis
+          </button>
         </div>
       </div>
     );

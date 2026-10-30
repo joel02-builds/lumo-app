@@ -329,6 +329,22 @@ export default function App() {
     } catch {
       // localStorage nicht verfügbar – still ignorieren
     }
+
+    // P3-UX-01: Server-Streak synchronisieren. Der Server trackt Streak
+    // geräteübergreifend; sein Wert ist autoritativer als localStorage.
+    // Fire-and-forget: UI blockiert nicht, bei Netzwerkfehler greift der
+    // lokale Wert als Fallback.
+    syncStreak().then(serverStreak => {
+      if (typeof serverStreak === 'number' && serverStreak > 0) {
+        try {
+          localStorage.setItem('lumo_streak', JSON.stringify({
+            days: serverStreak,
+            lastDate: new Date().toDateString(),
+          }));
+        } catch {}
+      }
+    }).catch(() => {}); // Netzwerkfehler still ignorieren
+
     dispatch({ type: 'BLOCK_FINISHED', blockId: currentBlock?.id, ...result });
   }, [currentBlock?.id]);
 
