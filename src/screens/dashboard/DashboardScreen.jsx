@@ -177,43 +177,20 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
             wirksamer als distale Ziele. "1 Block heute" besser als "8 Blöcke irgendwann".
             ADHS: Ohne Grenze entsteht Either/All-or-Nothing-Denken → Aufschub. */}
         {!allDone && total > 0 && (
-          <div className="lumo-card-reveal" style={{
+          <p className="lumo-card-reveal" style={{
             '--delay': '0.08s',
-            background: 'rgba(212,168,67,0.06)',
-            border: '1px solid rgba(212,168,67,0.18)',
-            borderRadius: '14px',
-            padding: '14px 18px',
-            width: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '14px',
+            fontSize: '13px',
+            color: 'var(--text-secondary)',
+            margin: '0',
+            lineHeight: '1.5',
+            textAlign: 'center',
           }}>
-            <div style={{
-              fontSize: '32px',
-              fontWeight: '800',
-              color: 'var(--gold)',
-              lineHeight: '1',
-              flexShrink: 0,
-              minWidth: '44px',
-              textAlign: 'center',
-            }}>
-              1
-            </div>
-            <div>
-              <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 2px', lineHeight: '1.3' }}>
-                {completed === 0
-                  ? 'Heute reicht ein Block.'
-                  : completed >= 1 && completed < total
-                  ? 'Du hast heute schon geliefert.'
-                  : 'Stark — du bist durch für heute.'}
-              </p>
-              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0', lineHeight: '1.5' }}>
-                {completed === 0
-                  ? `${total} ${total === 1 ? 'Block' : 'Blöcke'} insgesamt — mach so viel du magst. Aber einer ist genug.`
-                  : `${completed} von ${total} erledigt. Jeder weitere Block ist ein Bonus.`}
-              </p>
-            </div>
-          </div>
+            {completed === 0
+              ? `${total} ${total === 1 ? 'Block' : 'Blöcke'} bereit · mach so viel du magst.`
+              : completed >= 1 && completed < total
+              ? `${completed} von ${total} erledigt · jeder weitere Block ist ein Bonus.`
+              : 'Stark — du bist durch für heute.'}
+          </p>
         )}
 
         {(() => {
@@ -493,17 +470,20 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
                   }}
                 >
                   <BlockDot block={b} subjectColor={color} />
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{
-                      fontSize: '16px',
+                      fontSize: '15px',
                       fontWeight: isNext ? '600' : '500',
                       color: 'var(--text-primary)',
-                      marginBottom: '2px',
+                      marginBottom: '4px',
+                      lineHeight: '1.35',
                     }}>
                       {b.title}
                     </div>
-                    <div style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                      {statusLabel(b)}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                        {statusLabel(b)}
+                      </span>
                       {b.difficulty && (
                         <span style={{
                           fontSize: '10px',
@@ -511,10 +491,15 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
                           color: b.difficulty === 'schwer' ? 'var(--amber)' : b.difficulty === 'mittel' ? 'var(--gold)' : 'var(--green)',
                           background: b.difficulty === 'schwer' ? 'var(--amber-soft)' : b.difficulty === 'mittel' ? 'rgba(212,168,67,0.12)' : 'rgba(61,158,110,0.12)',
                           borderRadius: '999px',
-                          padding: '1px 7px',
+                          padding: '2px 8px',
                           letterSpacing: '0.02em',
                         }}>
                           {b.difficulty}
+                        </span>
+                      )}
+                      {b.estimatedMinutes && (
+                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)', opacity: 0.7 }}>
+                          ~{b.estimatedMinutes} Min
                         </span>
                       )}
                     </div>
@@ -554,45 +539,81 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
                     padding: '16px 18px',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '12px',
+                    gap: '14px',
                   }}>
-                    {/* Konzepte falls vorhanden */}
-                    {b.cards?.length > 0 ? (
+                    {/* Subtopics — Was erwartet mich in diesem Block */}
+                    {b.subtopics?.length > 0 && (
                       <div>
                         <p style={{
                           fontSize: '11px',
-                          fontWeight: '700',
-                          letterSpacing: '1px',
+                          fontWeight: '600',
+                          letterSpacing: '0.8px',
+                          textTransform: 'uppercase',
+                          color: 'var(--text-secondary)',
+                          margin: '0 0 10px',
+                        }}>
+                          Themen
+                        </p>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                          {b.subtopics.map((topic, i) => (
+                            <span key={i} style={{
+                              fontSize: '13px',
+                              color: 'var(--text-primary)',
+                              background: 'var(--bg-card-bright)',
+                              border: '1px solid var(--border)',
+                              borderRadius: '8px',
+                              padding: '5px 11px',
+                              lineHeight: '1.3',
+                              fontWeight: '450',
+                            }}>
+                              {topic}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Lernkarten-Konzepte falls Block bereits bearbeitet */}
+                    {b.cards?.length > 0 && (
+                      <div>
+                        <p style={{
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          letterSpacing: '0.8px',
                           textTransform: 'uppercase',
                           color: 'var(--text-secondary)',
                           margin: '0 0 8px',
                         }}>
-                          Themen in diesem Block
+                          Gelernte Konzepte
                         </p>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                           {b.cards.map((card, i) => (
                             <div key={i} style={{
                               display: 'flex',
                               alignItems: 'center',
                               gap: '8px',
-                              fontSize: '14px',
+                              fontSize: '13px',
                               color: 'var(--text-secondary)',
                             }}>
                               <div style={{
-                                width: '6px',
-                                height: '6px',
+                                width: '5px',
+                                height: '5px',
                                 borderRadius: '50%',
                                 background: color,
                                 flexShrink: 0,
+                                opacity: 0.7,
                               }} />
                               {card.concept || card}
                             </div>
                           ))}
                         </div>
                       </div>
-                    ) : (
+                    )}
+
+                    {/* Fallback wenn weder Subtopics noch Cards */}
+                    {!b.subtopics?.length && !b.cards?.length && (
                       <p style={{
-                        fontSize: '14px',
+                        fontSize: '13px',
                         color: 'var(--text-secondary)',
                         margin: '0',
                         fontStyle: 'italic',
