@@ -1733,7 +1733,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                       onClick={handleNext}
                       style={{
                         background: 'none',
-                        border: '1px solid var(--border)',
+                        border: '1px solid rgba(255,255,255,0.2)',
                         borderRadius: '8px',
                         padding: '9px 14px',
                         fontSize: '13px',

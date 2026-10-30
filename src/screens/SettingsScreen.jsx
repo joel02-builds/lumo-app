@@ -82,7 +82,7 @@ export default function SettingsScreen({ onBack, blocksAnalyzedTotal, onShowLega
 
   return (
     <div className="screen" style={{ justifyContent: 'flex-start', paddingTop: '60px' }}>
-      <div className="screen-content" style={{ maxWidth: '480px', gap: '16px', paddingBottom: '40px' }}>
+      <div className="screen-content" style={{ maxWidth: '480px', gap: '16px', paddingBottom: '16px' }}>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
           <button onClick={onBack} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: '14px', cursor: 'pointer' }}>
