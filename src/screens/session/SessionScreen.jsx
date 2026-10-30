@@ -140,22 +140,28 @@ export default function SessionScreen({ block, blocks, flashcards, goalType, spr
 
   if (phase === PHASES.FOCUS_RITUAL) {
     return (
+      // P1-UX-01: onBack={onPause} ermöglicht Nutzer, die Session jederzeit
+      // zu verlassen – auch während des Fokus-Rituals. onPause = RETURN_TO_DASHBOARD.
       <FocusRitualPhase
         onDone={() => setPhase(PHASES.ELABORATION)}
         block={block}
         allBlocks={blocks}
         onMoodSet={setSessionMood}
         sprintMode={sprintMode}
+        onBack={onPause}
       />
     );
   }
 
   if (phase === PHASES.ELABORATION) {
     return (
+      // P1-UX-01: onBack={onPause} für Elaboration – onSkip geht weiter zur
+      // Lernphase, onBack verlässt die Session komplett. Beides nötig.
       <ElaborationPhase
         block={block}
         onDone={() => setPhase(PHASES.CARDS)}
         onSkip={() => setPhase(PHASES.CARDS)}
+        onBack={onPause}
       />
     );
   }

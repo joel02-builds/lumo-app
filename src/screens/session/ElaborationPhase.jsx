@@ -49,7 +49,7 @@ function getElaborationQuestion(blockTitle) {
 
 const MIN_CHARS_FOR_FULL_XP = 20; // Mindest-Zeichen für volle Elaboration
 
-export default function ElaborationPhase({ block, onDone, onSkip }) {
+export default function ElaborationPhase({ block, onDone, onSkip, onBack }) {
   const [answer, setAnswer] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [autoSkipSecs, setAutoSkipSecs] = useState(null);
@@ -107,6 +107,39 @@ export default function ElaborationPhase({ block, onDone, onSkip }) {
 
   return (
     <div className="screen">
+      {/* P1-UX-01: Escape-Hatch – subtile Zurück-Schaltfläche, damit Nutzer
+          jederzeit die Session beenden können. onSkip ≠ onBack:
+          onSkip überspringt nur die Elaboration und startet die Lernphase,
+          onBack kehrt komplett zum Dashboard zurück. */}
+      {onBack && (
+        <button
+          onClick={onBack}
+          aria-label="Zurück zum Dashboard"
+          title="Session beenden"
+          style={{
+            position: 'fixed',
+            top: 'calc(16px + env(safe-area-inset-top, 0px))',
+            left: '16px',
+            background: 'none',
+            border: 'none',
+            color: 'var(--text-secondary)',
+            fontSize: '14px',
+            cursor: 'pointer',
+            padding: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            zIndex: 10,
+            opacity: 0.65,
+          }}
+          onFocus={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.outline = '2px solid var(--gold)'; e.currentTarget.style.outlineOffset = '2px'; }}
+          onBlur={e => { e.currentTarget.style.opacity = '0.65'; e.currentTarget.style.outline = 'none'; }}
+          onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+          onMouseLeave={e => e.currentTarget.style.opacity = '0.65'}
+        >
+          ← Zurück
+        </button>
+      )}
       <div className="screen-content" style={{ gap: '20px', maxWidth: '440px' }}>
 
         <LumoMascot state="thinking" />

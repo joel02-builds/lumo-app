@@ -152,7 +152,7 @@ function BreathPrimer({ onDone, onSkip }) {
   );
 }
 
-export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStats, onMoodSet, sprintMode }) {
+export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStats, onMoodSet, sprintMode, onBack }) {
   // step: 'mood' → 'breath' → 'ready'
   const [step, setStep] = useState('mood');
   const [mood, setMood] = useState(null);
@@ -178,6 +178,39 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
 
   return (
     <div className="screen">
+      {/* P1-UX-01: Escape-Hatch aus der Session – fixed oben links, alle drei Schritte.
+          Evidenz: Nielsen 1994 "User Control and Freedom" – Nutzer brauchen immer
+          einen klar erkennbaren Notausgang. ADHS-spezifisch: Zwang = Abbruch der App,
+          Exit = Vertrauen in das Produkt. Subtle aber jederzeit sichtbar. */}
+      {onBack && (
+        <button
+          onClick={onBack}
+          aria-label="Zurück zum Dashboard"
+          title="Session beenden"
+          style={{
+            position: 'fixed',
+            top: 'calc(16px + env(safe-area-inset-top, 0px))',
+            left: '16px',
+            background: 'none',
+            border: 'none',
+            color: 'var(--text-secondary)',
+            fontSize: '14px',
+            cursor: 'pointer',
+            padding: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            zIndex: 10,
+            opacity: 0.65,
+          }}
+          onFocus={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.outline = '2px solid var(--gold)'; e.currentTarget.style.outlineOffset = '2px'; }}
+          onBlur={e => { e.currentTarget.style.opacity = '0.65'; e.currentTarget.style.outline = 'none'; }}
+          onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+          onMouseLeave={e => e.currentTarget.style.opacity = '0.65'}
+        >
+          ← Zurück
+        </button>
+      )}
       <div className="screen-content" style={{ gap: '20px', maxWidth: '400px', width: '100%' }}>
 
         {step === 'mood' ? (
