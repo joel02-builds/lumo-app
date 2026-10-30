@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { appReducer, createInitialState, SCREENS } from './state/appReducer.js';
 import { lumoApi } from './api/lumo.js';
 import {
@@ -285,6 +285,20 @@ export default function App() {
     dispatch({ type: 'VIEW_PROJECTS' });
   }, [state.blocks.length]);
 
+  // P2-STATE-03: state.projects enthält Snapshots. Wenn ein Block abgeschlossen
+  // wird (BLOCK_FINISHED), aktualisiert der Reducer nur state.blocks, NICHT
+  // state.projects — der Snapshot wird erst bei SAVE_CURRENT_PROJECT gesetzt.
+  // Damit ProjectsScreen immer aktuelle Blockzahlen sieht, mergen wir state.blocks
+  // live für das aktive Projekt ein, ohne den Reducer anzutasten.
+  const projectsForDisplay = useMemo(() => {
+    if (!state.activeProjectId || !state.blocks.length) return state.projects;
+    return state.projects.map(p =>
+      p.id === state.activeProjectId
+        ? { ...p, blocks: state.blocks }
+        : p
+    );
+  }, [state.projects, state.blocks, state.activeProjectId]);
+
   const handleViewSettings = useCallback(() => {
     dispatch({ type: 'VIEW_SETTINGS' });
   }, []);
@@ -486,7 +500,7 @@ export default function App() {
 
       {state.screen === SCREENS.PROJECTS && (
         <ProjectsScreen
-          projects={state.projects}
+          projects={projectsForDisplay}
           onLoad={(id) => dispatch({ type: 'LOAD_PROJECT', payload: id })}
           onNew={handleStartFreshProject}
           onDelete={(id) => dispatch({ type: 'DELETE_PROJECT', payload: id })}

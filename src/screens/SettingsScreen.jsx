@@ -128,7 +128,9 @@ export default function SettingsScreen({ onBack, blocksAnalyzedTotal, onShowLega
         </div>
 
         {message && (
-          <p style={{ fontSize: '13px', color: 'var(--green)', textAlign: 'center', margin: '0' }}>
+          /* P2-UX-11: Erfolgsbestätigung nach Import/Export ist ein
+             Lumo-Brand-Aktionsmoment, kein semantischer Maschinenstatus → gold. */
+          <p style={{ fontSize: '13px', color: 'var(--gold)', textAlign: 'center', margin: '0' }}>
             {message}
           </p>
         )}

@@ -259,7 +259,10 @@ export default function WeakSpotsScreen({ blocks, flashcards, onBack, onStartBlo
             {weakBlocks.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '32px 0' }}>
                 <LumoMascot state="cheer" />
-                <p style={{ color: 'var(--green)', fontWeight: '600', fontSize: '16px', marginTop: '16px' }}>
+                {/* P2-UX-11: LumoMascot cheer + "Keine Lücken" = Lumo-Brand-Celebration-Moment
+                    (nicht semantisch "korrekt/leicht/gemeistert") → gold statt green.
+                    Vgl. "Kopiert!"-Button in LernzettelScreen und FlashcardScreen celebrations. */}
+                <p style={{ color: 'var(--gold)', fontWeight: '600', fontSize: '16px', marginTop: '16px' }}>
                   Keine Lücken. Starke Leistung.
                 </p>
               </div>
