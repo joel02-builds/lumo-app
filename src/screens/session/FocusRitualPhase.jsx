@@ -57,11 +57,11 @@ function BreathPrimer({ onDone, onSkip }) {
     : 1;
 
   const label =
-    breathPhase === 'idle' ? 'Gleich geht\'s los …'
+    breathPhase === 'idle' ? 'Gleich …'
     : breathPhase === 'inhale1' ? 'Einatmen …'
-    : breathPhase === 'inhale2' ? '… nochmal kurz'
-    : breathPhase === 'exhale' ? 'Langsam ausatmen …'
-    : 'Gut.';
+    : breathPhase === 'inhale2' ? '… und noch ein kleines bisschen'
+    : breathPhase === 'exhale' ? 'Ausatmen … ganz langsam'
+    : 'Gut. Bereit.';
 
   return (
     <div style={{
@@ -75,10 +75,10 @@ function BreathPrimer({ onDone, onSkip }) {
       {/* Titel */}
       <div style={{ textAlign: 'center' }}>
         <h1 style={{ fontSize: '20px', marginBottom: '6px', fontFamily: 'inherit', fontStyle: 'normal', fontWeight: '700' }}>
-          Ein Atemzug vor dem Start
+          Einen Moment ankommen.
         </h1>
         <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-          Doppelter Einatem · langer Ausatem · Fokus an.
+          Ein einziger Atemzug — dann bist du bereit.
         </p>
       </div>
 
@@ -492,9 +492,9 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
               onClick={onDone}
               style={{ width: '100%', marginTop: '4px' }}
             >
-              {mood === 'tired' ? 'Trotzdem starten – kurz und einfach'
-               : mood === 'stressed' ? 'Starten – ich halte es übersichtlich'
-               : mood === 'overwhelmed' ? 'Starten – Schritt für Schritt'
+              {mood === 'tired' ? 'Los geht\'s – kurz und einfach'
+               : mood === 'stressed' ? 'Los geht\'s – ich halte es übersichtlich'
+               : mood === 'overwhelmed' ? 'Los geht\'s – Schritt für Schritt'
                : 'Los geht\'s'}
             </button>
 
@@ -509,7 +509,7 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
                 padding: '4px',
               }}
             >
-              Direkt starten – Briefing überspringen
+              Direkt starten
             </button>
           </>
         )}

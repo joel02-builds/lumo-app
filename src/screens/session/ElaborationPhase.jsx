@@ -87,12 +87,12 @@ export default function ElaborationPhase({ block, onDone, onSkip }) {
             <h2 style={{ fontSize: '20px', marginBottom: '8px' }}>
               {hasEnoughText
                 ? 'Gut aktiviert.'
-                : 'Los geht\'s.'}
+                : 'Perfekt.'}
             </h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: '1.5' }}>
               {hasEnoughText
-                ? 'Dein Vorwissen ist jetzt aktiviert – das macht das Lernen leichter.'
-                : 'Das Thema kommt dir beim Lernen bekannter vor.'}
+                ? 'Dein Vorwissen ist aktiviert – das macht das Lernen gleich leichter.'
+                : 'Manchmal reicht es, kurz hinzuschauen. Der Rest kommt beim Lernen.'}
             </p>
           </div>
         </div>
@@ -115,7 +115,7 @@ export default function ElaborationPhase({ block, onDone, onSkip }) {
             color,
             marginBottom: '10px',
           }}>
-            Kurz nachdenken
+            Bevor wir anfangen
           </div>
           <h2 style={{
             fontSize: '20px',
@@ -134,7 +134,7 @@ export default function ElaborationPhase({ block, onDone, onSkip }) {
             rows={4}
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
-            placeholder="Stichworte, Sätze, egal was dir einfällt …"
+            placeholder="Stichworte, halbe Sätze, egal — alles hilft …"
             onKeyDown={(e) => {
               // Cmd/Ctrl+Enter submittiert
               if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
@@ -154,7 +154,7 @@ export default function ElaborationPhase({ block, onDone, onSkip }) {
             textAlign: 'right',
             opacity: 0.6,
           }}>
-            Alles richtig — Ziel ist Aktivierung, kein Test.
+            Kein Test. Kein Richtig oder Falsch. Nur warm werden.
           </p>
         </div>
 
@@ -179,7 +179,7 @@ export default function ElaborationPhase({ block, onDone, onSkip }) {
               transition: 'all 0.2s ease',
             }}
           >
-            {hasSomeText ? 'Weiter →' : 'Einfach mal schauen →'}
+            {hasSomeText ? 'Weiter →' : 'Direkt rein →'}
           </button>
 
           {/* Überspringen — immer sichtbar, aber unaufdringlich */}

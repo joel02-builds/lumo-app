@@ -1858,7 +1858,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                       textDecoration: 'underline',
                     }}
                   >
-                    {mood === 'bad' ? 'Weiter – ist okay' : 'Trotzdem weiter'}
+                    {mood === 'bad' ? 'Weiter – ist okay' : 'Weiter →'}
                   </button>
                 </div>
               )}
