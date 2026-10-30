@@ -72,13 +72,14 @@ export default function OnboardingScreen1({ onNext }) {
   // form state
   const [topic, setTopic] = useState('');
   const [materialText, setMaterialText] = useState('');
-  const [fileName, setFileName] = useState(null);
-  const [fileBase64, setFileBase64] = useState(null);
-  const [fileMediaType, setFileMediaType] = useState(null);
+  const [files, setFiles] = useState([]); // [{ name, base64, mediaType, text }]
   const [dragOver, setDragOver] = useState(false);
   const [fileError, setFileError] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef(null);
+
+  // Computed: has any file loaded?
+  const hasFiles = files.length > 0;
 
   // ── Screen-Transition ──────────────────────────────────────────────────────
   const goTo = useCallback((next) => {
@@ -110,50 +111,68 @@ export default function OnboardingScreen1({ onNext }) {
   };
 
   // ── Form handlers ──────────────────────────────────────────────────────────
-  const handleFile = useCallback(async (file) => {
-    if (!file) return;
-    setFileError('');
+  const processFile = useCallback(async (file) => {
+    if (!file) return null;
     if (file.size > MAX_FILE_SIZE) {
       setFileError('Datei zu groß (max. 25 MB)');
-      return;
+      return null;
     }
     const allowed = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
     if (!allowed.includes(file.type) && !file.name.match(/\.(pdf|docx|txt)$/i)) {
       setFileError('Nur PDF, DOCX oder TXT erlaubt');
-      return;
+      return null;
     }
-    setFileName(file.name);
-    setFileMediaType(file.type || 'application/octet-stream');
     const [b64, txt] = await Promise.all([readFileAsBase64(file), readFileAsText(file).catch(() => '')]);
-    setFileBase64(b64);
-    if (txt) setMaterialText(txt.slice(0, MAX_CHARS));
+    return { name: file.name, base64: b64, mediaType: file.type || 'application/octet-stream', text: txt || '' };
+  }, []);
+
+  const handleFiles = useCallback(async (fileList) => {
+    setFileError('');
+    const fileArray = Array.from(fileList);
+    const results = await Promise.all(fileArray.map(f => processFile(f)));
+    const valid = results.filter(Boolean);
+    if (valid.length > 0) {
+      setFiles(prev => {
+        // Deduplicate by name
+        const existingNames = new Set(prev.map(f => f.name));
+        const newFiles = valid.filter(f => !existingNames.has(f.name));
+        return [...prev, ...newFiles];
+      });
+      // Use text from first text-extractable file if no manual text yet
+      const firstWithText = valid.find(f => f.text);
+      if (firstWithText && !materialText) {
+        setMaterialText(firstWithText.text.slice(0, MAX_CHARS));
+      }
+    }
+  }, [processFile, materialText]);
+
+  const removeFile = useCallback((name) => {
+    setFiles(prev => prev.filter(f => f.name !== name));
   }, []);
 
   const handleDrop = useCallback(async (e) => {
     e.preventDefault();
     setDragOver(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) await handleFile(file);
-  }, [handleFile]);
+    if (e.dataTransfer.files?.length) await handleFiles(e.dataTransfer.files);
+  }, [handleFiles]);
 
   const handleSubmit = async () => {
     if (isProcessing) return;
     const wc = countWords(materialText);
-    if (wc < MIN_WORDS && !fileBase64) {
+    if (wc < MIN_WORDS && !hasFiles) {
       setFileError(`Mindestens ${MIN_WORDS} Wörter nötig (aktuell: ${wc})`);
       return;
     }
     setIsProcessing(true);
-    onNext({ topic, materialText, fileName, fileBase64, fileMediaType });
+    // Send files array + materialText (server handles both)
+    onNext({ topic, materialText, files });
   };
 
   const handleDemo = () => {
     onNext({
       topic: DEMO_MATERIAL.topic,
       materialText: DEMO_MATERIAL.text,
-      fileName: null,
-      fileBase64: null,
-      fileMediaType: null,
+      files: [],
     });
   };
 
@@ -552,11 +571,32 @@ export default function OnboardingScreen1({ onNext }) {
       transition: border-color 150ms, background 150ms;
     }
     .ob-drop-zone.over { border-color: rgba(212,146,74,0.6); background: rgba(212,146,74,0.06); }
-    .ob-drop-zone.has-file { border-color: rgba(212,146,74,0.4); background: rgba(212,146,74,0.06); }
+    .ob-drop-zone.compact { padding: 14px 16px; }
     .ob-drop-icon { font-size: 28px; margin-bottom: 8px; }
+    .ob-drop-zone.compact .ob-drop-icon { font-size: 20px; margin-bottom: 4px; }
     .ob-drop-main { font-size: 14px; font-weight: 500; color: #F0EAE0; margin-bottom: 4px; }
     .ob-drop-sub { font-size: 12px; color: rgba(240,234,224,0.45); }
-    .ob-drop-filename { font-size: 13px; color: #D4924A; font-weight: 600; margin-top: 4px; }
+
+    .ob-file-list {
+      display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px;
+    }
+    .ob-file-item {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(212,146,74,0.08);
+      border: 1px solid rgba(212,146,74,0.25);
+      border-radius: 8px; padding: 8px 10px;
+    }
+    .ob-file-icon { font-size: 15px; flex-shrink: 0; }
+    .ob-file-name {
+      flex: 1; font-size: 13px; font-weight: 500; color: #D4924A;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .ob-file-remove {
+      background: none; border: none; color: rgba(240,234,224,0.45);
+      font-size: 18px; cursor: pointer; padding: 0 2px; line-height: 1;
+      flex-shrink: 0; transition: color 150ms;
+    }
+    .ob-file-remove:hover { color: #F5A0A0; }
     .ob-textarea {
       width: 100%; background: rgba(240,234,224,0.06);
       border: 1px solid rgba(240,234,224,0.14); border-radius: 10px;
@@ -829,37 +869,56 @@ export default function OnboardingScreen1({ onNext }) {
 
         <div>
           <div className="ob-label">DEIN MATERIAL</div>
+
+          {/* File list */}
+          {files.length > 0 && (
+            <div className="ob-file-list">
+              {files.map(f => (
+                <div key={f.name} className="ob-file-item">
+                  <span className="ob-file-icon">📄</span>
+                  <span className="ob-file-name">{f.name}</span>
+                  <button
+                    className="ob-file-remove"
+                    onClick={() => removeFile(f.name)}
+                    aria-label="Datei entfernen"
+                  >×</button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Drop zone — always visible to allow adding more files */}
           <div
-            className={`ob-drop-zone${dragOver ? ' over' : ''}${fileName ? ' has-file' : ''}`}
+            className={`ob-drop-zone${dragOver ? ' over' : ''}${hasFiles ? ' compact' : ''}`}
             onClick={() => fileInputRef.current?.click()}
             onDragOver={e => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
           >
-            <div className="ob-drop-icon">{fileName ? '📄' : '📂'}</div>
-            {fileName ? (
+            <div className="ob-drop-icon">📂</div>
+            {hasFiles ? (
               <>
-                <div className="ob-drop-main">Datei geladen</div>
-                <div className="ob-drop-filename">{fileName}</div>
-                <div className="ob-drop-sub">Tippe um zu ändern</div>
+                <div className="ob-drop-main">Weitere Datei hinzufügen</div>
+                <div className="ob-drop-sub">PDF, DOCX oder TXT · max. 25 MB</div>
               </>
             ) : (
               <>
-                <div className="ob-drop-main">Datei ablegen oder tippen</div>
-                <div className="ob-drop-sub">PDF, DOCX oder TXT · max. 25 MB</div>
+                <div className="ob-drop-main">Dateien ablegen oder tippen</div>
+                <div className="ob-drop-sub">Mehrere PDFs, DOCX oder TXT möglich · max. 25 MB pro Datei</div>
               </>
             )}
           </div>
           <input
             ref={fileInputRef}
             type="file"
+            multiple
             accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
             style={{ display: 'none' }}
-            onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])}
+            onChange={e => e.target.files?.length && handleFiles(e.target.files)}
           />
         </div>
 
-        {!fileName && (
+        {!hasFiles && (
           <div>
             <div className="ob-label">ODER: TEXT EINFÜGEN</div>
             <textarea
@@ -880,7 +939,7 @@ export default function OnboardingScreen1({ onNext }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <button
             className="ob-cta ob-cta-full"
-            disabled={isProcessing || (!materialText.trim() && !fileBase64)}
+            disabled={isProcessing || (!materialText.trim() && !hasFiles)}
             onClick={handleSubmit}
           >
             {isProcessing ? 'Wird analysiert …' : 'Jetzt analysieren →'}

@@ -17,9 +17,8 @@ export const initialState = {
   onboardingStep: 1,
   topic: '',
   materialText: '',
-  fileName: '',
-  fileBase64: '',
-  fileMediaType: '',
+  files: [],       // [{ name, base64, mediaType, text }]
+  fileName: '',    // legacy – keep for backwards compat display
   goalType: null,
   goalDate: '',
   sprintMode: false,   // true wenn Prüfung ≤3 Tage entfernt – aktiviert komprimierten Lernmodus
@@ -123,9 +122,11 @@ export function appReducer(state, action) {
         ...state,
         topic: action.topic,
         materialText: action.materialText,
-        fileName: action.fileName,
-        fileBase64: action.fileBase64,
-        fileMediaType: action.fileMediaType,
+        files: action.files || [],
+        // Legacy: first file's name for display in downstream components
+        fileName: (action.files?.length > 0 ? action.files[0].name : null) || action.fileName || null,
+        fileBase64: action.files?.[0]?.base64 || action.fileBase64 || null,
+        fileMediaType: action.files?.[0]?.mediaType || action.fileMediaType || null,
         onboardingStep: 3,
       };
 

@@ -204,7 +204,7 @@ function sendFriendlyError(res, err) {
 
 app.post('/api/analyze', async (req, res) => {
   try {
-    const { topic, materialText, fileBase64, fileMediaType, goalType, goalDate, sprintMode } = req.body || {};
+    const { topic, materialText, fileBase64, fileMediaType, files: filesArray, goalType, goalDate, sprintMode } = req.body || {};
 
     const goalContext =
       goalType === 'exam'
@@ -214,11 +214,20 @@ app.post('/api/analyze', async (req, res) => {
           : 'Der Nutzer möchte das Thema einfach verstehen, ohne festen Termin.';
 
     const userContent = [];
-    if (fileBase64 && fileMediaType === 'application/pdf') {
-      userContent.push({
-        type: 'document',
-        source: { type: 'base64', media_type: 'application/pdf', data: fileBase64 },
-      });
+
+    // Multi-File: neues `files`-Array (Array von { base64, mediaType, name })
+    // Backward-compatible: Einzeldatei über fileBase64/fileMediaType weiterhin unterstützt
+    const filesToProcess = filesArray?.length
+      ? filesArray
+      : fileBase64 ? [{ base64: fileBase64, mediaType: fileMediaType }] : [];
+
+    for (const f of filesToProcess) {
+      if (f.base64 && f.mediaType === 'application/pdf') {
+        userContent.push({
+          type: 'document',
+          source: { type: 'base64', media_type: 'application/pdf', data: f.base64 },
+        });
+      }
     }
 
     // Begrenzt auf 8000 Zeichen: Render's kostenloser Plan killt Requests nach
@@ -231,10 +240,11 @@ app.post('/api/analyze', async (req, res) => {
         ? `${materialText.slice(0, MAX_MATERIAL_CHARS)}\n[...gekürzt...]`
         : materialText;
 
+    const hasPdfFile = filesToProcess.some(f => f.base64 && f.mediaType === 'application/pdf');
     let textPrompt = `Thema/Titel: ${topic || '(kein Titel angegeben)'}\n${goalContext}`;
     if (trimmedMaterialText && trimmedMaterialText.trim()) {
       textPrompt += `\n\nLernmaterial:\n${trimmedMaterialText}`;
-    } else if (!fileBase64) {
+    } else if (!hasPdfFile) {
       textPrompt += `\n\nEs wurde kein Material hochgeladen. Erstelle die Lernblöcke direkt zum genannten Thema, so wie es üblicherweise in diesem Fachgebiet unterrichtet wird.`;
     }
     userContent.push({ type: 'text', text: textPrompt });

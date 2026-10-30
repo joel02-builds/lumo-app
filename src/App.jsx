@@ -211,8 +211,11 @@ export default function App() {
         const data = await lumoApi.analyzeMaterial({
           topic: state.topic,
           materialText: state.materialText,
-          fileBase64: state.fileBase64,
-          fileMediaType: state.fileMediaType,
+          // Multi-file: send files array; server handles multiple PDFs.
+          // Legacy single-file kept as fallback for older state shape.
+          files: state.files?.length ? state.files : undefined,
+          fileBase64: !state.files?.length ? state.fileBase64 : undefined,
+          fileMediaType: !state.files?.length ? state.fileMediaType : undefined,
           goalType,
           goalDate,
           sprintMode,
@@ -222,7 +225,7 @@ export default function App() {
         dispatch({ type: 'ANALYSIS_ERROR', message: err.message });
       }
     },
-    [state.topic, state.materialText, state.fileBase64, state.fileMediaType]
+    [state.topic, state.materialText, state.files, state.fileBase64, state.fileMediaType]
   );
 
   const handleGoalConfirm = useCallback(
