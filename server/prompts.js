@@ -102,7 +102,8 @@ export const analyzeSchema = {
     },
     totalBlocks: { type: 'integer' },
     recommendedOrder: { type: 'array', items: { type: 'integer' } },
-    subject: { type: 'string' },
+    // P2-BUG-03: minLength:1 verhindert leeren String – das Modell muss ein Fach benennen.
+    subject: { type: 'string', minLength: 1 },
   },
   required: ['blocks', 'totalBlocks', 'recommendedOrder', 'subject'],
   additionalProperties: false,

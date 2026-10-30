@@ -4,6 +4,14 @@ import Button from '../../components/Button.jsx';
 import LernzettelInline from '../../components/LernzettelInline.jsx';
 import { lumoApi } from '../../api/lumo.js';
 
+// P2-CODE-01: Benannte Konstanten statt Magic Numbers.
+const CONFETTI_SECOND_BURST_DELAY_MS = 400;
+
+// P2-BUG-04: Vollständige Pflichtfelder einer Karteikarte.
+// Karten ohne diese Felder werden gefiltert, bevor sie in den State gehen –
+// ein leeres concept/question/answer würde die FlashcardScreen-Darstellung brechen.
+const REQUIRED_FLASHCARD_FIELDS = ['concept', 'question', 'answer', 'hint'];
+
 // Effort-Praise statt Ability-Praise (Dweck 1998):
 // Loben WAS der Nutzer GETAN hat – nicht was er IST.
 // "Du hast durchgehalten" > "Du bist gut"
@@ -52,6 +60,8 @@ export default function BlockCompletePhase({ block, result, cards, onContinue, o
     : [];
   const firedRef = useRef(false);
   const [showLernzettel, setShowLernzettel] = useState(false);
+  // P2-BUG-01: Fehler beim Generieren sichtbar machen statt still schlucken.
+  const [flashcardError, setFlashcardError] = useState(false);
 
   useEffect(() => {
     if (status === 'sicher' || !result?.uncertainPoints?.length) return;
@@ -61,23 +71,36 @@ export default function BlockCompletePhase({ block, result, cards, onContinue, o
       blockContent: block.content,
     }).then(data => {
       if (data?.flashcards?.length) {
-        onAddFlashcards?.(data.flashcards.map((card, i) => ({
-          ...card,
-          // Die vom Modell vergebene id ist nur innerhalb dieses einen Aufrufs
-          // eindeutig (z. B. "1", "2", …) – mit blockId namespacen, sonst würde
-          // ADD_FLASHCARDS eine gleich benannte Karte aus einem anderen Block
-          // fälschlich als Duplikat verwerfen.
-          id: `${block.id}-${card.id || i}`,
-          blockId: block.id,
-          blockTitle: block.title,
-          subject: block.subject,
-          subjectColor: block.subject_color,
-          createdAt: new Date().toISOString(),
-          status: 'new', // new | learning | mastered
-          reviewCount: 0,
-        })));
+        // P2-BUG-04: Nur Karten mit vollständigen Pflichtfeldern übernehmen.
+        // Modell-Antworten können trotz Schema gelegentlich leere Felder enthalten;
+        // eine Karte ohne concept/question/answer würde die Darstellung brechen.
+        const validCards = data.flashcards.filter(card =>
+          REQUIRED_FLASHCARD_FIELDS.every(field => card[field])
+        );
+        if (validCards.length) {
+          onAddFlashcards?.(validCards.map((card, i) => ({
+            ...card,
+            // Die vom Modell vergebene id ist nur innerhalb dieses einen Aufrufs
+            // eindeutig (z. B. "1", "2", …) – mit blockId namespacen, sonst würde
+            // ADD_FLASHCARDS eine gleich benannte Karte aus einem anderen Block
+            // fälschlich als Duplikat verwerfen.
+            id: `${block.id}-${card.id || i}`,
+            blockId: block.id,
+            blockTitle: block.title,
+            subject: block.subject,
+            subjectColor: block.subject_color,
+            createdAt: new Date().toISOString(),
+            status: 'new', // new | learning | mastered
+            reviewCount: 0,
+          })));
+        }
       }
-    }).catch(() => {});
+    }).catch(err => {
+      // P2-BUG-01: Fehler loggen und dem Nutzer dezent anzeigen.
+      // Kein harter Fehler – die Session läuft weiter; Lücken bleiben im Ergebnis sichtbar.
+      console.warn('[Lumo] Flashcard generation failed:', err);
+      setFlashcardError(true);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -95,7 +118,7 @@ export default function BlockCompletePhase({ block, result, cards, onContinue, o
         scalar: 1.1,
       });
 
-      // Zweiter Burst nach kurzer Verzögerung
+      // Zweiter Burst nach kurzer Verzögerung — P2-CODE-01: benannte Konstante
       setTimeout(() => {
         confetti({
           particleCount: 60,
@@ -105,7 +128,7 @@ export default function BlockCompletePhase({ block, result, cards, onContinue, o
           colors: ['#FFE8A0', '#D4A843'],
           scalar: 0.9,
         });
-      }, 400);
+      }, CONFETTI_SECOND_BURST_DELAY_MS);
     } else if (status === 'unsicher') {
       confetti({
         particleCount: 30,
@@ -233,8 +256,13 @@ export default function BlockCompletePhase({ block, result, cards, onContinue, o
           fontStyle: 'italic',
           textAlign: 'center',
           margin: '-4px 0 0',
+          opacity: flashcardError ? 0.7 : 1,
         }}>
-          Lumo erstellt Karteikarten für deine Lücken.
+          {flashcardError
+            // P2-BUG-01: Dezenter Hinweis wenn Karteikarten nicht erstellt werden konnten.
+            // Kein Fehlerblock – Session-Abschluss bleibt das Wichtigste auf dieser Seite.
+            ? 'Karteikarten konnten nicht erstellt werden – Lücken sind oben gespeichert.'
+            : 'Lumo erstellt Karteikarten für deine Lücken.'}
         </p>
       )}
 

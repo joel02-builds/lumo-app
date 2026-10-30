@@ -130,7 +130,10 @@ export function appReducer(state, action) {
         onboardingStep: 3,
       };
 
-    // Screen 2 wurde mit Screen 1 zusammengeführt → Back geht direkt zu Step 1
+    // P2-BUG-02: BACK_TO_STEP2 wird von onboardingStep===3 dispatcht.
+    // Seit Screen 2 mit Screen 1 zusammengeführt wurde (Step 2 existiert nicht mehr
+    // als eigene Render-Kondition in App.jsx), ist die korrekte Ziel-Step hier 1.
+    // Der Action-Name ist historisch; der Reducer-Sprung zu onboardingStep: 1 ist korrekt.
     case 'BACK_TO_STEP2':
       return { ...state, onboardingStep: 1 };
 
@@ -145,9 +148,15 @@ export function appReducer(state, action) {
       };
 
     case 'ANALYSIS_SUCCESS': {
+      // P2-BUG-03: Subject normalisieren – Modell soll lt. Prompt kleingeschrieben
+      // zurückgeben, tut es aber nicht immer. Trim + Lowercase hier sichert, dass
+      // subjectHistory-Vergleiche (strict equality) und subjectColors-Lookups
+      // konsistent funktionieren. Leerer String → null (kein Fach erkannt).
+      const rawSubject = action.data.subject;
+      const normalizedSubject = (rawSubject || '').toLowerCase().trim() || null;
       const blocks = action.data.blocks.map((b) => ({
         ...b,
-        subject: action.data.subject,
+        subject: normalizedSubject,
         status: 'not-started',
         confidence: null,
         goodPoints: [],
@@ -158,19 +167,31 @@ export function appReducer(state, action) {
         Array.isArray(action.data.recommendedOrder) && action.data.recommendedOrder.every((id) => ids.has(id))
           ? action.data.recommendedOrder
           : blocks.map((b) => b.id);
+      // P1-STATE-02: blocksAnalyzedTotal erst bei CONFIRM_MATERIAL erhöhen,
+      // nicht hier – der User könnte noch abbrechen oder neu hochladen.
       return {
         ...state,
         blocks,
         recommendedOrder,
         screen: SCREENS.MATERIAL_CONFIRMATION,
-        blocksAnalyzedTotal: (state.blocksAnalyzedTotal || 0) + blocks.length,
       };
     }
 
     case 'CONFIRM_MATERIAL':
       // Onboarding abgeschlossen → InstallBanner kann auf iOS jetzt erscheinen
       try { localStorage.setItem('lumo_onboarding_done', '1'); } catch {}
-      return { ...state, screen: SCREENS.DASHBOARD };
+      // P1-STATE-02: Zähler erst jetzt erhöhen – User hat Material bestätigt
+      // P2-PERF-01: File-Daten (Base64 etc.) nach Analyse aus dem State entfernen
+      //             – Blöcke sind analysiert, die Rohdaten werden nicht mehr gebraucht
+      return {
+        ...state,
+        screen: SCREENS.DASHBOARD,
+        blocksAnalyzedTotal: (state.blocksAnalyzedTotal || 0) + state.blocks.length,
+        files: [],
+        fileBase64: null,
+        fileMediaType: null,
+        materialText: '',
+      };
 
     case 'UPDATE_BLOCKS_ORDER':
       return {

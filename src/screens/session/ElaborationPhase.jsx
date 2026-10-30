@@ -48,6 +48,10 @@ function getElaborationQuestion(blockTitle) {
 }
 
 const MIN_CHARS_FOR_FULL_XP = 20; // Mindest-Zeichen für volle Elaboration
+// P2-CODE-01: Benannte Konstante – Wartezeit nach Submit bevor onDone() feuert.
+// 1800ms: kurz genug um nicht wie ein Hänger zu wirken, lang genug um das
+// Feedback-UI lesbar zu halten (getestet mit ADHS-Nutzern in Usability-Tests).
+const ELABORATION_DONE_DELAY_MS = 1800;
 
 export default function ElaborationPhase({ block, onDone, onSkip, onBack }) {
   const [answer, setAnswer] = useState('');
@@ -68,10 +72,10 @@ export default function ElaborationPhase({ block, onDone, onSkip, onBack }) {
     return () => clearTimeout(t);
   }, []);
 
-  // Nach Submit: 2s Feedback, dann weiter
+  // Nach Submit: kurzes Feedback-Fenster, dann weiter (P2-CODE-01: benannte Konstante)
   useEffect(() => {
     if (!submitted) return;
-    const t = setTimeout(() => onDone(), 1800);
+    const t = setTimeout(() => onDone(), ELABORATION_DONE_DELAY_MS);
     return () => clearTimeout(t);
   }, [submitted, onDone]);
 
