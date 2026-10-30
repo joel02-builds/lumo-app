@@ -60,6 +60,11 @@ export default function ConceptMap({ nodes, edges, color }) {
   // Drag State
   const dragRef = useRef(null); // { nodeId, startX, startY, origX, origY }
   const [focusId, setFocusId] = useState(null); // angeklickter Node
+  // P2-UX-09: touchAction nur während aktivem Drag deaktivieren.
+  // Hardcode 'none' blockiert auf iOS das normale Seiten-Scrollen — Nutzer
+  // können die Seite dann gar nicht mehr scrollen, wenn die Map sichtbar ist.
+  // Lösung: 'pan-y' erlaubt vertikalen Scroll; erst beim Drag → 'none'.
+  const [isDragging, setIsDragging] = useState(false);
 
   if (!nodes?.length) return null;
 
@@ -90,6 +95,7 @@ export default function ConceptMap({ nodes, edges, color }) {
       origY: positions[nodeId].y,
       moved: false,
     };
+    setIsDragging(true);
     svgRef.current?.setPointerCapture?.(e.pointerId);
   }
 
@@ -114,6 +120,7 @@ export default function ConceptMap({ nodes, edges, color }) {
     if (!dragRef.current) return;
     const wasDrag = dragRef.current.moved;
     dragRef.current = null;
+    setIsDragging(false);
     // Wenn nicht bewegt → Tap → Toggle focus
     if (!wasDrag) {
       setFocusId(prev => prev === nodeId ? null : nodeId);
@@ -122,6 +129,7 @@ export default function ConceptMap({ nodes, edges, color }) {
 
   function onPointerCancel() {
     dragRef.current = null;
+    setIsDragging(false);
   }
 
   const centerNode = nodes.find(n => n.isCenter) || nodes[0];
@@ -134,7 +142,8 @@ export default function ConceptMap({ nodes, edges, color }) {
         style={{
           width: '100%',
           maxHeight: '300px',
-          touchAction: 'none', // verhindert Scroll beim Drag auf Touch
+          // P2-UX-09: Nur während aktivem Drag 'none' → iOS-Scroll bleibt erhalten
+          touchAction: isDragging ? 'none' : 'pan-y',
           cursor: 'default',
           userSelect: 'none',
         }}
@@ -144,6 +153,7 @@ export default function ConceptMap({ nodes, edges, color }) {
           // Falls Drag auf SVG-Ebene endet (außerhalb Node)
           if (dragRef.current) {
             dragRef.current = null;
+            setIsDragging(false);
           }
         }}
         onPointerCancel={onPointerCancel}

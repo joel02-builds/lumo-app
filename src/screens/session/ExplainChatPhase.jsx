@@ -208,6 +208,29 @@ export default function ExplainChatPhase({ block, depth, onDone, onExit }) {
           margin: '0 auto',
         }}
       >
+        {/* P2-UX-03/05: Leerer Chat-Log während Initial-Load wirkt wie ein Fehler.
+            Placeholder zeigt, dass Lumo bereits aktiv ist – kein leeres UI. */}
+        {loading && messages.length === 0 && (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'flex-start',
+            animation: 'fadeIn 0.5s ease 0.2s both',
+          }}>
+            <div style={{
+              maxWidth: '85%',
+              padding: '14px 18px',
+              borderRadius: '4px 18px 18px 18px',
+              background: 'var(--bg-card)',
+              fontSize: '15px',
+              color: 'var(--text-secondary)',
+              fontStyle: 'italic',
+              opacity: 0.6,
+            }}>
+              Lumo liest deinen Block …
+            </div>
+          </div>
+        )}
+
         {messages.map((m, i) => (
           <div
             key={i}
@@ -435,6 +458,10 @@ export default function ExplainChatPhase({ block, depth, onDone, onExit }) {
         @keyframes lumo-pulse {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.5; }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </div>

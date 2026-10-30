@@ -252,7 +252,11 @@ VERBOTEN:
 - Lob das nichts über den Prozess aussagt.
 
 Der summaryText ist ein warmer, kurzer Satz (maximal 2 Sätze) direkt an den Nutzer, der die Bewertung einordnet.
-Sei niemals entmutigend, auch bei großen Lücken – bleib ermutigend und prozessorientiert.`;
+Sei niemals entmutigend, auch bei großen Lücken – bleib ermutigend und prozessorientiert.
+
+Gib außerdem eine kurze sampleAnswer (2-3 Sätze) – eine kompakte Erklärung wie eine gute Antwort auf diesen Block hätte klingen können.
+Ton: lehrend, nicht wertend. Kein "Die richtige Antwort wäre..." – direkt erklärend, als würde Lumo einem Freund die Kernidee auf den Punkt bringen.
+Die sampleAnswer zeigt dem Nutzer, wie er es hätte formulieren können – nicht als Kritik, sondern als Orientierung.`;
 
 export const evaluateUnderstandingSchema = {
   type: 'object',
@@ -261,8 +265,11 @@ export const evaluateUnderstandingSchema = {
     goodPoints: { type: 'array', items: { type: 'string' } },
     uncertainPoints: { type: 'array', items: { type: 'string' } },
     summaryText: { type: 'string' },
+    // P2-UX-04: Musterantwort — zeigt dem Nutzer nach der Bewertung wie eine gute Erklärung
+    // hätte klingen können. Opt-in (Accordion) um Ablenkung vor Ergebnis zu vermeiden.
+    sampleAnswer: { type: 'string' },
   },
-  required: ['status', 'goodPoints', 'uncertainPoints', 'summaryText'],
+  required: ['status', 'goodPoints', 'uncertainPoints', 'summaryText', 'sampleAnswer'],
   additionalProperties: false,
 };
 

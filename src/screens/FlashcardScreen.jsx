@@ -892,7 +892,9 @@ export default function FlashcardScreen({ flashcards, onUpdateFlashcard, onRemov
         ) : !subjectTransition ? (
           <div style={{ textAlign: 'center', padding: '40px 0' }}>
             <LumoMascot state="cheer" />
-            <p style={{ color: 'var(--green)', fontWeight: '600', fontSize: '16px', marginTop: '16px' }}>
+            {/* P2-UX-11: Celebration ist ein Lumo-Moment → gold.
+                Green bleibt semantisch (Leicht/Gemeistert/Retention-Anzeige). */}
+            <p style={{ color: 'var(--gold)', fontWeight: '600', fontSize: '16px', marginTop: '16px' }}>
               Alle Karten in dieser Kategorie erledigt!
             </p>
             <button onClick={startNewSession} style={{

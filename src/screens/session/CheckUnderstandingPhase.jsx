@@ -16,6 +16,8 @@ export default function CheckUnderstandingPhase({ block, onDone, onExit }) {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [failedAction, setFailedAction] = useState(null); // 'submit' | 'hint'
+  // P2-UX-04: Musterantwort — opt-in Accordion nach Ergebnis
+  const [showSampleAnswer, setShowSampleAnswer] = useState(false);
 
   async function handleSubmit() {
     if (!answer.trim() || submitting || hintLoading) return;
@@ -113,6 +115,66 @@ export default function CheckUnderstandingPhase({ block, onDone, onExit }) {
             </div>
           )}
 
+          {/* P2-UX-04: Musterantwort — opt-in Accordion. Zeigt wie eine gute Erklärung
+              hätte klingen können. Nicht als Kritik – als Orientierung. Barkley 2011:
+              Unmittelbares Vergleichs-Feedback verankert Konzepte besser als
+              reines Aufzählen von Lücken. */}
+          {result.sampleAnswer && (
+            <div style={{ width: '100%' }}>
+              <button
+                onClick={() => setShowSampleAnswer(v => !v)}
+                style={{
+                  width: '100%',
+                  background: 'var(--bg-card)',
+                  color: 'var(--text-secondary)',
+                  border: '1.5px solid rgba(255,255,255,0.15)',
+                  borderRadius: '12px',
+                  padding: '12px 16px',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                <span style={{ fontSize: '12px' }}>{showSampleAnswer ? '▾' : '▸'}</span>
+                So hätte ich es erklärt
+              </button>
+              {showSampleAnswer && (
+                <div style={{
+                  marginTop: '8px',
+                  padding: '14px 18px',
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border)',
+                  borderLeft: '3px solid var(--gold)',
+                  borderRadius: '12px',
+                  animation: 'fadeIn 0.25s ease',
+                }}>
+                  <p style={{
+                    fontSize: '11px',
+                    fontWeight: '700',
+                    color: 'var(--gold)',
+                    margin: '0 0 8px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '1px',
+                  }}>
+                    Musterantwort
+                  </p>
+                  <p style={{
+                    fontSize: '14px',
+                    color: 'var(--text-secondary)',
+                    margin: '0',
+                    lineHeight: '1.6',
+                  }}>
+                    {result.sampleAnswer}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
           <button
             onClick={() => onDone(result)}
             style={{
@@ -131,6 +193,12 @@ export default function CheckUnderstandingPhase({ block, onDone, onExit }) {
             {result.status === 'sicher' ? 'Weiter →' : 'Verstanden, weiter'}
           </button>
         </div>
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
       </div>
     );
   }

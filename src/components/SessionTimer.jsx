@@ -72,6 +72,9 @@ export default function SessionTimer({ seconds, totalCards, completedCards, esti
         gap: '2px',
       }}>
         {/* Hauptzeile: Zeit + optionaler Kontext */}
+        {/* P2-UX-07: sanfte Puls-Animation bei langen Sessions (≥20 Min).
+            Kein Countdown-Druck — nur ein weiches "Du bist schon länger hier"-Signal.
+            ADHS-safe: 2.5s Intervall, opacity 0.65 → 1 (kein agressives Blinken). */}
         <span style={{
           fontSize: '11px',
           color: isLong ? 'var(--gold)' : 'var(--text-secondary)',
@@ -79,9 +82,16 @@ export default function SessionTimer({ seconds, totalCards, completedCards, esti
           fontWeight: isLong ? '600' : '400',
           transition: 'color 3s ease',
           whiteSpace: 'nowrap',
+          animation: isLong ? 'lumo-timer-pulse 2.5s ease-in-out infinite' : 'none',
         }}>
           {minutes < 1 ? 'gestartet' : `${timeLabel} dabei`}
         </span>
+        <style>{`
+          @keyframes lumo-timer-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.65; }
+          }
+        `}</style>
 
         {/* Kontext-Zeile (nur wenn sinnvoll) */}
         {contextLabel && (

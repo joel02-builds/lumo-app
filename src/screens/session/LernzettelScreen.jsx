@@ -124,7 +124,9 @@ export default function LernzettelScreen({ block, cards, goalType, onDone, subje
           padding: '20px 24px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '18px',
+          // P2-UX-08: 18px → 12px — weniger visueller Abstand zwischen Punkten
+          // macht den Zettel kompakter und leichter zu scannen (Gestalt: Nähe).
+          gap: '12px',
         }}>
           {lernzettel?.points.map((point, i) => (
             <div key={i} style={{
@@ -201,9 +203,11 @@ export default function LernzettelScreen({ block, cards, goalType, onDone, subje
               onClick={handleCopy}
               style={{
                 flex: 1,
-                background: copied ? 'var(--green)' : 'var(--bg-card)',
-                color: copied ? 'white' : 'var(--text-secondary)',
-                border: `1px solid ${copied ? 'var(--green)' : 'var(--border)'}`,
+                // P2-UX-11: "Kopiert!" ist ein Lumo-Moment (Bestätigung/Celebration),
+                // kein semantischer Erfolg → gold statt green.
+                background: copied ? 'var(--gold)' : 'var(--bg-card)',
+                color: copied ? '#1a1206' : 'var(--text-secondary)',
+                border: `1px solid ${copied ? 'var(--gold)' : 'var(--border)'}`,
                 borderRadius: '12px',
                 padding: '13px',
                 fontSize: '14px',
