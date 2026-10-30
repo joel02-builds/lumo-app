@@ -2,10 +2,10 @@
   /* Dynamische Viewport-Höhe — wird per JS aktualisiert wenn Tastatur erscheint.
      Fallback: 100dvh (iOS 15.4+), dann 100vh für ältere Browser. */
   --dvh: 100dvh;
-  --bg: #0E0C09;
-  --bg-elevated: #161310;
-  --bg-card: #1C1814;
-  --bg-card-bright: #231F1A;
+  --bg: #0A0806;
+  --bg-elevated: #141210;
+  --bg-card: #1A1612;
+  --bg-card-bright: #201C17;
   --gold: #D4A843;
   --gold-soft: rgba(212, 168, 67, 0.12);
   --gold-light: #FFE8A0;
@@ -22,14 +22,21 @@
      deutlich wahrnehmbar aber kein Notfall-Rot (ADHS-Trigger-safe) */
   --amber: #C47A2B;
   --amber-soft: rgba(196, 122, 43, 0.12);
-  --border: rgba(255, 255, 255, 0.08);
+  --border: rgba(255, 255, 255, 0.07);
   --border-gold: rgba(212, 168, 67, 0.22);
-  --input-bg: #131E24;
+  --input-bg: #0F1A20;
   --input-border: rgba(212, 168, 67, 0.25);
   /* Tiefe / Layering */
-  --shadow-card: 0 2px 12px rgba(0,0,0,0.35), 0 1px 3px rgba(0,0,0,0.25);
-  --shadow-elevated: 0 8px 40px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3);
-  --shadow-gold: 0 4px 24px rgba(212, 168, 67, 0.28), 0 2px 8px rgba(212, 168, 67, 0.15);
+  --shadow-card: 0 2px 16px rgba(0,0,0,0.45), 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-elevated: 0 8px 48px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.35);
+  --shadow-gold: 0 4px 28px rgba(212, 168, 67, 0.35), 0 2px 10px rgba(212, 168, 67, 0.18);
+  /* Glow-System — FluxEdit-style Tiefe, Lumo-Palette
+     Ebene 1: zentraler Haupt-Glow (warm Gold, aus der Mitte)
+     Ebene 2: oberer Ambient-Layer (weicher Goldschimmer am Top)
+     Ebene 3: untere Vignette (noch dunklere Ecken für echte Tiefe) */
+  --glow-center: radial-gradient(ellipse 70% 55% at 50% 50%, rgba(212, 168, 67, 0.07) 0%, rgba(212, 168, 67, 0.02) 40%, transparent 70%);
+  --glow-top: radial-gradient(ellipse 90% 40% at 50% 0%, rgba(212, 168, 67, 0.09) 0%, rgba(212, 168, 67, 0.03) 50%, transparent 75%);
+  --glow-vignette: radial-gradient(ellipse 100% 100% at 50% 50%, transparent 50%, rgba(0,0,0,0.35) 100%);
 }
 
 * {
@@ -134,9 +141,15 @@ input::placeholder {
   justify-content: center;
   padding: 48px 24px;
   animation: lumo-screen-fade-in 220ms ease-in-out;
-  /* Subtile Tiefe: warmes Leuchten aus der Mitte statt flachem Hintergrund */
+  /* Dreischichtiges Glow-System — FluxEdit-style Tiefe in Lumo-Palette.
+     Layer 1 (oben):  Starker ambientier Top-Glow — zieht Blick nach oben
+     Layer 2 (Mitte): Zentraler Warmton-Schimmer — gibt dem Screen Körper
+     Layer 3 (unten): Dunkle Eck-Vignette — lässt Content "schweben"
+     ADHS-sicher: kein Animation, kein Flackern, nur ruhige Tiefe */
   background:
-    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(212, 168, 67, 0.045) 0%, transparent 70%),
+    radial-gradient(ellipse 100% 45% at 50% 0%, rgba(212, 168, 67, 0.11) 0%, rgba(212, 168, 67, 0.04) 55%, transparent 80%),
+    radial-gradient(ellipse 65% 50% at 50% 45%, rgba(212, 168, 67, 0.055) 0%, transparent 65%),
+    radial-gradient(ellipse 100% 100% at 50% 100%, rgba(0,0,0,0.3) 0%, transparent 60%),
     var(--bg);
 }
 
