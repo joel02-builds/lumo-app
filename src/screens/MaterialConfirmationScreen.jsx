@@ -17,7 +17,7 @@ const SUBJECT_LABELS = {
   jura: 'Jura',
 };
 
-export default function AnalysisResultScreen({ blocks, totalBlocks, recommendedOrder, onStart, onReanalyze, subject }) {
+export default function AnalysisResultScreen({ blocks, totalBlocks, recommendedOrder, onStart, onReanalyze, subject, onStartBlock }) {
   const subjectColor = getSubjectColor(subject);
   const [selectedColor, setSelectedColor] = useState(null);
   const [editMode, setEditMode] = useState(false);
@@ -94,30 +94,17 @@ export default function AnalysisResultScreen({ blocks, totalBlocks, recommendedO
               Farbe für dieses Fach
             </p>
           </div>
-          {/* Gap 1: Explizites "X Blöcke bereit" mit normalisierendem Framing.
-              Konkurrenz zeigt nur eine Block-Liste – kein Gefühl für Machbarkeit.
-              Wir kommunizieren aktiv: "Das schaffst du." */}
-          <div style={{
-            background: 'rgba(212,168,67,0.08)',
-            border: '1px solid rgba(212,168,67,0.25)',
-            borderRadius: '16px',
-            padding: '16px 20px',
-            marginBottom: '4px',
-          }}>
-            <div style={{ fontSize: '36px', fontWeight: '800', color: 'var(--gold)', lineHeight: '1.1', marginBottom: '4px' }}>
-              {totalBlocks} {totalBlocks === 1 ? 'Block' : 'Blöcke'} bereit
-            </div>
-            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: '0', lineHeight: '1.5' }}>
-              {totalBlocks === 1
-                ? 'Einer reicht. Fang einfach an.'
-                : totalBlocks <= 3
-                ? `${difficultyLabel} — das schaffst du locker.`
-                : `${difficultyLabel} · mach so viel du magst.`}
-            </p>
-          </div>
-          <h1 style={{ fontSize: '22px', marginBottom: '0', lineHeight: '1.2' }}>
+          <h1 style={{ fontSize: '22px', marginBottom: '4px', lineHeight: '1.2' }}>
             Lumo hat alles vorbereitet.
           </h1>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0', lineHeight: '1.5' }}>
+            {totalBlocks} {totalBlocks === 1 ? 'Block' : 'Blöcke'} ·{' '}
+            {totalBlocks === 1
+              ? 'Fang einfach an.'
+              : totalBlocks <= 3
+              ? `${difficultyLabel} — das schaffst du locker.`
+              : `mach so viel du magst.`}
+          </p>
         </div>
 
         <button
@@ -229,90 +216,139 @@ export default function AnalysisResultScreen({ blocks, totalBlocks, recommendedO
             flexDirection: 'column',
             gap: '8px',
           }}>
-            {editedBlocks.map((b, i) => (
-              <div key={b.id} style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '12px 16px',
-                background: 'var(--bg-card)',
-                borderRadius: '12px',
-                border: '1px solid var(--border)',
-                borderLeft: i === 0 ? `3px solid ${activeColor}` : '1px solid var(--border)',
-              }}>
-                <div style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: i === 0 ? activeColor : 'var(--bg-card-bright)',
-                  color: i === 0 ? '#1a1206' : 'var(--text-secondary)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '12px',
-                  fontWeight: '700',
-                  flexShrink: 0,
+            {editedBlocks.map((b, i) => {
+              const isFirst = i === 0;
+              return (
+                <div key={b.id} style={{
+                  background: 'var(--bg-card)',
+                  borderRadius: '14px',
+                  border: `1px solid ${isFirst ? activeColor + '55' : 'var(--border)'}`,
+                  borderLeft: isFirst ? `3px solid ${activeColor}` : `1px solid var(--border)`,
+                  overflow: 'hidden',
                 }}>
-                  {i + 1}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
+                  {/* Block-Inhalt */}
                   <div style={{
-                    fontSize: '15px',
-                    fontWeight: i === 0 ? '600' : '400',
-                    color: 'var(--text-primary)',
-                    marginBottom: b.subtopics?.length ? '6px' : '0',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '12px',
+                    padding: '12px 14px 10px',
                   }}>
-                    {b.title}
-                  </div>
-                  {/* Subtopics — zeigen was den Nutzer erwartet */}
-                  {b.subtopics?.length > 0 && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '6px' }}>
-                      {b.subtopics.map((s, si) => (
-                        <span key={si} style={{
-                          fontSize: '11px',
-                          color: 'var(--text-secondary)',
-                          background: 'var(--bg-elevated)',
-                          border: '1px solid var(--border)',
-                          borderRadius: '999px',
-                          padding: '2px 7px',
-                          whiteSpace: 'nowrap',
-                        }}>
-                          {s}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  <div>
-                    <span style={{
-                      fontSize: '11px',
+                    <div style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      background: isFirst ? activeColor : 'var(--bg-card-bright)',
+                      color: isFirst ? '#1a1206' : 'var(--text-secondary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '12px',
                       fontWeight: '700',
-                      color: b.difficulty === 'schwer' ? 'var(--amber)' : b.difficulty === 'mittel' ? 'var(--gold)' : 'var(--green)',
-                      background: b.difficulty === 'schwer' ? 'var(--amber-soft)' : b.difficulty === 'mittel' ? 'rgba(212,168,67,0.12)' : 'rgba(61,158,110,0.12)',
-                      borderRadius: '999px',
-                      padding: '2px 8px',
-                      letterSpacing: '0.02em',
+                      flexShrink: 0,
+                      marginTop: '1px',
                     }}>
-                      {b.difficulty}
-                    </span>
-                    {b.estimatedMinutes && (
-                      <span style={{
-                        fontSize: '11px',
-                        color: 'var(--text-secondary)',
-                        marginLeft: '6px',
+                      {i + 1}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{
+                        fontSize: '15px',
+                        fontWeight: isFirst ? '600' : '500',
+                        color: 'var(--text-primary)',
+                        lineHeight: '1.35',
+                        marginBottom: b.subtopics?.length ? '7px' : '4px',
                       }}>
-                        ~{b.estimatedMinutes} Min
-                      </span>
-                    )}
+                        {b.title}
+                      </div>
+                      {/* Subtopics */}
+                      {b.subtopics?.length > 0 && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '6px' }}>
+                          {b.subtopics.map((s, si) => (
+                            <span key={si} style={{
+                              fontSize: '11px',
+                              color: 'var(--text-secondary)',
+                              background: 'var(--bg-elevated)',
+                              border: '1px solid var(--border)',
+                              borderRadius: '999px',
+                              padding: '2px 7px',
+                              whiteSpace: 'nowrap',
+                            }}>
+                              {s}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {/* Difficulty + Zeit */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {b.difficulty && (
+                          <span style={{
+                            fontSize: '10px',
+                            fontWeight: '700',
+                            color: b.difficulty === 'schwer' ? 'var(--amber)' : b.difficulty === 'mittel' ? 'var(--gold)' : 'var(--green)',
+                            background: b.difficulty === 'schwer' ? 'var(--amber-soft)' : b.difficulty === 'mittel' ? 'rgba(212,168,67,0.12)' : 'rgba(61,158,110,0.12)',
+                            borderRadius: '999px',
+                            padding: '2px 7px',
+                            letterSpacing: '0.02em',
+                          }}>
+                            {b.difficulty}
+                          </span>
+                        )}
+                        {b.estimatedMinutes && (
+                          <span style={{ fontSize: '11px', color: 'var(--text-secondary)', opacity: 0.7 }}>
+                            ~{b.estimatedMinutes} Min
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Direkt-Starten Button */}
+                  {onStartBlock && (
+                    <button
+                      onClick={() => onStartBlock(b.id)}
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        background: isFirst ? `${activeColor}18` : 'transparent',
+                        border: 'none',
+                        borderTop: `1px solid ${isFirst ? activeColor + '33' : 'var(--border)'}`,
+                        color: isFirst ? activeColor : 'var(--text-secondary)',
+                        fontSize: '13px',
+                        fontWeight: isFirst ? '600' : '500',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '8px',
+                      }}
+                    >
+                      <span>{isFirst ? 'Jetzt starten' : 'Diesen Block starten'}</span>
+                      <span style={{ fontSize: '16px', opacity: 0.7 }}>→</span>
+                    </button>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
-        <Button onClick={() => onStart({ subject, color: selectedColor || subjectColor, blocks: editedBlocks })} style={{ width: '100%' }}>
-          Jetzt starten
-        </Button>
+        {/* Sekundär: alle Blöcke im Dashboard ansehen */}
+        <button
+          onClick={() => onStart({ subject, color: selectedColor || subjectColor, blocks: editedBlocks })}
+          style={{
+            width: '100%',
+            padding: '12px 20px',
+            background: 'var(--bg-card)',
+            border: '1px solid rgba(255,255,255,0.12)',
+            borderRadius: '14px',
+            color: 'var(--text-secondary)',
+            fontSize: '14px',
+            fontWeight: '500',
+            cursor: 'pointer',
+          }}
+        >
+          Alle Blöcke ansehen →
+        </button>
 
         <button
           onClick={onReanalyze}
@@ -323,6 +359,7 @@ export default function AnalysisResultScreen({ blocks, totalBlocks, recommendedO
             fontSize: '13px',
             cursor: 'pointer',
             textDecoration: 'underline',
+            opacity: 0.6,
           }}
         >
           Neu analysieren

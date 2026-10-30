@@ -444,6 +444,7 @@ export default function App() {
           subject={state.blocks[0]?.subject}
           onStart={handleStart}
           onReanalyze={() => runAnalysis(state.goalType, state.goalDate)}
+          onStartBlock={(blockId) => dispatch({ type: 'START_BLOCK', blockId })}
         />
       )}
 
