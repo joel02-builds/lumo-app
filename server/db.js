@@ -21,23 +21,76 @@
  */
 
 import Database from 'better-sqlite3';
+import { accessSync, constants } from 'node:fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { randomUUID } from 'crypto';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// In Production: persistenter Pfad (Railway Volume oder /data)
-// Lokal: im Server-Ordner selbst
-const DB_DIR = process.env.DB_PATH || __dirname;
-const DB_FILE = path.join(DB_DIR, 'lumo.db');
+// Erkennt Railway-Deployment zuverlässig auch ohne NODE_ENV=production.
+// RAILWAY_ENVIRONMENT ist eine Plattform-Variable, die Railway vor dem ersten
+// Prozess-Byte setzt – daher sicher auf Modul-Ebene auswertbar (vor dotenv).
+const IS_RAILWAY = Boolean(process.env.RAILWAY_ENVIRONMENT);
 
 let db;
 
 export function initDB() {
+  // ── 1. DB-Verzeichnis auflösen ────────────────────────────────────────────
+  // Pfad-Priorität: expliziter Override › Railway-Volume-Auto-Variable › lokales Dev
+  //
+  // DB_PATH und RAILWAY_VOLUME_MOUNT_PATH werden hier (nach dem dotenv-Load in
+  // server/index.js) ausgewertet, nicht auf Modul-Ebene – damit lokale .env-
+  // Overrides greifen, auch wenn db.js vor dem dotenv-Import geladen wird.
+  const dbDir = process.env.DB_PATH
+    || process.env.RAILWAY_VOLUME_MOUNT_PATH
+    || __dirname;
+  const dbFile = path.join(dbDir, 'lumo.db');
+
+  // ── 2. Sicherheitsprüfung: kein stiller Fallback auf ephemeres Verzeichnis ─
+  // Auf Railway muss immer ein persistentes Volume gemountet sein. Fehlen beide
+  // Variablen, läge die DB im flüchtigen Container-Dateisystem – jeder Deploy
+  // würde alle Nutzerdaten löschen. Deshalb harter Abbruch statt stillem Fallback.
+  if (IS_RAILWAY && !process.env.DB_PATH && !process.env.RAILWAY_VOLUME_MOUNT_PATH) {
+    console.error('[DB] FATAL: Kein persistentes Volume konfiguriert.');
+    console.error('[DB] Auf Railway muss ein Volume gemountet sein, damit Nutzerdaten');
+    console.error('[DB] Deploys überleben. Anleitung:');
+    console.error('[DB]   Railway Dashboard → Service → "Add Volume" → Mount Path: /data');
+    console.error('[DB] Nach dem Mounten setzt Railway RAILWAY_VOLUME_MOUNT_PATH automatisch.');
+    process.exit(1);
+  }
+
+  // ── 3. Verzeichnis-Prüfung: existiert und ist beschreibbar? ───────────────
   try {
-    db = new Database(DB_FILE);
-    db.pragma('journal_mode = WAL'); // bessere Concurrent-Read-Performance
+    accessSync(dbDir, constants.W_OK);
+  } catch (dirErr) {
+    console.error(`[DB] FATAL: Datenbankverzeichnis nicht zugänglich (${dirErr.code}).`);
+    console.error('[DB] Das Verzeichnis muss existieren und vom Prozess beschreibbar sein.');
+    if (IS_RAILWAY) {
+      // Auf Railway gibt es keinen sinnvollen Fallback — harter Abbruch.
+      process.exit(1);
+    }
+    // Lokal: graceful degradation, App läuft mit localStorage-only Fallback weiter.
+    return false;
+  }
+
+  // ── 4. Datenbank öffnen ───────────────────────────────────────────────────
+  try {
+    db = new Database(dbFile);
+
+    // WAL-Modus: bessere Concurrent-Read-Performance.
+    // WAL-Dateien (.db-shm, .db-wal) liegen automatisch im selben Verzeichnis
+    // wie die Hauptdatei – auf einem Railway-Volume sind alle drei persistent
+    // und überleben Deploys.
+    //
+    // ⚠️  SQLite + mehrere Server-Instanzen:
+    //     SQLite erlaubt beliebig viele gleichzeitige Leser, aber nur einen
+    //     Writer pro Prozess. Railway-Volumes können nicht von mehreren Replikas
+    //     gleichzeitig gemountet werden (Railway-Doku: "Replicas can't be used
+    //     with volumes"). Lumo nutzt genau eine Instanz → kein Multi-Writer-
+    //     Problem. Sollte Lumo je horizontal skaliert werden, muss die Persistenz
+    //     auf PostgreSQL oder einen externen Key-Value-Store migriert werden.
+    db.pragma('journal_mode = WAL');
     db.pragma('synchronous = NORMAL'); // sicherer als OFF, schneller als FULL
 
     db.exec(`
@@ -55,7 +108,8 @@ export function initDB() {
       );
     `);
 
-    console.log('[DB] SQLite initialisiert:', DB_FILE);
+    console.log('[DB] SQLite initialisiert:', dbFile);
+    console.log('[DB] Persistenz:', IS_RAILWAY ? 'Railway Volume ✓' : 'lokal (Entwicklung)');
     return true;
   } catch (err) {
     console.error('[DB] Fehler beim Initialisieren:', err.message);

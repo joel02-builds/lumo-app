@@ -4,3 +4,9 @@ dist
 server/.env
 *.local
 .DS_Store
+
+# SQLite-Datenbankdateien — nie committen.
+# WAL-Modus erzeugt drei Dateien: .db, .db-shm (Shared Memory), .db-wal (Write-Ahead Log).
+*.db
+*.db-shm
+*.db-wal
