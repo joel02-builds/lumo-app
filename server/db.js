@@ -29,9 +29,29 @@ import { randomUUID } from 'crypto';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Erkennt Railway-Deployment zuverlässig auch ohne NODE_ENV=production.
-// RAILWAY_ENVIRONMENT ist eine Plattform-Variable, die Railway vor dem ersten
-// Prozess-Byte setzt – daher sicher auf Modul-Ebene auswertbar (vor dotenv).
-const IS_RAILWAY = Boolean(process.env.RAILWAY_ENVIRONMENT);
+// Railway setzt vor Prozessstart mehrere RAILWAY_*-Plattformvariablen – alle
+// vor dotenv verfügbar, daher sicher auf Modul-Ebene auswertbar.
+//
+// Dokumentierte Railway-Variablen (Stand Nov 2025, docs.railway.com/variables/reference):
+//   RAILWAY_ENVIRONMENT_ID   — UUID des Environments (z. B. "abc123…")
+//   RAILWAY_ENVIRONMENT_NAME — lesbarer Name     (z. B. "production")
+//   RAILWAY_SERVICE_ID       — UUID des Service
+//   RAILWAY_PROJECT_ID       — UUID des Projekts
+//
+// RAILWAY_ENVIRONMENT ist in der aktuellen Railway-Dokumentation nicht gelistet
+// und wurde deshalb durch die vier dokumentierten Variablen ersetzt.
+// Mindestens eine davon ist auf jedem Railway-Deployment immer gesetzt.
+const IS_RAILWAY = Boolean(
+  process.env.RAILWAY_ENVIRONMENT_ID ||
+  process.env.RAILWAY_ENVIRONMENT_NAME ||
+  process.env.RAILWAY_SERVICE_ID ||
+  process.env.RAILWAY_PROJECT_ID
+);
+
+// Fasst beide Produktionssignale zusammen: Railway-Plattform ODER NODE_ENV=production.
+// Wird für Sicherheitsschranken genutzt, die in JEDER Produktionsumgebung greifen müssen,
+// nicht nur auf Railway (z. B. non-Railway-Hosting wie Render, Fly, eigener VPS).
+const IS_PRODUCTION = IS_RAILWAY || process.env.NODE_ENV === 'production';
 
 let db;
 
@@ -48,15 +68,22 @@ export function initDB() {
   const dbFile = path.join(dbDir, 'lumo.db');
 
   // ── 2. Sicherheitsprüfung: kein stiller Fallback auf ephemeres Verzeichnis ─
-  // Auf Railway muss immer ein persistentes Volume gemountet sein. Fehlen beide
-  // Variablen, läge die DB im flüchtigen Container-Dateisystem – jeder Deploy
-  // würde alle Nutzerdaten löschen. Deshalb harter Abbruch statt stillem Fallback.
-  if (IS_RAILWAY && !process.env.DB_PATH && !process.env.RAILWAY_VOLUME_MOUNT_PATH) {
-    console.error('[DB] FATAL: Kein persistentes Volume konfiguriert.');
-    console.error('[DB] Auf Railway muss ein Volume gemountet sein, damit Nutzerdaten');
-    console.error('[DB] Deploys überleben. Anleitung:');
-    console.error('[DB]   Railway Dashboard → Service → "Add Volume" → Mount Path: /data');
-    console.error('[DB] Nach dem Mounten setzt Railway RAILWAY_VOLUME_MOUNT_PATH automatisch.');
+  // In JEDER Produktionsumgebung muss ein persistenter DB-Pfad konfiguriert sein.
+  // Ohne ihn läge die DB im flüchtigen Container-Dateisystem – jeder Deploy löscht
+  // alle Nutzerdaten. Harter Abbruch statt stillem Fallback auf __dirname.
+  if (IS_PRODUCTION && !process.env.DB_PATH && !process.env.RAILWAY_VOLUME_MOUNT_PATH) {
+    if (IS_RAILWAY) {
+      console.error('[DB] FATAL: Kein persistentes Volume konfiguriert.');
+      console.error('[DB] Auf Railway muss ein Volume gemountet sein, damit Nutzerdaten');
+      console.error('[DB] Deploys überleben. Anleitung:');
+      console.error('[DB]   Railway Dashboard → Service → "Add Volume" → Mount Path: /data');
+      console.error('[DB] Nach dem Mounten setzt Railway RAILWAY_VOLUME_MOUNT_PATH automatisch.');
+    } else {
+      console.error('[DB] FATAL: Kein persistenter Datenbankpfad konfiguriert.');
+      console.error('[DB] In Produktionsumgebungen (NODE_ENV=production) muss DB_PATH');
+      console.error('[DB] auf ein persistentes Verzeichnis gesetzt sein, das Deploys überlebt.');
+      console.error('[DB] Beispiel: DB_PATH=/data');
+    }
     process.exit(1);
   }
 
@@ -66,8 +93,8 @@ export function initDB() {
   } catch (dirErr) {
     console.error(`[DB] FATAL: Datenbankverzeichnis nicht zugänglich (${dirErr.code}).`);
     console.error('[DB] Das Verzeichnis muss existieren und vom Prozess beschreibbar sein.');
-    if (IS_RAILWAY) {
-      // Auf Railway gibt es keinen sinnvollen Fallback — harter Abbruch.
+    if (IS_PRODUCTION) {
+      // In Produktion (Railway oder NODE_ENV=production) gibt es keinen Fallback.
       process.exit(1);
     }
     // Lokal: graceful degradation, App läuft mit localStorage-only Fallback weiter.
@@ -109,7 +136,7 @@ export function initDB() {
     `);
 
     console.log('[DB] SQLite initialisiert:', dbFile);
-    console.log('[DB] Persistenz:', IS_RAILWAY ? 'Railway Volume ✓' : 'lokal (Entwicklung)');
+    console.log('[DB] Persistenz:', IS_RAILWAY ? 'Railway Volume ✓' : IS_PRODUCTION ? 'Produktion (DB_PATH) ✓' : 'lokal (Entwicklung)');
     return true;
   } catch (err) {
     console.error('[DB] Fehler beim Initialisieren:', err.message);
@@ -242,4 +269,4 @@ export function updateStreak(userId) {
   }
 }
 
-export { db };
+export { db, IS_RAILWAY };

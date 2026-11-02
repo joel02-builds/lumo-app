@@ -5,7 +5,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import Anthropic from '@anthropic-ai/sdk';
-import { initDB, createNewUser, getOrCreateUser, loadUserState, saveUserState, deleteUserState, updateStreak } from './db.js';
+import { initDB, createNewUser, getOrCreateUser, loadUserState, saveUserState, deleteUserState, updateStreak, IS_RAILWAY } from './db.js';
 import {
   getAnalyzeSystem,
   analyzeSchema,
@@ -44,10 +44,10 @@ const MODEL = 'claude-sonnet-4-6';
 // setzen: ohne gesetzten Wert gilt lokal "development" als sicherer Default.
 if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
-// "Sind wir wirklich in Production?" NICHT nur an NODE_ENV festmachen – Railway
-// setzt zusätzlich eigene RAILWAY_*-Variablen (z. B. RAILWAY_ENVIRONMENT) für
-// JEDE Deployment – das ist ein zweites, von NODE_ENV unabhängiges Signal.
-const isProd = process.env.NODE_ENV === 'production' || Boolean(process.env.RAILWAY_ENVIRONMENT);
+// "Sind wir wirklich in Production?" IS_RAILWAY aus db.js importiert —
+// keine doppelte Erkennungslogik mehr. db.js prüft die vier dokumentierten
+// Railway-Plattformvariablen (Stand Nov 2025, docs.railway.com/variables/reference).
+const isProd = process.env.NODE_ENV === 'production' || IS_RAILWAY;
 
 // dotenv nur lokal laden: in Production (z. B. Railway) liefert die Plattform
 // Umgebungsvariablen bereits direkt in process.env, bevor der Prozess überhaupt
@@ -62,7 +62,9 @@ if (!isProd) {
 // Production) den tatsächlichen Endzustand von process.env zeigt.
 console.log('PORT:', process.env.PORT);
 console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('RAILWAY_ENVIRONMENT:', process.env.RAILWAY_ENVIRONMENT);
+// Diagnose: Railway-Erkennung über dokumentierte Plattformvariablen
+console.log('RAILWAY_ENVIRONMENT_ID:', process.env.RAILWAY_ENVIRONMENT_ID);
+console.log('RAILWAY_ENVIRONMENT_NAME:', process.env.RAILWAY_ENVIRONMENT_NAME);
 console.log('API KEY vorhanden:', Boolean(process.env.ANTHROPIC_API_KEY));
 console.log('API KEY Länge:', process.env.ANTHROPIC_API_KEY?.length || 0);
 // Nur die Namen, keine Werte – zeigt, ob ANTHROPIC_API_KEY überhaupt in der
