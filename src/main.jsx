@@ -30,7 +30,7 @@ class ErrorBoundary extends Component {
           gap: '20px',
           textAlign: 'center',
         }}>
-          <img src="/mascot/lumo-idle.png" alt="Lumo" width={100} height={100} style={{ objectFit: 'contain' }} />
+          <img src="/mascot/lumo-idle.webp" alt="Lumo" width={100} height={100} style={{ objectFit: 'contain' }} />
           <h1 style={{ fontSize: '24px', color: '#F0EDE8', margin: '0' }}>
             Etwas ist schiefgelaufen.
           </h1>

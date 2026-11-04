@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import LumoMascot from '../../components/LumoMascot.jsx';
 import Button from '../../components/Button.jsx';
 import { getRecommendedBlock } from '../../utils/blockProgress.js';
@@ -93,16 +93,22 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
   const next = getRecommendedBlock(safeBlocks, recommendedOrder || []);
 
   // Fällige SR-Karten berechnen (FSRS-6)
+  // P-FE-08: Memoized – getDueCards ist teuer; nur neu berechnen wenn flashcards sich ändert
   const allFlashcards = flashcards || [];
-  const dueCards = getDueCards(allFlashcards);
+  const dueCards = useMemo(() => getDueCards(allFlashcards), [allFlashcards]);
   const dueCount = dueCards.length;
 
   // Kumulativer Fortschritt über alle Projekte
+  // P-FE-08: Memoized – deps auf stabile Prop-Referenzen (blocks, projects)
   const allProjects = projects || [];
-  const allCompletedBlocks = [
-    ...safeBlocks.filter(b => b.status === 'completed' && b.confidence === 'sicher'),
-    ...allProjects.flatMap(p => (p.blocks || []).filter(b => b.status === 'completed' && b.confidence === 'sicher')),
-  ];
+  const allCompletedBlocks = useMemo(() => {
+    const sb = (blocks || []).filter(Boolean);
+    const ap = projects || [];
+    return [
+      ...sb.filter(b => b.status === 'completed' && b.confidence === 'sicher'),
+      ...ap.flatMap(p => (p.blocks || []).filter(b => b.status === 'completed' && b.confidence === 'sicher')),
+    ];
+  }, [blocks, projects]);
   const totalMasteredConcepts = allCompletedBlocks.reduce((sum, b) => sum + (b.cards?.length || 0), 0);
   const totalSessions = blocksAnalyzedTotal || 0;
 

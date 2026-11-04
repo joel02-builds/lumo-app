@@ -16,7 +16,7 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync, accessSync, constants, writeFileSync, unlinkSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, chmodSync, rmSync, accessSync, constants, writeFileSync, unlinkSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'url';
@@ -530,4 +530,456 @@ describe('Integration: initDB() im Kindprozess (echter Modulaufruf)', () => {
       `Erwartet exit 0, bekam ${result.status}.\nstderr: ${result.stderr}`);
   });
 
+});
+
+// ─── 5. Migrations-Tests ──────────────────────────────────────────────────────
+//
+// Testen den PRAGMA-user_version-basierten Migrationsmechanismus direkt.
+// Jeder Test bekommt ein isoliertes temporäres Verzeichnis und einen
+// frischen Kindprozess (keine ESM-Modul-Cache-Verschmutzung).
+//
+// Kindprozess Exit-Codes (zusätzlich zu den Codes aus Gruppe 4):
+//   0 = Test bestanden
+//   2 = initDB() → false (Fehler oder graceful abort)
+//   3..9 = testspezifische Prüfung fehlgeschlagen (stderr nennt Grund)
+
+/**
+ * Führt ein beliebiges ESM-Script in einem separaten Kindprozess aus.
+ * @param {object} env - Umgebungsvariablen für den Kindprozess
+ * @param {string} code - ESM-JavaScript-Code
+ */
+function spawnScript(env, code) {
+  // Skript ins Projektverzeichnis schreiben (nicht /tmp), damit ESM
+  // 'better-sqlite3' und andere lokale Pakete über node_modules auflösen kann.
+  const scriptPath = path.join(__dirname, `_lumo-mig-test-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`);
+  writeFileSync(scriptPath, code, 'utf8');
+  const result = spawnSync(
+    process.execPath,
+    [scriptPath],
+    {
+      env: {
+        PATH: process.env.PATH || '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+        ...(process.env.NODE_PATH ? { NODE_PATH: process.env.NODE_PATH } : {}),
+        ...env,
+      },
+      cwd: __dirname,
+      timeout: 15000,
+      encoding: 'utf8',
+    }
+  );
+  try { unlinkSync(scriptPath); } catch { /* ignorieren */ }
+  return result;
+}
+
+const DB_JS = JSON.stringify(path.join(__dirname, 'db.js'));
+
+// ── 5a. Neue Datenbank → Version 4 + beide Tabellen ─────────────────────────
+
+describe('Migrations S5a: Neue Datenbank', () => {
+  it('erhält aktuelle Schema-Version und beide Tabellen nach initDB()', () => {
+    const tmpDir = mkdtempSync(path.join(tmpdir(), 'lumo-mig-s5a-'));
+    // S5a: erwartet SCHEMA_VERSION = 4 (Migration 0→1→2→3→4)
+    const EXPECTED_VERSION = 4;
+    const result = spawnScript({ DB_PATH: tmpDir, NODE_ENV: 'development' }, `
+import { initDB } from ${DB_JS};
+import Database from 'better-sqlite3';
+import p from 'path';
+const ok = initDB();
+if (!ok) { console.error('initDB() returned false'); process.exit(2); }
+// Zweite Verbindung zur selben Datei (WAL-Modus erlaubt das) – liest Schema
+const reader = new Database(p.join(${JSON.stringify(tmpDir)}, 'lumo.db'), { readonly: true });
+const version = reader.pragma('user_version', { simple: true });
+if (version !== ${EXPECTED_VERSION}) { console.error('user_version:', version); process.exit(3); }
+const tables = reader.prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").all().map(r => r.name);
+if (!tables.includes('users'))      { console.error('Fehlende Tabelle: users; vorhanden:', tables); process.exit(4); }
+if (!tables.includes('user_state')) { console.error('Fehlende Tabelle: user_state; vorhanden:', tables); process.exit(5); }
+// S-07: blocks_analyzed_total-Spalte prüfen (Migration 3→4)
+const cols = reader.pragma('table_info(users)').map(c => c.name);
+if (!cols.includes('blocks_analyzed_total')) { console.error('Spalte blocks_analyzed_total fehlt; Spalten:', cols); process.exit(6); }
+reader.close();
+process.exit(0);
+`);
+    rmSync(tmpDir, { recursive: true, force: true });
+    assert.equal(result.status, 0,
+      `S5a fehlgeschlagen (exit ${result.status}).\nstdout: ${result.stdout}\nstderr: ${result.stderr}`);
+  });
+});
+
+// ── 5b. Bestehende DB ohne Versionsinfo → Daten erhalten ────────────────────
+
+describe('Migrations S5b: Bestehende DB ohne Versionsinfo', () => {
+  it('behält vorhandene User-Daten nach Migration (user_version 0 → 4)', async () => {
+    const tmpDir = mkdtempSync(path.join(tmpdir(), 'lumo-mig-s5b-'));
+    const dbFile = path.join(tmpDir, 'lumo.db');
+
+    // Vorarbeit: DB manuell anlegen wie vor dem Migrations-Mechanismus.
+    // user_version bleibt 0 (Default), Tabellen + Testdaten einfügen.
+    {
+      const Database = (await import('better-sqlite3')).default;
+      const pre = new Database(dbFile);
+      pre.exec(`
+        CREATE TABLE IF NOT EXISTS users (
+          id TEXT PRIMARY KEY,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          last_seen TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+        CREATE TABLE IF NOT EXISTS user_state (
+          user_id TEXT PRIMARY KEY,
+          state_json TEXT NOT NULL,
+          updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY (user_id) REFERENCES users(id)
+        );
+        INSERT INTO users (id) VALUES ('test-user-keep');
+        INSERT INTO user_state (user_id, state_json) VALUES ('test-user-keep', '{"streak":{"days":7}}');
+      `);
+      pre.close();
+    }
+
+    const result = spawnScript({ DB_PATH: tmpDir, NODE_ENV: 'development' }, `
+import { initDB } from ${DB_JS};
+import Database from 'better-sqlite3';
+import p from 'path';
+const ok = initDB();
+if (!ok) { console.error('initDB() returned false'); process.exit(2); }
+const reader = new Database(p.join(${JSON.stringify(tmpDir)}, 'lumo.db'), { readonly: true });
+const version = reader.pragma('user_version', { simple: true });
+if (version !== 4) { console.error('user_version:', version); process.exit(3); }
+const user = reader.prepare("SELECT id FROM users WHERE id = 'test-user-keep'").get();
+if (!user) { console.error('Testdaten fehlen nach Migration'); process.exit(4); }
+const state = reader.prepare("SELECT state_json FROM user_state WHERE user_id = 'test-user-keep'").get();
+if (!state) { console.error('user_state-Eintrag fehlt nach Migration'); process.exit(5); }
+if (!state.state_json.includes('7')) { console.error('state_json verändert:', state.state_json); process.exit(6); }
+reader.close();
+process.exit(0);
+`);
+    rmSync(tmpDir, { recursive: true, force: true });
+    assert.equal(result.status, 0,
+      `S5b fehlgeschlagen (exit ${result.status}).\nstdout: ${result.stdout}\nstderr: ${result.stderr}`);
+  });
+});
+
+// ── 5c. Erneuter Start → keine Migration erneut ──────────────────────────────
+
+describe('Migrations S5c: Erneuter Start', () => {
+  it('führt keine Migration erneut aus wenn user_version bereits aktuell ist', () => {
+    const tmpDir = mkdtempSync(path.join(tmpdir(), 'lumo-mig-s5c-'));
+
+    // Erster Lauf: Migration 0 → 1
+    const first = spawnScript({ DB_PATH: tmpDir, NODE_ENV: 'development' }, `
+import { initDB } from ${DB_JS};
+const ok = initDB();
+process.exit(ok ? 0 : 2);
+`);
+    assert.equal(first.status, 0, `Erster Lauf fehlgeschlagen.\nstderr: ${first.stderr}`);
+
+    // Zweiter Lauf: kein Fehler, Version bleibt 4
+    const second = spawnScript({ DB_PATH: tmpDir, NODE_ENV: 'development' }, `
+import { initDB } from ${DB_JS};
+import Database from 'better-sqlite3';
+import p from 'path';
+const ok = initDB();
+if (!ok) { console.error('Zweiter initDB() returned false'); process.exit(2); }
+const reader = new Database(p.join(${JSON.stringify(tmpDir)}, 'lumo.db'), { readonly: true });
+const version = reader.pragma('user_version', { simple: true });
+reader.close();
+if (version !== 4) { console.error('user_version nach zweitem Lauf:', version); process.exit(3); }
+process.exit(0);
+`);
+    rmSync(tmpDir, { recursive: true, force: true });
+    assert.equal(second.status, 0,
+      `S5c fehlgeschlagen (exit ${second.status}).\nstdout: ${second.stdout}\nstderr: ${second.stderr}`);
+  });
+});
+
+// ── 5d. Fehler in Migration → Rollback ───────────────────────────────────────
+//
+// Testet das Transaktions-Rollback direkt mit better-sqlite3, ohne db.js-Modul-
+// Komplexität. Simuliert eine fehlerhafte Migration, prüft dass kein SQL und
+// kein user_version-Bump persistent werden.
+
+describe('Migrations S5d: Fehler in Migration → Rollback', () => {
+  it('SQL-Änderung und Versions-Bump werden vollständig zurückgerollt', () => {
+    const tmpDir = mkdtempSync(path.join(tmpdir(), 'lumo-mig-s5d-'));
+    const result = spawnScript({ NODE_ENV: 'development' }, `
+import Database from 'better-sqlite3';
+import p from 'path';
+const dbFile = p.join(${JSON.stringify(tmpDir)}, 'rollback-test.db');
+const db = new Database(dbFile);
+db.pragma('journal_mode = WAL');
+
+// Ausgangszustand: user_version = 0, keine Tabelle 'migration_test'
+const before = db.pragma('user_version', { simple: true });
+if (before !== 0) { console.error('Ausgangszustand user_version nicht 0:', before); process.exit(3); }
+
+// Fehlerhafte Migration: Tabelle anlegen + Fehler + user_version-Bump
+// Das Ganze in einer Transaktion — bei Fehler alles zurückrollen
+const failingMigration = db.transaction(() => {
+  db.exec("CREATE TABLE migration_test (id TEXT PRIMARY KEY)");
+  db.pragma('user_version = 1');
+  throw new Error('Deliberater Migrationsfehler');
+});
+try {
+  failingMigration();
+} catch {
+  // Erwarteter Fehler — Rollback muss passiert sein
+}
+
+// Prüfen: weder Tabelle noch Versionsänderung dürfen persistent sein
+const afterVersion = db.pragma('user_version', { simple: true });
+if (afterVersion !== 0) { console.error('user_version wurde nicht zurückgerollt:', afterVersion); process.exit(4); }
+const table = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='migration_test'").get();
+if (table) { console.error('migration_test-Tabelle wurde nicht zurückgerollt'); process.exit(5); }
+db.close();
+process.exit(0);
+`);
+    rmSync(tmpDir, { recursive: true, force: true });
+    assert.equal(result.status, 0,
+      `S5d fehlgeschlagen (exit ${result.status}).\nstdout: ${result.stdout}\nstderr: ${result.stderr}`);
+  });
+});
+
+// ── 5e. DB mit höherer Version → Abbruch ─────────────────────────────────────
+
+describe('Migrations S5e: Datenbank-Version > SCHEMA_VERSION', () => {
+  it('initDB() bricht ab und gibt false zurück wenn DB-Version zu hoch', async () => {
+    const tmpDir = mkdtempSync(path.join(tmpdir(), 'lumo-mig-s5e-'));
+    const dbFile = path.join(tmpDir, 'lumo.db');
+
+    // DB mit user_version=999 vorbereiten (höher als SCHEMA_VERSION=1)
+    {
+      const Database = (await import('better-sqlite3')).default;
+      const pre = new Database(dbFile);
+      pre.pragma('user_version = 999');
+      pre.close();
+    }
+
+    const result = spawnScript({ DB_PATH: tmpDir, NODE_ENV: 'development' }, `
+import { initDB } from ${DB_JS};
+const ok = initDB();
+// initDB() muss false zurückgeben (Migrations-Fehler → catch-Block)
+// Exit 2 = initDB() false = erwartetes Verhalten
+process.exit(ok ? 0 : 2);
+`);
+    // Prüfe: user_version muss unverändert 999 sein (keine Herabsetzung)
+    const Database = (await import('better-sqlite3')).default;
+    const check = new Database(dbFile, { readonly: true });
+    const version = check.pragma('user_version', { simple: true });
+    check.close();
+    rmSync(tmpDir, { recursive: true, force: true });
+
+    assert.equal(result.status, 2,
+      `S5e: Erwartet exit 2 (initDB false), bekam ${result.status}.\nstderr: ${result.stderr}`);
+    assert.equal(version, 999, `S5e: user_version wurde auf ${version} verändert (darf nicht)`);
+    // Fehlermeldung muss im stderr-Output des Kindprozesses erscheinen
+    assert.ok(result.stderr.includes('FATAL') || result.stderr.includes('neuer') || result.stderr.includes('999'),
+      `S5e: Kein verständlicher Fehlerhinweis in stderr:\n${result.stderr}`);
+  });
+});
+
+// ── 5f. Foreign-Key-Constraint durchgesetzt ───────────────────────────────────
+
+describe('Migrations S5f: Foreign-Key-Enforcement', () => {
+  it('wirft bei INSERT in user_state mit nicht-existierender user_id', () => {
+    const tmpDir = mkdtempSync(path.join(tmpdir(), 'lumo-mig-s5f-'));
+    const result = spawnScript({ DB_PATH: tmpDir, NODE_ENV: 'development' }, `
+import { initDB, db } from ${DB_JS};
+const ok = initDB();
+if (!ok) { console.error('initDB() returned false'); process.exit(2); }
+// db hat foreign_keys=ON durch initDB(). INSERT mit nicht-existierender user_id
+// muss einen FOREIGN KEY constraint Fehler werfen.
+let threw = false;
+try {
+  db.prepare("INSERT INTO user_state (user_id, state_json) VALUES (?, ?)").run('nonexistent-user-id', '{}');
+} catch (err) {
+  if (err.message.toLowerCase().includes('foreign key')) {
+    threw = true;
+  } else {
+    console.error('Falscher Fehler:', err.message);
+    process.exit(3);
+  }
+}
+if (!threw) {
+  console.error('FK-Constraint wurde NICHT durchgesetzt – foreign_keys=ON fehlt oder unwirksam');
+  process.exit(4);
+}
+process.exit(0);
+`);
+    rmSync(tmpDir, { recursive: true, force: true });
+    assert.equal(result.status, 0,
+      `S5f fehlgeschlagen (exit ${result.status}).\nstdout: ${result.stdout}\nstderr: ${result.stderr}`);
+  });
+});
+
+// ── 5g. Vorhandene Daten bleiben nach Migration unverändert ──────────────────
+
+describe('Migrations S5g: Datenintegrität', () => {
+  it('state_json bleibt nach Migration identisch erhalten', async () => {
+    const tmpDir = mkdtempSync(path.join(tmpdir(), 'lumo-mig-s5g-'));
+    const dbFile = path.join(tmpDir, 'lumo.db');
+    const originalState = JSON.stringify({ streak: { days: 42, lastDate: '2026-11-03' }, flashcards: [{ id: 'c1' }] });
+
+    // Vorarbeit: DB mit user_version=0 und einem vollständigen State
+    {
+      const Database = (await import('better-sqlite3')).default;
+      const pre = new Database(dbFile);
+      pre.exec(`
+        CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, created_at TEXT NOT NULL DEFAULT (datetime('now')), last_seen TEXT NOT NULL DEFAULT (datetime('now')));
+        CREATE TABLE IF NOT EXISTS user_state (user_id TEXT PRIMARY KEY, state_json TEXT NOT NULL, updated_at TEXT NOT NULL DEFAULT (datetime('now')), FOREIGN KEY (user_id) REFERENCES users(id));
+      `);
+      pre.prepare("INSERT INTO users (id) VALUES (?)").run('integrity-test-user');
+      pre.prepare("INSERT INTO user_state (user_id, state_json) VALUES (?, ?)").run('integrity-test-user', originalState);
+      pre.close();
+    }
+
+    const result = spawnScript({ DB_PATH: tmpDir, NODE_ENV: 'development' }, `
+import { initDB } from ${DB_JS};
+import Database from 'better-sqlite3';
+import p from 'path';
+const ok = initDB();
+if (!ok) { console.error('initDB() returned false'); process.exit(2); }
+const reader = new Database(p.join(${JSON.stringify(tmpDir)}, 'lumo.db'), { readonly: true });
+const row = reader.prepare("SELECT state_json FROM user_state WHERE user_id = 'integrity-test-user'").get();
+reader.close();
+if (!row) { console.error('Eintrag fehlt nach Migration'); process.exit(3); }
+const expected = ${JSON.stringify(originalState)};
+if (row.state_json !== expected) {
+  console.error('state_json verändert:\\nErwartet:', expected, '\\nGefunden:', row.state_json);
+  process.exit(4);
+}
+process.exit(0);
+`);
+    rmSync(tmpDir, { recursive: true, force: true });
+    assert.equal(result.status, 0,
+      `S5g fehlgeschlagen (exit ${result.status}).\nstdout: ${result.stdout}\nstderr: ${result.stderr}`);
+  });
+});
+
+// ─── 6. AUDIT-E-03: Produktionsverhalten bei Initialisierungsfehlern ─────────
+//
+// Stellt sicher, dass initDB() in Produktion (IS_PRODUCTION === true) beim
+// Auftreten eines Fehlers innerhalb des try-Blocks process.exit(1) aufruft
+// und nicht stillschweigend mit return false weiterläuft.
+//
+// In Entwicklung (NODE_ENV nicht production, kein Railway) muss das bisherige
+// Fallback-Verhalten (return false → localStorage-only) unverändert bleiben.
+//
+// Simulationsstrategie für den try-Block-Fehler:
+//   'lumo.db' wird als Verzeichnis statt Datei angelegt → new Database() schlägt fehl.
+//   Das ist der zuverlässigste Weg, den try-Block zum Werfen zu bringen, ohne
+//   interne Migrationsdetails zu manipulieren.
+
+// ── E03a. Produktion + DB-Öffnungsfehler → process.exit(1) ──────────────────
+
+describe('AUDIT-E-03a: Produktion + DB-Initialisierungsfehler', () => {
+  it('beendet Prozess mit exit 1 wenn new Database() in Produktion fehlschlägt', () => {
+    const tmpDir = mkdtempSync(path.join(tmpdir(), 'lumo-e03a-'));
+    // 'lumo.db' als Verzeichnis anlegen → new Database() schlägt fehl
+    mkdirSync(path.join(tmpDir, 'lumo.db'));
+
+    const result = spawnScript({ DB_PATH: tmpDir, NODE_ENV: 'production' }, `
+import { initDB } from ${DB_JS};
+const ok = initDB();
+// Sollte nie hier ankommen — in Produktion muss process.exit(1) aufgerufen werden
+process.exit(ok ? 0 : 2);
+`);
+    rmSync(tmpDir, { recursive: true, force: true });
+    assert.equal(result.status, 1,
+      `E03a: Erwartet exit 1, bekam ${result.status}.\nstdout: ${result.stdout}\nstderr: ${result.stderr}`);
+    assert.ok(
+      result.stderr.includes('Fehler beim Initialisieren') || result.stderr.includes('Kontrollierter Abbruch'),
+      `E03a: Kein FATAL-Hinweis in stderr:\n${result.stderr}`
+    );
+  });
+});
+
+// ── E03b. Produktion + user_version > SCHEMA_VERSION → process.exit(1) ───────
+
+describe('AUDIT-E-03b: Produktion + user_version > SCHEMA_VERSION', () => {
+  it('beendet Prozess mit exit 1 wenn DB-Version zu hoch in Produktion', async () => {
+    const tmpDir = mkdtempSync(path.join(tmpdir(), 'lumo-e03b-'));
+    const dbFile = path.join(tmpDir, 'lumo.db');
+    {
+      const Database = (await import('better-sqlite3')).default;
+      const pre = new Database(dbFile);
+      pre.pragma('user_version = 999');
+      pre.close();
+    }
+
+    const result = spawnScript({ DB_PATH: tmpDir, NODE_ENV: 'production' }, `
+import { initDB } from ${DB_JS};
+const ok = initDB();
+process.exit(ok ? 0 : 2);
+`);
+    rmSync(tmpDir, { recursive: true, force: true });
+    assert.equal(result.status, 1,
+      `E03b: Erwartet exit 1, bekam ${result.status}.\nstdout: ${result.stdout}\nstderr: ${result.stderr}`);
+    assert.ok(
+      result.stderr.includes('FATAL') || result.stderr.includes('Kontrollierter Abbruch'),
+      `E03b: Kein Fehlerhinweis in stderr:\n${result.stderr}`
+    );
+  });
+});
+
+// ── E03c. Produktion + nicht zugänglicher DB-Pfad → process.exit(1) ──────────
+//
+// Hinweis: chmodSync funktioniert in dieser Testumgebung nicht als Simulation,
+// da der Prozess als root läuft (root ignoriert Schreibrechtsbits auf Verzeichnissen).
+// Stattdessen: nicht-existierender Pfad → accessSync wirft ENOENT → gleicher Code-Pfad.
+// Das ist eine valide Simulation der Verzweigung accessSync-Fehler → IS_PRODUCTION → exit(1).
+
+describe('AUDIT-E-03c: Produktion + nicht zugänglicher DB-Pfad', () => {
+  it('beendet Prozess mit exit 1 wenn DB_PATH nicht zugänglich ist in Produktion', () => {
+    const nonExistentDir = path.join(tmpdir(), `lumo-e03c-nonexistent-${Date.now()}`);
+    // Sicherstellen, dass das Verzeichnis nicht existiert
+    rmSync(nonExistentDir, { recursive: true, force: true });
+
+    const result = spawnScript({ DB_PATH: nonExistentDir, NODE_ENV: 'production' }, `
+import { initDB } from ${DB_JS};
+const ok = initDB();
+process.exit(ok ? 0 : 2);
+`);
+    assert.equal(result.status, 1,
+      `E03c: Erwartet exit 1, bekam ${result.status}.\nstdout: ${result.stdout}\nstderr: ${result.stderr}`);
+    assert.ok(
+      result.stderr.includes('FATAL') || result.stderr.includes('nicht zugänglich'),
+      `E03c: Kein Fehlerhinweis in stderr:\n${result.stderr}`
+    );
+  });
+});
+
+// ── E03d. Entwicklung + DB-Öffnungsfehler → return false (kein Crash) ────────
+
+describe('AUDIT-E-03d: Entwicklung + DB-Initialisierungsfehler', () => {
+  it('gibt false zurück (kein Prozessabbruch) wenn new Database() in Entwicklung fehlschlägt', () => {
+    const tmpDir = mkdtempSync(path.join(tmpdir(), 'lumo-e03d-'));
+    // Gleiche Fehlersimulation wie E03a, aber ohne IS_PRODUCTION
+    mkdirSync(path.join(tmpDir, 'lumo.db'));
+
+    const result = spawnScript({ DB_PATH: tmpDir, NODE_ENV: 'development' }, `
+import { initDB } from ${DB_JS};
+const ok = initDB();
+// In Entwicklung: false zurückgegeben (graceful degradation), kein process.exit(1)
+process.exit(ok ? 0 : 2);
+`);
+    rmSync(tmpDir, { recursive: true, force: true });
+    assert.equal(result.status, 2,
+      `E03d: Erwartet exit 2 (initDB false, kein Crash), bekam ${result.status}.\nstdout: ${result.stdout}\nstderr: ${result.stderr}`);
+  });
+});
+
+// ── E03e. Erfolgreiche Initialisierung in Produktion → unverändert ────────────
+
+describe('AUDIT-E-03e: Erfolgreiche Initialisierung in Produktion', () => {
+  it('gibt true zurück und beendet sich mit exit 0 bei erfolgreicher DB-Initialisierung', () => {
+    const tmpDir = mkdtempSync(path.join(tmpdir(), 'lumo-e03e-'));
+
+    const result = spawnScript({ DB_PATH: tmpDir, NODE_ENV: 'production' }, `
+import { initDB } from ${DB_JS};
+const ok = initDB();
+process.exit(ok ? 0 : 2);
+`);
+    rmSync(tmpDir, { recursive: true, force: true });
+    assert.equal(result.status, 0,
+      `E03e: Erwartet exit 0 (Erfolg), bekam ${result.status}.\nstdout: ${result.stdout}\nstderr: ${result.stderr}`);
+  });
 });

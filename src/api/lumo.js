@@ -3,7 +3,7 @@ const GENERIC_ERROR = 'Hier ist gerade etwas schiefgelaufen. Lass es uns nochmal
 const TIMEOUT_ERROR = 'Lumo braucht einen Moment länger. Warte kurz oder versuch es nochmal.';
 const OFFLINE_ERROR = 'Du bist gerade offline. Lumo braucht eine Verbindung zum Lernen.';
 
-const TIMEOUT_MS = 30000;
+const TIMEOUT_MS = 60000; // H-02: auf 60s erhöht (server-seitig 55s)
 
 async function post(path, body) {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) {

@@ -50,7 +50,8 @@ async function fetchWithCookies(path, options = {}) {
 
 /**
  * Lädt den Server-State für diesen User.
- * Gibt { state, userId } oder null bei Fehler/Offline zurück.
+ * Gibt { state } oder null bei Fehler/Offline zurück.
+ * Hinweis: userId wird serverseitig nicht mehr exponiert (S-08).
  */
 export async function loadServerState() {
   const result = await fetchWithCookies('/api/state');

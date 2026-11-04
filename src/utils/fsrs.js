@@ -134,47 +134,59 @@ export function calculateNextReview(card, quality) {
   const rating = qualityToRating(quality);
   const now = new Date();
 
-  let schedulingResult;
   try {
     // FSRS-Scheduling-Algorithmus ausführen
     const cards = f.repeat(fsrsCard, now);
-    schedulingResult = cards[rating];
-  } catch {
-    // Fallback bei FSRS-Fehler: einfaches exponentielles Backoff
+    const schedulingResult = cards[rating];
+
+    // Kein Ergebnis für dieses Rating (z.B. state-Wert außerhalb gültiger Enum-Range)
+    if (!schedulingResult) {
+      throw new TypeError(
+        `No scheduling result for rating ${rating} — state may be invalid (state: ${fsrsCard.state})`
+      );
+    }
+
+    const updatedCard = schedulingResult.card;
+    const interval = updatedCard.scheduled_days || 1;
+
+    // Status ableiten aus FSRS State
+    let status;
+    switch (updatedCard.state) {
+      case State.New:        status = 'new';      break;
+      case State.Learning:   status = 'learning'; break;
+      case State.Relearning: status = 'learning'; break;
+      case State.Review:     status = interval >= 21 ? 'mastered' : 'review'; break;
+      default:               status = 'learning';
+    }
+
+    return {
+      fsrs: updatedCard,
+      nextReview: updatedCard.due.toISOString(),
+      lastReview: now.toISOString(),
+      interval,
+      difficulty: updatedCard.difficulty,
+      stability: updatedCard.stability,
+      retrievability: updatedCard.retrievability,
+      status,
+      _algorithm: 'fsrs6',
+    };
+  } catch (err) {
+    // Fallback bei FSRS-Fehler: einfaches exponentielles Backoff.
+    // fsrs: null ist absichtlich gesetzt:
+    //   - bricht den Dauerfehler-Loop (nächster Aufruf startet mit createEmptyCard)
+    //   - isDueForReview fällt korrekt auf card.nextReview zurück
     const days = quality === 0 ? 1 : quality === 1 ? 2 : quality === 2 ? 4 : 7;
     const nextReview = new Date();
     nextReview.setDate(nextReview.getDate() + days);
     return {
       nextReview: nextReview.toISOString(),
-      status: quality >= 2 ? 'learning' : 'new',
+      status: card.status || (quality >= 2 ? 'learning' : 'new'),
+      interval: days,
+      fsrs: null,
       _algorithm: 'fallback',
+      _fallbackReason: err?.message?.slice(0, 120) ?? 'unknown',
     };
   }
-
-  const updatedCard = schedulingResult.card;
-  const interval = schedulingResult.card.scheduled_days || 1;
-
-  // Status ableiten aus FSRS State
-  let status;
-  switch (updatedCard.state) {
-    case State.New:      status = 'new';      break;
-    case State.Learning: status = 'learning'; break;
-    case State.Relearning: status = 'learning'; break;
-    case State.Review:   status = interval >= 21 ? 'mastered' : 'review'; break;
-    default:             status = 'learning';
-  }
-
-  return {
-    fsrs: updatedCard,
-    nextReview: updatedCard.due.toISOString(),
-    lastReview: now.toISOString(),
-    interval,
-    difficulty: updatedCard.difficulty,
-    stability: updatedCard.stability,
-    retrievability: updatedCard.retrievability,
-    status,
-    _algorithm: 'fsrs6',
-  };
 }
 
 // ─── Fälligkeits-Utilities ────────────────────────────────────────────────

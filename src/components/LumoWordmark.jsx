@@ -27,7 +27,7 @@ export default function LumoWordmark({ onClick, hidden = false }) {
       onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
     >
       <img
-        src="/mascot/lumo-idle.png"
+        src="/mascot/lumo-idle.webp"
         alt="Lumo"
         width={28}
         height={28}

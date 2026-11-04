@@ -15,6 +15,10 @@ import { readFileAsBase64, readFileAsText } from '../../utils/fileReader.js';
 const MAX_FILE_SIZE = 25 * 1024 * 1024;
 const MIN_WORDS = 100;
 const MAX_CHARS = 50000;
+// H-01a/H-01c: Serverseitiges Limit für Materialtext — Warnung, wenn materialText
+// diese Grenze überschreitet (Backend kürzt dort ab).
+const BACKEND_LIMIT = 32000;
+const DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
 const DEMO_MATERIAL = {
   topic: 'Neurobiologie – Synaptische Übertragung',
@@ -72,6 +76,9 @@ export default function OnboardingScreen1({ onNext }) {
   // form state
   const [topic, setTopic] = useState('');
   const [materialText, setMaterialText] = useState('');
+  // H-01c: Ursprüngliche Materiallänge vor jedem Kürzen — Grundlage für
+  // die Trunkierungswarnung mit korrektem Prozentsatz.
+  const [originalMaterialLength, setOriginalMaterialLength] = useState(0);
   const [files, setFiles] = useState([]); // [{ name, base64, mediaType, text }]
   const [dragOver, setDragOver] = useState(false);
   const [fileError, setFileError] = useState('');
@@ -128,9 +135,16 @@ export default function OnboardingScreen1({ onNext }) {
       setFileError('Datei zu groß (max. 25 MB)');
       return null;
     }
-    const allowed = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
-    if (!allowed.includes(file.type) && !file.name.match(/\.(pdf|docx|txt)$/i)) {
-      setFileError('Nur PDF, DOCX oder TXT erlaubt');
+    // H-01b: DOCX wird abgelehnt — FileReader.readAsText() liest ZIP-Binärdaten
+    // als Zeichensalat; echte Textextraktion wäre eine eigene Abhängigkeit.
+    // DOCX-Erkennung nach MIME-Type UND Dateiendung (Browser-MIME kann fehlen).
+    if (file.type === DOCX_MIME || /\.docx$/i.test(file.name)) {
+      setFileError('DOCX-Dateien werden nicht unterstützt. Bitte exportiere die Datei als PDF oder füge den Text direkt ein.');
+      return null;
+    }
+    const allowed = ['application/pdf', 'text/plain'];
+    if (!allowed.includes(file.type) && !file.name.match(/\.(pdf|txt)$/i)) {
+      setFileError('Nur PDF oder TXT erlaubt');
       return null;
     }
     const [b64, txt] = await Promise.all([readFileAsBase64(file), readFileAsText(file).catch(() => '')]);
@@ -149,10 +163,19 @@ export default function OnboardingScreen1({ onNext }) {
         const newFiles = valid.filter(f => !existingNames.has(f.name));
         return [...prev, ...newFiles];
       });
-      // Use text from first text-extractable file if no manual text yet
-      const firstWithText = valid.find(f => f.text);
-      if (firstWithText && !materialText) {
-        setMaterialText(firstWithText.text.slice(0, MAX_CHARS));
+      // H-03: Alle TXT-Dateien zusammenführen — nur text/plain-Dateien liefern
+      // nutzbaren Klartext; PDFs werden serverseitig als document-Blocks verarbeitet.
+      const isTxtFile = (f) => f.mediaType === 'text/plain' || /\.txt$/i.test(f.name || '');
+      const textFiles = valid.filter(f => isTxtFile(f) && f.text && f.text.trim());
+      if (textFiles.length > 0 && !materialText) {
+        // Mehrere Dateien: Inhalte mit Dateiname als Abschnittsüberschrift trennen.
+        const merged = textFiles.length === 1
+          ? textFiles[0].text
+          : textFiles.map(f => `--- ${f.name} ---\n${f.text}`).join('\n\n');
+        // H-01c: Ursprüngliche Gesamtlänge VOR dem Kürzen auf MAX_CHARS merken,
+        // damit die Trunkierungswarnung den korrekten Prozentwert zeigt.
+        setOriginalMaterialLength(merged.length);
+        setMaterialText(merged.slice(0, MAX_CHARS));
       }
     }
   }, [processFile, materialText]);
@@ -641,6 +664,19 @@ export default function OnboardingScreen1({ onNext }) {
       padding: 4px 0;
     }
     .ob-demo-link:hover { color: rgba(240,234,224,0.70); }
+
+    /* ── H-01c: Trunkierungswarnung ── */
+    .ob-trunc-warn {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 11px 13px;
+      background: rgba(212,146,74,0.10);
+      border: 1px solid rgba(212,146,74,0.32);
+      border-radius: 10px;
+      font-size: 13px;
+    }
+    .ob-trunc-icon { font-size: 15px; line-height: 1.5; flex-shrink: 0; }
+    .ob-trunc-title { font-weight: 600; color: #E5A85E; margin-bottom: 2px; }
+    .ob-trunc-sub { color: rgba(240,234,224,0.55); font-size: 12px; }
   `;
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -936,20 +972,21 @@ export default function OnboardingScreen1({ onNext }) {
             {hasFiles ? (
               <>
                 <div className="ob-drop-main">Weitere Datei hinzufügen</div>
-                <div className="ob-drop-sub">PDF, DOCX oder TXT · max. 25 MB</div>
+                <div className="ob-drop-sub">PDF oder TXT · max. 25 MB</div>
               </>
             ) : (
               <>
                 <div className="ob-drop-main">Dateien ablegen oder tippen</div>
-                <div className="ob-drop-sub">Mehrere PDFs, DOCX oder TXT möglich · max. 25 MB pro Datei</div>
+                <div className="ob-drop-sub">Mehrere PDFs oder TXT möglich · max. 25 MB pro Datei</div>
               </>
             )}
           </div>
+          {/* H-01b: DOCX aus accept entfernt */}
           <input
             ref={fileInputRef}
             type="file"
             multiple
-            accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+            accept=".pdf,.txt,application/pdf,text/plain"
             style={{ display: 'none' }}
             onChange={e => e.target.files?.length && handleFiles(e.target.files)}
           />
@@ -962,7 +999,11 @@ export default function OnboardingScreen1({ onNext }) {
               className="ob-textarea"
               placeholder="Füge hier deinen Lernstoff ein …"
               value={materialText}
-              onChange={e => setMaterialText(e.target.value.slice(0, MAX_CHARS))}
+              onChange={e => {
+                // H-01c: Länge VOR Kürzen merken für korrekte Warnung
+                setOriginalMaterialLength(e.target.value.length);
+                setMaterialText(e.target.value.slice(0, MAX_CHARS));
+              }}
               rows={5}
             />
             <div style={{ fontSize: '12px', color: 'rgba(240,234,224,0.35)', marginTop: '4px', textAlign: 'right' }}>
@@ -972,6 +1013,25 @@ export default function OnboardingScreen1({ onNext }) {
         )}
 
         {fileError && <div className="ob-error">{fileError}</div>}
+
+        {/* H-01c: Trunkierungswarnung — sichtbar VOR dem API-Aufruf, basierend
+            auf der ursprünglichen Materiallänge (nicht dem bereits gekürzten Text).
+            Nutzer kann bewusst fortfahren oder abbrechen. */}
+        {materialText.length > BACKEND_LIMIT && (
+          <div className="ob-trunc-warn">
+            <span className="ob-trunc-icon">⚠️</span>
+            <div>
+              <div className="ob-trunc-title">
+                Nur {Math.round(BACKEND_LIMIT / Math.max(originalMaterialLength, materialText.length) * 100)}% deines Materials wird analysiert
+              </div>
+              <div className="ob-trunc-sub">
+                {(BACKEND_LIMIT / 1000).toFixed(0)}&thinsp;von&thinsp;
+                {((Math.max(originalMaterialLength, materialText.length)) / 1000).toFixed(1)}&thinsp;Tsd. Zeichen
+                {' '}· Du kannst trotzdem fortfahren
+              </div>
+            </div>
+          </div>
+        )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <button

@@ -125,11 +125,12 @@ export default function SessionScreen({ block, blocks, flashcards, goalType, spr
   // würden dadurch jede Sekunde abgebrochen und neu gestartet, bevor sie je
   // ablaufen können. Stabile Referenzen sind hier kein Stil, sondern nötig.
   const handleExplainDone = useCallback(() => setPhase(PHASES.CHECK), []);
-  const handleCardsDone = useCallback((answerResults) => {
+  const handleCardsDone = useCallback((answerResults, retryResults = {}) => {
     // Session→FSRS Bridge: Lernergebnisse an App weitergeben, damit FSRS-Karten
-    // aktualisiert werden (isGood=true → Rating.Good, false → Rating.Again)
+    // aktualisiert werden (isGood=true → Rating.Good, false → Rating.Again).
+    // retryResults ({ [concept]: 'right'|'wrong'|'skipped' }) wird nicht persistiert.
     if (answerResults && Object.keys(answerResults).length > 0) {
-      onSaveCardResults?.(answerResults);
+      onSaveCardResults?.(answerResults, retryResults);
     }
     setPhase(PHASES.CHECK);
   }, [onSaveCardResults]);

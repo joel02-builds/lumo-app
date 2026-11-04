@@ -24,15 +24,15 @@ import { useEffect, useRef, useState } from 'react';
 // ─── State → Bild-Mapping ──────────────────────────────────────────────────
 
 const MASCOT_IMAGES = {
-  idle:            '/mascot/lumo-idle.png',
-  learning:        '/mascot/lumo-learning.png',
-  complete:        '/mascot/lumo-complete.png',
-  thinking:        '/mascot/lumo-thinking.png',
-  cheer:           '/mascot/lumo-cheer.png',
+  idle:            '/mascot/lumo-idle.webp',
+  learning:        '/mascot/lumo-learning.webp',
+  complete:        '/mascot/lumo-complete.webp',
+  thinking:        '/mascot/lumo-thinking.webp',
+  cheer:           '/mascot/lumo-cheer.webp',
   // Neue States — können auf vorhandene Bilder mappen bis eigene verfügbar sind
-  'first-complete': '/mascot/lumo-cheer.png',   // Erste Block-Vollendung → Jubel
-  streak:          '/mascot/lumo-cheer.png',     // Streak-Meilenstein → Jubel
-  absence:         '/mascot/lumo-thinking.png',  // Lange Pause → nachdenklich
+  'first-complete': '/mascot/lumo-cheer.webp',   // Erste Block-Vollendung → Jubel
+  streak:          '/mascot/lumo-cheer.webp',     // Streak-Meilenstein → Jubel
+  absence:         '/mascot/lumo-thinking.webp',  // Lange Pause → nachdenklich
 };
 
 // ─── SVG-Fallback Komponente ────────────────────────────────────────────────

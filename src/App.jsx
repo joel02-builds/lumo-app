@@ -360,7 +360,9 @@ export default function App() {
   //
   // Matching: concept-String case-insensitive, weil Karten manchmal
   // leicht unterschiedlich formatiert sein können.
-  const handleSaveCardResults = useCallback((answerResults) => {
+  // retryResults: { [concept]: 'right' | 'wrong' | 'skipped' }
+  // Wird empfangen und als Log-Kontext verwendet, aber nicht persistiert.
+  const handleSaveCardResults = useCallback((answerResults, retryResults = {}) => {
     if (!answerResults || !state.flashcards?.length) return;
     const updates = [];
     for (const [concept, isGood] of Object.entries(answerResults)) {
@@ -372,9 +374,15 @@ export default function App() {
       try {
         const quality = isGood ? 2 : 0; // Good=2, Again=0
         const updated = calculateNextReview(card, quality);
+        if (updated._algorithm === 'fallback') {
+          // Kein Lerninhalt, keine Nutzerantworten – nur technische IDs
+          console.warn('[Lumo/FSRS] Fallback verwendet.', 'cardId:', card.id, '| reason:', updated._fallbackReason ?? 'unknown');
+        }
         updates.push({ id: card.id, updates: updated });
-      } catch {
-        // FSRS-Fehler still ignorieren – kein Loop-Stopper
+      } catch (err) {
+        // calculateNextReview sollte nach dem Fix keinen Fehler mehr werfen.
+        // Defensiver outer catch für unerwartete Fälle – kein Lerninhalt geloggt.
+        console.error('[Lumo/FSRS] Unerwarteter Fehler.', 'cardId:', card.id, '| err.name:', err?.name ?? 'unknown');
       }
     }
     if (updates.length > 0) {

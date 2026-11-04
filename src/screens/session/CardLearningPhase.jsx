@@ -67,6 +67,9 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
   const [repeatFeedback, setRepeatFeedback] = useState(null);
   const [repeatIsGood, setRepeatIsGood] = useState(false);
   const [repeatSending, setRepeatSending] = useState(false);
+  // Retry-Ergebnisse: nicht persistiert, nicht für FSRS verwendet.
+  // Erfasst 'right' | 'wrong' | 'skipped' pro Konzept für die aktuelle Session.
+  const [retryResults, setRetryResults] = useState({});
 
   // Micro-Reward Pool – variable-ratio für dopaminerge Verstärkung
   // Mood-adaptiv: Ton passt sich dem emotionalen Zustand an
@@ -368,15 +371,26 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
 
   function handleRepeatNext() {
     const isRepeatLast = repeatIndex >= weakCardQueue.length - 1;
+    const repeatCard = weakCardQueue[repeatIndex];
+
+    // Ergebnis erfassen – in beiden Branches, vor jedem State-Reset.
+    // repeatFeedback !== null = Karte wurde bewertet (nicht nur übersprungen).
+    if (repeatCard && repeatFeedback !== null) {
+      setRetryResults(prev => ({
+        ...prev,
+        [repeatCard.concept]: repeatIsGood ? 'right' : 'wrong',
+      }));
+    }
+
     if (isRepeatLast) {
-      // Wiederholung abgeschlossen → final-recall
+      // Letzte Karte: direkt abschließen
       setRepeatMode(false);
       setPhase('final-recall');
     } else {
       setRepeatIndex((i) => i + 1);
       setRepeatAnswer('');
       setRepeatFeedback(null);
-      setRepeatIsGood(false);
+      setRepeatIsGood(false);   // ← reset erst nach Erfassung
     }
   }
 
@@ -500,6 +514,21 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
         </button>
         <button
           onClick={() => {
+            const currentCard = weakCardQueue[repeatIndex];
+            setRetryResults(prev => {
+              const next = { ...prev };
+              if (currentCard) {
+                // Aktuelle Karte: bewertet oder noch nicht angeschaut
+                next[currentCard.concept] = repeatFeedback !== null
+                  ? (repeatIsGood ? 'right' : 'wrong')
+                  : 'skipped';
+              }
+              // Alle verbleibenden Karten als 'skipped' markieren
+              weakCardQueue.slice(repeatIndex + 1).forEach(c => {
+                next[c.concept] = 'skipped';
+              });
+              return next;
+            });
             setRepeatMode(false);
             setPhase('final-recall');
           }}
@@ -849,7 +878,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
               </p>
             </div>
             <button
-              onClick={() => onDone(answerResults)}
+              onClick={() => onDone(answerResults, retryResults)}
               style={{
                 width: '100%',
                 background: 'var(--gold)',

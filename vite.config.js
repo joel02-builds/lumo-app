@@ -17,8 +17,12 @@ export default defineConfig({
       // Strategie: Cache-First für Assets, Network-First für API-Calls
       workbox: {
         // App-Shell (JS/CSS/HTML) cachen — CacheFirst ist OK da Vite
-        // Content-Hashes in Dateinamen einbaut
+        // Content-Hashes in Dateinamen einbaut.
+        // PNG bleibt für PWA-Manifest-Icons (icon-192.png, icon-512.png).
+        // Mascot-PNGs werden via globIgnores ausgeschlossen — sie wurden nach
+        // WebP konvertiert und laufen über die Runtime-CacheFirst-Strategie.
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        globIgnores: ['mascot/*.png'],  // P-PWA-01: Mascot-PNGs (4,18 MB) nicht precachen
 
         // Navigations-Fallback: immer index.html ausliefern (SPA)
         navigateFallback: '/index.html',

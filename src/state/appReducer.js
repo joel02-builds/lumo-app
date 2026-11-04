@@ -285,9 +285,9 @@ export function appReducer(state, action) {
       return { ...state, screen: SCREENS.ONBOARDING, onboardingStep: 1 };
 
     case 'ADD_FLASHCARDS': {
-      const newCards = action.payload.filter(
-        newCard => !state.flashcards.find(existing => existing.id === newCard.id)
-      );
+      // P-FE-04: Set-basierte Deduplication (O(n+m) statt O(n*m))
+      const existingIds = new Set(state.flashcards.map(c => c.id));
+      const newCards = action.payload.filter(newCard => !existingIds.has(newCard.id));
       return { ...state, flashcards: [...state.flashcards, ...newCards] };
     }
 

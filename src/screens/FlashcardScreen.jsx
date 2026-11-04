@@ -502,7 +502,11 @@ export default function FlashcardScreen({ flashcards, onUpdateFlashcard, onRemov
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter, sortBy]);
 
-  const activeQueue = queueIds.map(id => flashcards.find(c => c.id === id)).filter(Boolean);
+  // P-FE-07: Memoized – verhindert unnötige Array-Neuberechnungen bei jedem Re-render
+  const activeQueue = useMemo(
+    () => queueIds.map(id => flashcards.find(c => c.id === id)).filter(Boolean),
+    [queueIds, flashcards],
+  );
   const currentCard = activeQueue[currentIndex];
   const total = activeQueue.length;
 
