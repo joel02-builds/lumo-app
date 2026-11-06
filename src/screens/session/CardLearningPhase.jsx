@@ -56,9 +56,10 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
   //
   // Max. 1 In-Session-Wiederholung pro Karte (kein endless loop).
   // Framing: "Noch kurz zurück" — nicht "Fehler".
-  // Session→FSRS Bridge: Ergebnis jeder Karte tracken (concept → isGood)
+  // Session→FSRS Bridge: Ergebnis jeder Karte tracken (concept → quality)
   // Wird am Ende an onDone übergeben → SessionScreen → App.jsx → FSRS Update
-  const [answerResults, setAnswerResults] = useState({}); // { [concept]: boolean }
+  // K-01: quality 0=Again, 1=Hard, 2=Good, 3=Easy (gesetzt durch handleRating)
+  const [answerResults, setAnswerResults] = useState({}); // { [concept]: number }
 
   const [weakCardQueue, setWeakCardQueue] = useState([]);   // Cards mit isGoodAnswer=false
   const [repeatMode, setRepeatMode] = useState(false);      // true = wir sind in der Wiederholungsrunde
@@ -218,18 +219,12 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
       });
       setFeedback(result.feedback);
       setIsGoodAnswer(result.isGood);
-      // Track per-card result for Session→FSRS Bridge
-      setAnswerResults((prev) => ({ ...prev, [currentCard.concept]: result.isGood }));
+      // K-01: answerResults + weakCardQueue werden jetzt in handleRating gesetzt
+      // (wenn der User eine der 4 Rating-Buttons klickt), nicht hier.
       if (result.isGood) {
         setRewardMessage(REWARD_MESSAGES[Math.floor(Math.random() * REWARD_MESSAGES.length)]);
         setShowRewardBurst(true);
         setTimeout(() => setShowRewardBurst(false), 600);
-      } else {
-        // Karte für In-Session-Wiederholung vormerken (max. 1x pro Karte)
-        setWeakCardQueue((q) => {
-          const alreadyQueued = q.some((c) => c.concept === currentCard.concept);
-          return alreadyQueued ? q : [...q, currentCard];
-        });
       }
       setPhase('feedback');
     } catch (err) {
@@ -241,17 +236,11 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
         : 'Beschreib es etwas ausführlicher.'
       );
       setIsGoodAnswer(isGood);
-      // Track per-card result for Session→FSRS Bridge (fallback path)
-      setAnswerResults((prev) => ({ ...prev, [currentCard.concept]: isGood }));
+      // K-01: answerResults + weakCardQueue werden in handleRating gesetzt (Fallback-Pfad)
       if (isGood) {
         setRewardMessage(REWARD_MESSAGES[Math.floor(Math.random() * REWARD_MESSAGES.length)]);
         setShowRewardBurst(true);
         setTimeout(() => setShowRewardBurst(false), 600);
-      } else {
-        setWeakCardQueue((q) => {
-          const alreadyQueued = q.some((c) => c.concept === currentCard.concept);
-          return alreadyQueued ? q : [...q, currentCard];
-        });
       }
       setPhase('feedback');
     } finally {
@@ -342,6 +331,35 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
         resetCardState();
       }
     }, 300);
+  }
+
+  // ── K-01: FSRS 4-Stufen-Bewertung ─────────────────────────────────────
+  // Wird aus den Rating-Buttons im Feedback-Screen aufgerufen.
+  // quality: 0=Again, 1=Hard, 2=Good, 3=Easy (FSRS-6 Qualitätsstufen)
+  //
+  // - Again (0): Karte sofort nochmal zeigen + In-Session-Wiederholung
+  // - Hard  (1): Weiter, aber Karte für In-Session-Wiederholung vormerken
+  // - Good  (2): Weiter, kein Repeat
+  // - Easy  (3): Weiter, kein Repeat
+  function handleRating(quality) {
+    // Track für FSRS Bridge (überschreibt evtl. früheren Wert bei Retry)
+    setAnswerResults((prev) => ({ ...prev, [currentCard.concept]: quality }));
+    // Again + Hard → In-Session-Wiederholung am Ende (max. 1x pro Karte)
+    if (quality <= 1) {
+      setWeakCardQueue((q) => {
+        const alreadyQueued = q.some((c) => c.concept === currentCard.concept);
+        return alreadyQueued ? q : [...q, currentCard];
+      });
+    }
+    if (quality === 0) {
+      // Nochmal: sofort nochmal versuchen (Reset ohne Karten-Index-Sprung)
+      setAnswer('');
+      setFeedback(null);
+      setIsGoodAnswer(false);
+      setPhase('answering');
+    } else {
+      handleNext();
+    }
   }
 
   // ── Wiederholungs-Handlers ──────────────────────────────────────────────
@@ -1838,59 +1856,47 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                 </div>
               )}
 
-              {isGoodAnswer ? (
-                <button onClick={handleNext} style={{
-                  width: '100%',
-                  background: 'var(--gold)',
-                  color: '#1a1206',
-                  border: 'none',
-                  borderRadius: '12px',
-                  padding: '14px',
-                  fontSize: '16px',
-                  fontWeight: '700',
-                  cursor: 'pointer',
+              {/* K-01: FSRS 4-Stufen-Bewertung statt binärer Gut/Nochmal-Auswahl */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <p style={{
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  letterSpacing: '0.8px',
+                  textTransform: 'uppercase',
+                  color: 'var(--text-secondary)',
+                  margin: '0',
+                  textAlign: 'center',
                 }}>
-                  {isLast ? 'Block abschließen' : 'Weiter →'}
-                </button>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <button
-                    onClick={() => {
-                      setAnswer('');
-                      setFeedback(null);
-                      setIsGoodAnswer(false);
-                      setPhase('answering');
-                    }}
-                    style={{
-                      width: '100%',
-                      background: 'var(--gold)',
-                      color: '#1a1206',
-                      border: 'none',
-                      borderRadius: '12px',
-                      padding: '14px',
-                      fontSize: '16px',
-                      fontWeight: '700',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {mood === 'bad' ? 'Nochmal – ich versuch\'s' : 'Nochmal versuchen'}
-                  </button>
-                  <button
-                    onClick={handleNext}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--text-secondary)',
-                      fontSize: '13px',
-                      cursor: 'pointer',
-                      padding: '8px',
-                      textDecoration: 'underline',
-                    }}
-                  >
-                    {mood === 'bad' ? 'Weiter – ist okay' : 'Weiter →'}
-                  </button>
+                  Wie sicher warst du?
+                </p>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {[
+                    { q: 0, label: 'Nochmal',  bg: 'rgba(196,122,43,0.18)', fg: 'var(--amber, #C47A2B)' },
+                    { q: 1, label: 'Schwer',   bg: 'rgba(196,122,43,0.09)', fg: 'var(--text-primary)' },
+                    { q: 2, label: 'Gut',      bg: 'rgba(80,180,100,0.12)', fg: 'var(--text-primary)' },
+                    { q: 3, label: 'Leicht',   bg: 'var(--gold)',           fg: '#1a1206' },
+                  ].map(({ q, label, bg, fg }) => (
+                    <button
+                      key={q}
+                      onClick={() => handleRating(q)}
+                      style={{
+                        flex: 1,
+                        background: bg,
+                        color: fg,
+                        border: 'none',
+                        borderRadius: '10px',
+                        padding: '12px 4px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        lineHeight: '1.2',
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
                 </div>
-              )}
+              </div>
             </>
           )}
         </div>

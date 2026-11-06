@@ -351,12 +351,16 @@ export default function App() {
   // Session→FSRS Bridge
   // ─────────────────────────────────────────────────────────────────────────
   // Nach einer Lernsession gibt CardLearningPhase die Ergebnisse jeder Karte
-  // weiter: { [concept]: isGood }. Hier suchen wir die passenden Flashcards
+  // weiter: { [concept]: quality }. Hier suchen wir die passenden Flashcards
   // im State und aktualisieren ihre FSRS-Werte.
   //
-  // Rating-Mapping (FSRS-6):
-  //   isGood=true  → Quality 2 (Good)  → normale Wiederholung
-  //   isGood=false → Quality 0 (Again) → Intervall verkürzen
+  // K-01: Rating-Mapping (FSRS-6, 4 Stufen):
+  //   0 = Again → kurzes Intervall, Karte wird bald wiederholt
+  //   1 = Hard  → etwas längeres Intervall
+  //   2 = Good  → normales Intervall
+  //   3 = Easy  → deutlich verlängertes Intervall
+  //
+  // Legacy-Fallback: boolean-Werte aus älteren Sessions werden toleriert.
   //
   // Matching: concept-String case-insensitive, weil Karten manchmal
   // leicht unterschiedlich formatiert sein können.
@@ -365,14 +369,17 @@ export default function App() {
   const handleSaveCardResults = useCallback((answerResults, retryResults = {}) => {
     if (!answerResults || !state.flashcards?.length) return;
     const updates = [];
-    for (const [concept, isGood] of Object.entries(answerResults)) {
+    for (const [concept, qualityOrLegacy] of Object.entries(answerResults)) {
       const conceptLower = concept.toLowerCase().trim();
       const card = state.flashcards.find(
         (c) => (c.concept || c.front || '').toLowerCase().trim() === conceptLower
       );
       if (!card) continue;
       try {
-        const quality = isGood ? 2 : 0; // Good=2, Again=0
+        // K-01: 4-stufige Qualität; Legacy-boolean-Fallback für Abwärtskompatibilität
+        const quality = typeof qualityOrLegacy === 'number'
+          ? Math.max(0, Math.min(3, Math.round(qualityOrLegacy)))
+          : (qualityOrLegacy ? 2 : 0);
         const updated = calculateNextReview(card, quality);
         if (updated._algorithm === 'fallback') {
           // Kein Lerninhalt, keine Nutzerantworten – nur technische IDs
