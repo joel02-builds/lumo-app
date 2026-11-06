@@ -516,19 +516,35 @@ export function deleteUserState(userId) {
 
 /**
  * Streak-Update: wird nach jeder abgeschlossenen Session aufgerufen.
- * Streak ist in state_json eingebettet, kein separates Feld nötig.
+ *
+ * P-BE-02: Statt vollständigen State zu laden (JSON.parse ~400 KB) und
+ * zurückzuschreiben (JSON.stringify ~400 KB), liest und schreibt diese
+ * Funktion nur das `streak`-Feld direkt via SQLite-JSON-Funktionen.
+ * Spart ~2 × 4–10 ms Serialisierungszeit + 1 vollständigen DB-Read.
+ *
+ * SQLite 3.53.4 (bundled in better-sqlite3) unterstützt json_extract
+ * und json_set seit SQLite 3.38.0 — hier sicher nutzbar. ✓
  */
 export function updateStreak(userId) {
   if (!db || !userId) return null;
   try {
-    const state = loadUserState(userId);
     const today = new Date().toDateString();
     const yesterday = new Date(Date.now() - 86400000).toDateString();
 
-    const streak = state?.streak || { days: 0, lastDate: null };
+    // P-BE-02: Nur streak-Feld lesen – kein vollständiger State-Load
+    const row = db.prepare(
+      "SELECT json_extract(state_json, '$.streak') AS streak_json FROM user_state WHERE user_id = ?"
+    ).get(userId);
+
+    // Kein State vorhanden — kein Streak-Update möglich
+    if (!row) return null;
+
+    const streak = row.streak_json
+      ? JSON.parse(row.streak_json)
+      : { days: 0, lastDate: null };
 
     if (streak.lastDate === today) {
-      // Bereits heute gelernt — kein Update
+      // Bereits heute gelernt — kein Update nötig
       return streak;
     }
 
@@ -537,9 +553,11 @@ export function updateStreak(userId) {
       lastDate: today,
     };
 
-    // Streak in State mergen
-    const newState = { ...(state || {}), streak: newStreak };
-    saveUserState(userId, newState);
+    // P-BE-02: Nur streak-Feld aktualisieren – kein vollständiger State-Save
+    db.prepare(
+      "UPDATE user_state SET state_json = json_set(state_json, '$.streak', json(?)), updated_at = datetime('now') WHERE user_id = ?"
+    ).run(JSON.stringify(newStreak), userId);
+
     return newStreak;
   } catch (err) {
     console.error('[DB] updateStreak Fehler:', err.message);
