@@ -422,10 +422,10 @@ export default function App() {
         console.error('[Lumo/FSRS] Unerwarteter Fehler.', 'cardId:', card.id, '| err.name:', err?.name ?? 'unknown');
       }
     }
+    // P-FE-02: Batch-Dispatch statt N einzelner UPDATE_FLASHCARD-Dispatches.
+    // Spart N−1 Reducer-Läufe, N−1 Re-Renders und N−1 State-Serialisierungen.
     if (updates.length > 0) {
-      updates.forEach(({ id, updates: u }) => {
-        dispatch({ type: 'UPDATE_FLASHCARD', payload: { id, updates: u } });
-      });
+      dispatch({ type: 'UPDATE_FLASHCARDS_BATCH', payload: updates });
     }
   }, [state.flashcards]);
 

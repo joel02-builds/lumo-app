@@ -308,6 +308,23 @@ export function appReducer(state, action) {
       };
     }
 
+    // P-FE-02: Batch-Update für mehrere Karten nach einer Session.
+    // Statt N einzelner UPDATE_FLASHCARD-Dispatches (N Reducer-Läufe +
+    // N Re-Renders + N Serialisierungen) → 1 Dispatch, 1 Reducer-Lauf,
+    // 1 Re-Render, 1 Serialisierung. Map-Lookup für O(n+m) statt O(n×m).
+    case 'UPDATE_FLASHCARDS_BATCH': {
+      if (!action.payload?.length) return state;
+      const updateMap = new Map(action.payload.map(u => [u.id, u.updates]));
+      const now = new Date().toISOString();
+      return {
+        ...state,
+        flashcards: state.flashcards.map(card => {
+          const upd = updateMap.get(card.id);
+          return upd ? { ...card, ...upd, lastReviewed: now } : card;
+        }),
+      };
+    }
+
     case 'REMOVE_FLASHCARD': {
       return {
         ...state,
