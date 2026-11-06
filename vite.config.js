@@ -76,6 +76,25 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    // P-FE-11: Vendor-Chunks trennen — React und ts-fsrs ändern sich selten,
+    // daher profitieren sie am meisten von separatem Browser-Caching.
+    // react-dom ist das schwerste Paket (~130 KB min); nach dem ersten Besuch
+    // wird es aus dem SW-Cache bedient statt neu heruntergeladen.
+    rollupOptions: {
+      output: {
+        // P-FE-11: Rolldown benötigt manualChunks als Funktion (kein Objekt)
+        manualChunks(id) {
+          if (id.includes('/node_modules/react') || id.includes('/node_modules/react-dom')) {
+            return 'vendor-react';
+          }
+          if (id.includes('/node_modules/ts-fsrs')) {
+            return 'vendor-fsrs';
+          }
+        },
+      },
+    },
+  },
   server: {
     port: 5173,
     strictPort: true,

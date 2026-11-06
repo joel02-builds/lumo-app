@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { appReducer, createInitialState, SCREENS } from './state/appReducer.js';
 import { lumoApi } from './api/lumo.js';
 import {
@@ -14,26 +14,50 @@ import { loadServerState, scheduleSyncToServer, mergeStates, syncStreak } from '
 import { clearAllNotes } from './utils/notesStorage.js';
 import { startKeepAlive } from './utils/keepAlive.js';
 import StorageWarningBanner from './components/StorageWarningBanner.jsx';
-import OnboardingScreen1 from './screens/onboarding/OnboardingScreen1.jsx';
-// OnboardingScreen2 wurde in OnboardingScreen1 zusammengeführt (Welcome + Material in einem Schritt)
-import OnboardingScreen3 from './screens/onboarding/OnboardingScreen3.jsx';
-import AnalyzingScreen from './screens/AnalyzingScreen.jsx';
+// P-FE-11: Code Splitting — Screens in zwei Kategorien:
+//
+// EAGER (im Haupt-Bundle):
+//   DashboardScreen, WelcomeBackScreen, SessionScreen
+//   → Werden sofort nach App-Load gebraucht; kein Delay akzeptabel.
+//
+// LAZY (eigener Chunk, lädt on-demand):
+//   Alle anderen Screens — sie erscheinen erst nach einer Nutzeraktion
+//   (Material hochladen, Analyse starten, Einstellungen öffnen, …).
+//   Beim ersten Besuch kurzer transparenter Fallback; danach aus SW-Cache.
+//
+// Laden: React.lazy() + Suspense mit minimalem Fallback (#0E0C09 = App-Hintergrund)
+// → kein weißer Flash, kein Spinner-Noise.
+
+// ── Eager ──────────────────────────────────────────────────────────────────
 import DashboardScreen from './screens/dashboard/DashboardScreen.jsx';
 import SessionScreen from './screens/session/SessionScreen.jsx';
 import WelcomeBackScreen from './screens/WelcomeBackScreen.jsx';
-import WeakSpotsScreen from './screens/WeakSpotsScreen.jsx';
-import ProjectsScreen from './screens/ProjectsScreen.jsx';
-import ExamResultScreen from './screens/ExamResultScreen.jsx';
-import SettingsScreen from './screens/SettingsScreen.jsx';
-import FlashcardScreen from './screens/FlashcardScreen.jsx';
-import MaterialConfirmationScreen from './screens/MaterialConfirmationScreen.jsx';
+
+// ── Lazy ───────────────────────────────────────────────────────────────────
+// OnboardingScreen2 wurde in OnboardingScreen1 zusammengeführt (Welcome + Material in einem Schritt)
+const OnboardingScreen1          = lazy(() => import('./screens/onboarding/OnboardingScreen1.jsx'));
+const OnboardingScreen3          = lazy(() => import('./screens/onboarding/OnboardingScreen3.jsx'));
+const AnalyzingScreen            = lazy(() => import('./screens/AnalyzingScreen.jsx'));
+const MaterialConfirmationScreen = lazy(() => import('./screens/MaterialConfirmationScreen.jsx'));
+const WeakSpotsScreen            = lazy(() => import('./screens/WeakSpotsScreen.jsx'));
+const ProjectsScreen             = lazy(() => import('./screens/ProjectsScreen.jsx'));
+const ExamResultScreen           = lazy(() => import('./screens/ExamResultScreen.jsx'));
+const SettingsScreen             = lazy(() => import('./screens/SettingsScreen.jsx'));
+const FlashcardScreen            = lazy(() => import('./screens/FlashcardScreen.jsx'));
+const LegalScreen                = lazy(() => import('./screens/LegalScreen.jsx'));
+
 import ErrorBanner from './components/ErrorBanner.jsx';
 import LumoWordmark from './components/LumoWordmark.jsx';
 import OfflineBanner from './components/OfflineBanner.jsx';
 import InstallBanner from './components/InstallBanner.jsx';
 import BetaFeedbackButton from './components/BetaFeedbackButton.jsx';
-import LegalScreen from './screens/LegalScreen.jsx';
 import CookieConsent, { useCookieConsent } from './components/CookieConsent.jsx';
+
+// Minimaler Suspense-Fallback: transparenter dunkler Hintergrund —
+// kein weißer Flash, kein Spinner der ablenkt (ADHS-safe).
+function LazyFallback() {
+  return <div style={{ position: 'fixed', inset: 0, background: '#0E0C09' }} />;
+}
 import { calculateNextReview } from './utils/fsrs.js';
 
 export default function App() {
@@ -418,9 +442,14 @@ export default function App() {
   return (
     <>
       {/* LegalScreen überlagert alles — via showLegal aus jedem Screen erreichbar */}
-      {showLegal && <LegalScreen onBack={() => setShowLegal(false)} />}
+      {showLegal && (
+        <Suspense fallback={<LazyFallback />}>
+          <LegalScreen onBack={() => setShowLegal(false)} />
+        </Suspense>
+      )}
 
       {!showLegal && (
+        <Suspense fallback={<LazyFallback />}>
         <>
       {!isOnline && <OfflineBanner />}
       {storageLayer === 'localStorage' && <StorageWarningBanner />}
@@ -590,6 +619,7 @@ export default function App() {
         />
       )}
         </>
+        </Suspense>
       )}
     </>
   );
