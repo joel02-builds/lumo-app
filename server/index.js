@@ -883,7 +883,7 @@ app.get('/api/state', (req, res) => {
 
 // S-06: State-Schema-Validierung
 // Maximale Payload-Größe (als String, da JSON.stringify für die Größenprüfung):
-const MAX_STATE_JSON_BYTES = 500 * 1024; // 500 KB
+const MAX_STATE_JSON_BYTES = 1024 * 1024; // 1 MB – P-DB-01: Limit angehoben (war 500 KB)
 const MAX_STATE_DEPTH = 10;              // Max. Verschachtelungstiefe
 
 /**
