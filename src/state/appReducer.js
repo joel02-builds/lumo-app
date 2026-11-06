@@ -133,9 +133,15 @@ export function appReducer(state, action) {
     // P2-BUG-02: BACK_TO_STEP2 wird von onboardingStep===3 dispatcht.
     // Seit Screen 2 mit Screen 1 zusammengeführt wurde (Step 2 existiert nicht mehr
     // als eigene Render-Kondition in App.jsx), ist die korrekte Ziel-Step hier 1.
-    // Der Action-Name ist historisch; der Reducer-Sprung zu onboardingStep: 1 ist korrekt.
+    // Der Action-Name ist historisch.
+    //
+    // Bug-Fix: Rückkehrende Nutzer (bereits mind. 1 Projekt) kamen über den
+    // Projects-Screen hierher. Für sie geht "Zurück" zur Projektliste, nicht
+    // zum Welcome-Screen, den sie schon kennen.
     case 'BACK_TO_STEP2':
-      return { ...state, onboardingStep: 1 };
+      return state.projects.length > 0
+        ? { ...state, screen: SCREENS.PROJECTS }
+        : { ...state, onboardingStep: 1 };
 
     case 'START_ANALYSIS':
       return {
@@ -385,18 +391,25 @@ export function appReducer(state, action) {
       return { ...state, projects };
     }
 
-    case 'START_NEW_PROJECT':
+    case 'START_NEW_PROJECT': {
       // Gespeicherte Projekte (projects), die Lifetime-Nutzungszähler für das
       // künftige Freemium-Limit und die Karteikarten (fach-/projektübergreifend
       // zum Wiederholen gedacht) bleiben über einen Neustart hinweg erhalten.
       // Nur der aktuell aktive Arbeitsstand wird zurückgesetzt.
+      //
+      // Bug-Fix: Rückkehrende Nutzer (projects.length > 0) überspringen die
+      // Onboarding-Intro-Phasen (s0-s3) und landen direkt auf dem Form.
+      // Das wird in App.jsx via skipIntro-Prop an OnboardingScreen1 übergeben.
+      // onboardingStep bleibt immer 1 (OnboardingScreen1 rendert das Formular).
       return {
         ...initialState,
         projects: state.projects,
         blocksAnalyzedTotal: state.blocksAnalyzedTotal,
         sessionsTotal: state.sessionsTotal,
         flashcards: state.flashcards,
+        onboardingStep: 1,
       };
+    }
 
     default:
       return state;

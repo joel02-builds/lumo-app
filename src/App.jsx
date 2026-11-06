@@ -462,9 +462,17 @@ export default function App() {
         />
       )}
 
-      {/* Kombinierter Welcome + Material Screen (früher Screen 1 + 2 getrennt) */}
+      {/* Kombinierter Welcome + Material Screen (früher Screen 1 + 2 getrennt)
+           Bug-Fix: Rückkehrende Nutzer (projects.length > 0) überspringen die
+           Intro-Phasen s0–s3 und starten direkt im Form. Zurück-Button auf dem
+           Form dispatcht BACK_TO_STEP2 → Projekteliste statt Welcome-Screen. */}
       {isWelcomeScreen && (
-        <OnboardingScreen1 onNext={handleMaterial} onShowLegal={() => setShowLegal(true)} />
+        <OnboardingScreen1
+          onNext={handleMaterial}
+          onShowLegal={() => setShowLegal(true)}
+          skipIntro={state.projects.length > 0}
+          onBack={state.projects.length > 0 ? () => dispatch({ type: 'BACK_TO_STEP2' }) : null}
+        />
       )}
 
       {state.screen === SCREENS.ONBOARDING && state.onboardingStep === 3 && (

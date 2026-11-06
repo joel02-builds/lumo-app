@@ -63,8 +63,10 @@ const QUIZ_Q2 = {
   ],
 };
 
-export default function OnboardingScreen1({ onNext }) {
-  const [phase, setPhase] = useState('s0'); // s0 → s1 → s2 → s3 → form
+export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = null }) {
+  // Bug-Fix: Rückkehrende Nutzer (skipIntro=true) starten direkt im Form,
+  // sie brauchen die Intro-Phasen s0–s3 nicht noch einmal zu sehen.
+  const [phase, setPhase] = useState(skipIntro ? 'form' : 's0'); // s0 → s1 → s2 → s3 → form
   const [outPhase, setOutPhase] = useState(null);
 
   // S2 Quiz state
@@ -694,9 +696,14 @@ export default function OnboardingScreen1({ onNext }) {
         <div className="ob-prog-fill" style={{ width: `${progress}%` }} />
       </div>
 
-      {/* Back — sichtbar ab S1 (S0 hat kein Zurück); im Form zurück zu S3 */}
+      {/* Back — sichtbar ab S1 (S0 hat kein Zurück); im Form zurück zu S3
+           oder per onBack-Prop (Rückkehrende Nutzer → Projekteliste) */}
       {phase !== 's0' && (
-        <button className="ob-back" onClick={goBack} aria-label="Zurück">
+        <button
+          className="ob-back"
+          onClick={phase === 'form' && onBack ? onBack : goBack}
+          aria-label="Zurück"
+        >
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
             <path d="M13 8H3M7 4l-4 4 4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
