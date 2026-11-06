@@ -80,6 +80,7 @@ export default function App() {
   // Storage-Status für Warning Banner
   const [storageLayer, setStorageLayer] = useState(null); // null = noch nicht geprüft
   const idbHydrated = useRef(false);
+  const idbDebounceRef = useRef(null); // P-FE-01: Debounce für IDB-Write
 
   // Beim ersten Render:
   // 1. requestPersistentStorage — einmalig, erhöht Schutz vor Browser-Eviction
@@ -184,13 +185,18 @@ export default function App() {
       flashcards: state.flashcards,
     };
 
-    // Sync: sofortiger localStorage-Write (UI blockiert nie)
+    // Sync: sofortiger localStorage-Write (Sicherheitsnetz, kein IDB-Overhead)
     saveProject(snapshot);
 
-    // Async: IDB-Write im Hintergrund (primärer Layer)
-    saveProjectAsync(snapshot).catch(() => {
-      // IDB-Fehler sind nicht kritisch – localStorage ist der Fallback
-    });
+    // Async: IDB-Write debounced — P-FE-01: bei schnellen State-Updates (z. B.
+    // Karteikarten-Flipping) wird nur der letzte Stand innerhalb von 300 ms
+    // in IDB geschrieben. localStorage hält jeden Zwischenstand als Fallback.
+    clearTimeout(idbDebounceRef.current);
+    idbDebounceRef.current = setTimeout(() => {
+      saveProjectAsync(snapshot).catch(() => {
+        // IDB-Fehler sind nicht kritisch – localStorage ist der Fallback
+      });
+    }, 300);
 
     // Server-Sync — nur bei erteiletem Cookie-Consent (ePrivacy)
     const cookieConsent = (() => { try { return localStorage.getItem('lumo_cookie_consent'); } catch { return null; } })();

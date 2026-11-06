@@ -91,8 +91,7 @@ console.log('NODE_ENV:', process.env.NODE_ENV);
 // Diagnose: Railway-Erkennung über dokumentierte Plattformvariablen
 console.log('RAILWAY_ENVIRONMENT_ID:', process.env.RAILWAY_ENVIRONMENT_ID);
 console.log('RAILWAY_ENVIRONMENT_NAME:', process.env.RAILWAY_ENVIRONMENT_NAME);
-console.log('API KEY vorhanden:', Boolean(process.env.ANTHROPIC_API_KEY));
-console.log('API KEY Länge:', process.env.ANTHROPIC_API_KEY?.length || 0);
+console.log('API KEY vorhanden:', Boolean(process.env.ANTHROPIC_API_KEY)); // R-01: Länge entfernt (unnötig, kein Mehrwert)
 // Nur die Namen, keine Werte – ausschließlich in Entwicklung, da die vollständige
 // ENV-Key-Liste in Production nicht benötigt wird und unnötige Offenlegung birgt.
 // isProd ist bereits in Zeile 74 definiert (NODE_ENV === 'production' || IS_RAILWAY).
