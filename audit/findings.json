@@ -241,5 +241,65 @@
     "fix": "(1) index.html: <meta name='description' content='Lumo – KI-gestütztes Lernbegleiter-System für strukturiertes und effektives Lernen'> ergänzen. (2) public/robots.txt erstellen: 'User-agent: *\\nAllow: /\\nSitemap: https://lumo-app.up.railway.app/sitemap.xml'. Vite kopiert Dateien aus public/ automatisch in dist/.",
     "konfidenz": "hoch",
     "status": "CONFIRMED"
+  },
+  {
+    "id": "F023",
+    "bereich": "5 Sicherheit",
+    "schwere": "S1",
+    "befund": "Auf dem Live-Deployment (Render) fehlen alle Security-Header vollständig: CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, Cross-Origin-Opener-Policy und Cross-Origin-Resource-Policy. x-powered-by: Express ist gesetzt. Ursache: Der zuletzt deployete Commit (~53cb6809, 2026-11-02 21:36 +0100) enthält keinen Helmet-Import. Helmet wurde erst in Commit 32db339 (2026-11-04 19:26 +0100) hinzugefügt. Render wurde nach dem Security-Hardening nicht neu deployed; der Live-Stand läuft mit Code vom 2. November — 15+ Commits und ~2 Tage hinter origin/main.",
+    "beleg": "Live-Messung (extern, 8. Nov 2026): CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, COOP, CORP fehlen; x-powered-by: Express gesetzt. Bundle-Timestamp: index-CKVMGB5f.js last-modified 2026-11-02 20:36 UTC (= commit 53cb6809, 21:36 +0100). Verifikation: git show 53cb6809:server/index.js | head -15 → kein Helmet-Import; git log --follow -S 'app.use(helmet' -- server/index.js → 32db339 (2026-11-04). Helmet ist in render.yaml nicht als Abhängigkeit deklariert; NODE_ENV=production ist gesetzt, IS_RAILWAY=false (keine RAILWAY_*-Vars in render.yaml), isProd=true wegen NODE_ENV.",
+    "reproduktion": "curl -sI https://[live-url]/ | grep -Ei 'x-frame|content-security|strict-transport|x-content|referrer|permissions|x-powered' → kein Treffer außer x-powered-by: Express.",
+    "fix": "Render-Redeploy auf aktuellen Stand (origin/main HEAD = 395d3e0 oder später). Damit wird Helmet 8.3.0 aktiviert und alle konfigurierten Security-Header werden gesetzt. Zusätzlich empfohlen: render.yaml um einen Health-Check und einen Deploy-Hook mit Header-Verifikation erweitern.",
+    "stand": "Live-Stand",
+    "konfidenz": "hoch",
+    "status": "CONFIRMED"
+  },
+  {
+    "id": "F024",
+    "bereich": "8 Lernwirksamkeit",
+    "schwere": "S2",
+    "befund": "Das KI-Feedback bei falschen Antworten benennt die konkrete Fehlvorstellung des Nutzers nicht. Bei der live getesteten Falschantwort 'Synapsen leiten elektrischen Strom schneller weiter' antwortete Lumo mit 'Noch nicht ganz' und zeigte die Musterantwort in zwei Boxen — ohne die spezifischen Irrtümer ('elektrisch statt chemisch', 'schneller statt mit chemischer Verzögerung') explizit zu benennen. Lernforschung (Hattie & Timperley 2007; Shute 2008) zeigt, dass 'elaborative Korrektur' — also das Benennen der Fehlvorstellung plus Erklärung der Korrektur — signifikant effektiver für Konzeptlernen ist als reine Modellvorgabe. Ohne dieses Feedback weiß der Nutzer nicht, welchen Denkfehler er korrigieren muss.",
+    "beleg": "Live-Messung (extern, 8. Nov 2026): POST /api/evaluate-card-answer mit Antwort 'Synapsen leiten elektrischen Strom schneller weiter' → Response 'Noch nicht ganz' + Musterantwort doppelt; weder 'chemisch' noch 'langsamer' noch ähnliche korrigierende Erklärung in der Antwort. Code-Review: server/prompts.js (evaluate-card-answer Prompt) enthält keine Instruktion, die Fehlvorstellung des Nutzers explizit zu adressieren.",
+    "reproduktion": "POST /api/evaluate-card-answer mit einer Antwort, die einen klassischen Denkfehler enthält → Feedback verweist auf Musterantwort, benennt den Irrtum aber nicht direkt.",
+    "fix": "Prompt für evaluate-card-answer erweitern: 'Wenn die Antwort einen konkreten Denkfehler enthält, benenne ihn explizit (z.B. \"Du hast Elektronen mit Neurotransmittern verwechselt\") und erkläre, warum die korrekte Antwort stimmt.' UI-Erweiterung: Neben der Musterantwort eine separate Zeile 'Wo dein Fehler lag: ...' einfügen.",
+    "stand": "beide",
+    "konfidenz": "hoch",
+    "status": "CONFIRMED"
+  },
+  {
+    "id": "F025",
+    "bereich": "3 Produktdesign und UX",
+    "schwere": "S2",
+    "befund": "Nach einer nicht bestandenen Wiederholungsfrage zeigt die App nur 'Fertig ✓' — keine Musterlösung, kein Exit-Button, keine Pause-Option. Die Wiederholungsfrage taucht nach ca. einer Minute wörtlich identisch wieder auf. Der Nutzer befindet sich in einem geschlossenen Loop ohne Ausweg: Er kann weder zur Lösung nachschlagen, noch die Session temporär verlassen, noch den Zyklus bewusst unterbrechen. Für ADHS-Nutzer ist dies besonders kritisch: Frustration über wiederholtes Scheitern ohne erkennbaren Ausweg führt zu Learned Helplessness (Seligman 1972) und Task Abandonment. Absicht des Designers (activation-only) ist verständlich, löst das Nutzerproblem aber nicht.",
+    "beleg": "Live-Messung (extern, 8. Nov 2026): 'Wiederholungsfrage kommt nach etwa einer Minute wörtlich wieder; bei nicht bestanden erscheint nur \"Fertig ✓\" ohne Lösung; der Screen hat kein Zurück und keine Pause.' Code-Review: BlockCompletePhase.jsx / SessionScreen.jsx — kein Button für 'Lösung zeigen', kein 'Session beenden', kein 'Pause'.",
+    "reproduktion": "Session starten → Karteikartenphase absichtlich falsch beantworten → 'Fertig ✓' klicken → Wiederholungsfrage nach ~1 Minute → Frage falsch beantworten → Ergebnis 'nicht bestanden' → kein Ausweg sichtbar.",
+    "fix": "Nach 'nicht bestanden': (1) Musterlösung einblenden ('Hier die Antwort:', collapsible), (2) 'Session beenden'-Button sichtbar machen (Escape-Hatch), (3) 'Wiederholen' als explizite Wahl anbieten. Alternativ: Beim zweiten Fehlversuch in Folge automatisch Musterlösung zeigen (Desirable Difficulty Prinzip).",
+    "stand": "beide",
+    "konfidenz": "hoch",
+    "status": "CONFIRMED"
+  },
+  {
+    "id": "F026",
+    "bereich": "3 Produktdesign und UX",
+    "schwere": "S2",
+    "befund": "Beim Start einer Session wartet die App 15–20 Sekunden auf generate-cards ohne jeden Statustext oder Fortschrittsindikator. Die analyze-Route braucht 25–30 Sekunden, ebenfalls ohne Rückmeldung. Der Nutzer sieht einen leeren oder eingefrorenen Screen und kann nicht unterscheiden, ob die App arbeitet, hängt oder abgestürzt ist. Dies verletzt Nielsen-Heuristik #1 (System Status Visibility). Für ADHS-Nutzer ist dies besonders schädlich: Fehlende Rückmeldung führt zu erhöhtem Cognitive Load, Frustration und impulsivem Reload (was den Prozess unterbricht). Die Offline-First-Architektur erklärt die Wartezeit, nicht aber das Fehlen des Indikators.",
+    "beleg": "Live-Messung (extern, 8. Nov 2026): 'Sessionstart wartet 15 bis 20 s auf generate-cards ohne Statustext, analyze braucht 25 bis 30 s.' Code-Review: SessionScreen.jsx — kein Loading-State-Rendering beim initialen KI-Aufruf sichtbar.",
+    "reproduktion": "Session mit neuem Material starten → Timer messen bis erste Karteikarte erscheint → kein Ladebalken, kein Statustext, kein Spinner während der gesamten Wartezeit.",
+    "fix": "Loading-State in SessionScreen.jsx implementieren: Sobald generate-cards-Request abgeht, Spinner + Text zeigen ('Lumo bereitet deine Karten vor…'). Für analyze: Progressiver Status ('Analysiert Thema… Erstellt Verbindungen… Fast fertig…'). Optional: Skeleton-Cards als Placeholder. Latenz selbst ist akzeptabel für einmalige Vorbereitung — die fehlende Anzeige ist das Problem.",
+    "stand": "beide",
+    "konfidenz": "hoch",
+    "status": "CONFIRMED"
+  },
+  {
+    "id": "F027",
+    "bereich": "3 Produktdesign und UX",
+    "schwere": "S2",
+    "befund": "Auf Session-Screens bei 1280px Breite überlappt der Zurück-Button (x: 16–90px, y: 16–51px) mit dem Logo (x: 68–115px, y: 29–56px). Auf Mobilgeräten überdeckt der Feedback-Button Block 4 und der Sticky-Button ist unten abgeschnitten. Diese Überlappungen sind nur auf dem Live-Server reproduzierbar (zuvor als 'nicht prüfbar' eingestuft, da nur lokal getestet). Überlappende interaktive Elemente verletzen WCAG 2.5.8 (Minimum Touch Target Size) und erzeugen Fehleingaben, besonders bei ADHS-Nutzern mit Impulsivität.",
+    "beleg": "Live-Messung (extern, 8. Nov 2026): 'Überlappung: Zurück-Button (x 16-90, y 16-51) liegt über dem Logo (x 68-115, y 29-56) auf Session-Screens bei 1280 px. Mobil überdeckt der Feedback-Button Block 4, der Sticky-Button ist abgeschnitten.' Zuvor PLAUSIBLE/nicht prüfbar — jetzt CONFIRMED durch externe Browser-Messung.",
+    "reproduktion": "Live-URL auf 1280px Breite → Session starten → Zurück-Button und Logo-Position vermessen. Mobil (z.B. iPhone 14 Pro, 393px) → Session starten → Feedback-Button und Block 4 prüfen.",
+    "fix": "Session-Screen-Header: z-index und Position von Zurück-Button und Logo klären (kein absolutes Positioning mit überlappenden Koordinaten). Mobil: Feedback-Button in separate Zeile auslagern oder fixen; Sticky-Button bottom-Offset um safe-area-inset-bottom erweitern.",
+    "stand": "beide",
+    "konfidenz": "hoch",
+    "status": "CONFIRMED"
   }
 ]

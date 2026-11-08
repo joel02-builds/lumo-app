@@ -1,314 +1,211 @@
-# Lumo Pre-Launch Audit — Abschlussbericht (v2 — korrigiert)
+# Lumo Pre-Launch Audit — Abschlussbericht (v3)
 
-**Datum:** 2026-11-08  
-**Auditor:** Claude Sonnet 4.6 (Phasen A–F, inkl. Lighthouse + axe-core)  
-**Findings:** 22 Befunde (F001–F022), davon 20 CONFIRMED, 2 PLAUSIBLE  
-**Korrekturen gegenüber v1:** Scores durchgehend per Formel berechnet; Phase D (Lighthouse, axe-core) abgeschlossen; F019–F022 neu.
-
----
-
-## Erläuterungen vor dem Lesen
-
-**Was wurde geprüft?**  
-Der lokale Arbeitsstand (Arbeitsverzeichnis, nicht deployed). Deployed auf origin/main läuft Commit `395d3e0`, der P01-Änderungen (globaler AI-Concurrency-Gate, WAL-Checkpoint, iteratives `isTooDeep`, Batch-Flashcard-Update) **nicht** enthält. Bereiche 1 und 5 profitieren vom lokalen Stand; der deployed Code ist schwächer.
-
-**Live-URL nicht erreichbar?**  
-Externe HTTPS-Verbindungen sind im Ausführungs-Container geblockt (Proxy 403 CONNECT). Security-Header wurden über einen lokalen Produktions-Server (`DB_PATH=/tmp NODE_ENV=production`) verifiziert. Alle weiteren Tests ebenfalls lokal.
-
-**Formel:** `100 − Σ Abzüge`; S1 = 12, S2 = 5, S3 = 1,5; **nur CONFIRMED-Befunde zählen.**  
-PLAUSIBLE-Befunde erscheinen in der Tabelle mit `(0)` — sie fließen nicht in die Score-Berechnung ein.
+**Datum:** 2026-11-08 (v3 — Zwei-Stand-Bewertung, Live-Evidenz)  
+**Auditor:** Claude Sonnet 4.6 (Phasen A–F, Lighthouse, axe-core, Live-Verifikation)  
+**Findings:** 27 Befunde (F001–F027) · 25 CONFIRMED · 2 PLAUSIBLE  
+**v3 gegenüber v2:** Zwei Stände bewertet (Live-Stand vs. Arbeitsstand); F023–F027 aus Live-Evidenz; Bereiche 4 und 12 als „nicht bewertet"; Schnitt nur über bewertete Bereiche.
 
 ---
 
-## 1. Punktezahl je Bereich — mit Rechenweg
+## Kurzurteil
 
-| Nr | Bereich | Formel | **Punkte** | Konfidenz | Einschränkungen |
-|----|---------|--------|-----------|-----------|-----------------|
-| 1 | Engineering | 100 − 1,5 (F011) | **98,5** | mittel | F009 PLAUSIBLE (nicht gezählt) |
-| 2 | QA und Funktion | 100 − 5 (F003) | **95** | mittel | — |
-| 3 | Produktdesign und UX | 100 − 1,5 (F012) | **98,5** | mittel | Keine Browser-Nutzertests |
-| 4 | KI-Pipeline | 100 | **100** ⚠️ | niedrig | Golden Set nicht durchführbar; Latenz nicht messbar |
-| 5 | Sicherheit | 100 − 5 − 5 − 1,5 − 1,5 − 1,5 | **85,5** | hoch | F001+F002+F008+F014+F019 |
-| 6 | Datenschutz und Recht | 100 − 5 − 5 − 5 − 5 | **80** | hoch | F004+F005+F006+F007 |
-| 7 | Performance | 100 − 1,5 − 5 − 1,5 | **92** | mittel | F018+F021+F022; lokal ohne CDN getestet |
-| 8 | Lernwirksamkeit | 100 − 1,5 (F013) | **98,5** | mittel | FSRS vollständig geprüft |
-| 9 | Barrierefreiheit | 100 − 1,5 − 5 | **93,5** | hoch | F017+F020; Lighthouse+axe-core ausgeführt |
-| 10 | Plattform und PWA | 100 − 1,5 (F010) | **98,5** | hoch | — |
-| 11 | Betrieb und Release | 100 − 5 (F016) | **95** | mittel | F015 PLAUSIBLE (nicht gezählt) |
-| 12 | Produkt und Wirtschaftlichkeit | 100 | **100** ⚠️ | sehr niedrig | Nicht geprüft; kein Abzug mangels Evidenz |
+| Stand | Verdict | Begründung |
+|-------|---------|------------|
+| **Live-Stand** (deployed Render) | 🔴 **HARD NO-GO** | F023 (S1): Alle Security-Header fehlen im deployed Code. Render läuft noch auf Commit vom 2. Nov. — 15+ Commits hinter origin/main. |
+| **Arbeitsstand** (lokal, inkl. P01) | 🟡 **CONDITIONAL NO-GO** | Keine S1-Befunde; 7 offene S2-Befunde in Sicherheit, Datenschutz, UX und Betrieb. Launch nach gezielten Fixes möglich. |
 
-**⚠️ = Formel-Score ohne Messung; realer Score kann niedriger liegen.**
-
-**Gesamtschnitt** (alle 12 Bereiche, ungewichtet): **94,5 / 100**
-
-**v1 → v2 Änderungen:**  
-Bereiche 1, 3, 4, 7, 8, 9, 10, 11 wurden korrigiert. Frühere Scores (82, 77, 87, 90, 97, 72, 90) waren entweder nicht formelbasiert oder ohne Messungen gesetzt.
+**Kritischer Pfad:** Render-Redeploy auf aktuellen Stand (origin/main HEAD `395d3e0` oder später) → Live-Stand wird Arbeitsstand-equivalent → HARD NO-GO wird CONDITIONAL NO-GO. Danach: S2-Befunde adressieren.
 
 ---
 
-## 2. Klärungsfragen — vollständige Antworten
+## Methodik
 
-### Frage 1: Welcher Stand wurde geprüft?
+**Formel:** `100 − Σ Abzüge` je Bereich; S1 = 12 Pkt., S2 = 5 Pkt., S3 = 1,5 Pkt.; **nur CONFIRMED-Befunde zählen.**
+
+**PLAUSIBLE-Befunde** fließen nicht in die Score-Berechnung ein (erscheinen mit `0` Abzug).
+
+**„Nicht bewertet"** = Bereich wurde nicht ausreichend gemessen; kein Score, kein Abzug. Der Gesamtschnitt wird nur über bewertete Bereiche berechnet.
+
+**Stands:**
+- **Live-Stand** = auf Render deployte Version (Bundle-Timestamp 2026-11-02 20:36 UTC, Commit ~53cb6809/560a864)
+- **Arbeitsstand** = lokal, inkl. P01-Änderungen (server/index.js mit Helmet, appReducer.js mit BATCH_UPDATE)
+
+---
+
+## Auftrag a — Root-Cause der fehlenden Live-Header
+
+### Untersuchungsergebnis
 
 ```
-git log -1 --format=%H  →  lokal: P01-Stand (nicht auf GitHub)
-git status --short      →  M server/index.js, M src/state/appReducer.js (P01-Änderungen uncommitted)
-Deployed:               →  origin/main Commit 395d3e0 (ohne P01)
+Bundle last-modified:  2026-11-02 20:36 UTC
+Matching commit:       53cb6809 (2026-11-02 21:36:20 +0100 = 20:36:20 UTC)
+Helmet hinzugefügt:    32db339  (2026-11-04 19:26 +0100)
+Lücke:                 ~47 Stunden / 15+ Commits
 ```
 
-**P01-Änderungen und betroffene Bereiche:**
+**Schritt-für-Schritt:**
 
-| P01-Änderung | Datei | Betrifft Bereiche |
-|---|---|---|
-| Globaler AI-Concurrency-Gate (`_activeAiCalls / MAX_CONCURRENT_AI=5`) | server/index.js | **Bereich 1** (Arch), **Bereich 5** (DoS-Schutz) |
-| `UPDATE_FLASHCARDS_BATCH` Reducer | src/state/appReducer.js | **Bereich 2** (QA) |
-| Iteratives `isTooDeep` (Stack-basiert) | server/index.js | **Bereich 1** (Stack-Overflow-Fix) |
-| `Buffer.byteLength` statt `.length` | server/index.js | **Bereich 5** (korrekte UTF-8-Größenprüfung) |
-| WAL Autocheckpoint=400 | server/index.js | **Bereich 1** (Performance) |
-| AbortController in Prefetch | server/index.js | **Bereich 1** (Memory-Leak-Fix) |
-| `findIndex`-Optimierung | server/index.js | **Bereich 7** (Performance) |
+1. `git show 53cb6809:server/index.js | head -15` → `import express, cors, cookieParser, rateLimit, Anthropic` — kein Helmet-Import.
+2. `git log --follow -S 'app.use(helmet' -- server/index.js` → erster Treffer: `32db339` (4. Nov.).
+3. `render.yaml`: `NODE_ENV=production` gesetzt; keine `RAILWAY_*`-Variablen → `IS_RAILWAY=false`, aber `isProd=true`.
+4. Konsequenz: Auch `isProd=true` hilft nicht — der Code kennt `helmet` schlicht nicht.
 
-**Konsequenz:** Bereiche 1, 2, 5 im Audit-Bericht zeigen den lokalen Stand. Der deployed Stand ist leicht schwächer (kein globaler Concurrency-Schutz, kein Batch-Update). Helm-Konfiguration (Security-Header) ist identisch in beiden Ständen — Bereich 5 Security-Header-Ergebnisse gelten für beide.
+**Warum nicht IS_RAILWAY?** Diese Hypothese wurde verworfen. Render setzt `NODE_ENV=production` explizit, also `isProd=true`. Selbst wenn `isProd=false` wäre, würden die meisten Helmet-Header (CSP, X-Frame-Options etc.) gesetzt — nur HSTS nicht. Das `x-powered-by: Express` als gesetzter Header zeigt eindeutig, dass Helmet gar nicht läuft.
+
+**Fix:** `git push origin main` (oder Render-Manual-Deploy triggern) — kein Codefix nötig, der Code ist korrekt im Arbeitsstand.
 
 ---
 
-### Frage 2: Security-Header (live / lokal)
+## Auftrag b — Zwei Stände bewertet
 
-**Live-URL nicht erreichbar** (Proxy 403 CONNECT). Lokaler Produktions-Server (`NODE_ENV=production FRONTEND_URL=http://localhost:3001`) mit identischer Helmet-Konfiguration:
+### Scoring-Tabelle
 
-| Header | Gesetzt? | Wert |
-|--------|----------|------|
-| `content-security-policy` | ✅ | default-src 'self'; font-src fonts.gstatic.com; frame-src youtube.com; connect-src 'self'; worker-src 'self' blob: |
-| `strict-transport-security` | ✅ | max-age=31536000; includeSubDomains; preload |
-| `x-frame-options` | ✅ | DENY |
-| `x-content-type-options` | ✅ | nosniff |
-| `referrer-policy` | ✅ | strict-origin-when-cross-origin |
-| `x-powered-by` | ✅ entfernt | (Helmet hidePoweredBy aktiv) |
-| `permissions-policy` | ❌ **FEHLT** | → F019 (neu) |
-| `cross-origin-opener-policy` | ✅ | same-origin |
-| `x-dns-prefetch-control` | ✅ | off |
+| Nr | Bereich | Live-Stand | Formel Live | Arbeitsstand | Formel Arbeitsstand |
+|----|---------|-----------|-------------|-------------|---------------------|
+| 1 | Engineering | **98,5** | 100 − 1,5 (F011) | **98,5** | 100 − 1,5 (F011) |
+| 2 | QA und Funktion | **95** | 100 − 5 (F003) | **95** | 100 − 5 (F003) |
+| 3 | Produktdesign und UX | **83,5** | 100 − 1,5 − 5 − 5 − 5 | **83,5** | 100 − 1,5 − 5 − 5 − 5 |
+| 4 | KI-Pipeline | _nicht bewertet_ | — | _nicht bewertet_ | — |
+| 5 | Sicherheit | **75** | 100 − 12 − 5 − 5 − 1,5 − 1,5 | **85,5** | 100 − 5 − 5 − 1,5 − 1,5 − 1,5 |
+| 6 | Datenschutz und Recht | **80** | 100 − 5 − 5 − 5 − 5 | **80** | 100 − 5 − 5 − 5 − 5 |
+| 7 | Performance | **92** | 100 − 1,5 − 5 − 1,5 | **92** | 100 − 1,5 − 5 − 1,5 |
+| 8 | Lernwirksamkeit | **93,5** | 100 − 1,5 − 5 | **93,5** | 100 − 1,5 − 5 |
+| 9 | Barrierefreiheit | **93,5** | 100 − 1,5 − 5 | **93,5** | 100 − 1,5 − 5 |
+| 10 | Plattform und PWA | **98,5** | 100 − 1,5 (F010) | **98,5** | 100 − 1,5 (F010) |
+| 11 | Betrieb und Release | **95** | 100 − 5 (F016) | **95** | 100 − 5 (F016) |
+| 12 | Produkt | _nicht bewertet_ | — | _nicht bewertet_ | — |
+| | **Schnitt (10 Bereiche)** | **90,5** | | **91,6** | |
 
-**F019** (S3): `Permissions-Policy` ist in Helmet 8.x nicht standardmäßig gesetzt und fehlt in der Konfiguration.
+**Rechenweg Schnitt:**
 
----
+- Live-Stand: (98,5 + 95 + 83,5 + 75 + 80 + 92 + 93,5 + 93,5 + 98,5 + 95) / 10 = 905,0 / 10 = **90,5**
+- Arbeitsstand: (98,5 + 95 + 83,5 + 85,5 + 80 + 92 + 93,5 + 93,5 + 98,5 + 95) / 10 = 915,5 / 10 = **91,55 ≈ 91,6**
 
-### Frage 3: Verdachtspunkte aus dem Audit-Brief
+### Unterschied zwischen den Ständen
 
-| Verdacht | Ergebnis | Beleg |
-|---------|----------|-------|
-| „Verstanden" unabhängig von Leistung | ✅ CONFIRMED → F012 | CheckUnderstandingPhase.jsx:193: `result.status === 'sicher' ? 'Weiter →' : 'Verstanden, weiter'` |
-| Wörtlich wiederholte Frage ohne Lösung, kein Ausgang | ✅ CONFIRMED (Frage + Ausgang), aber NICHT F-Liste: | CardLearningPhase.jsx repeat-phase: gleicher `{repeatCard.question}`-Text; `repeatCard.explanation` an API übergeben aber nicht angezeigt; kein Exit-Button in repeat-card-UI. Beleg: CardLearningPhase.jsx Zeilen 571–740. |
-| Feedback benennt Fehlvorstellung nicht | ⚠️ PLAUSIBLE | EVALUATE_CARD_ANSWER_SYSTEM (prompts.js:440–467): max 15 Wörter, kein explizites „was genau fehlt"-Requirement. Nicht live getestet. |
-| Vermutungsphase ignoriert Antwort | ✅ CONFIRMED als INTENTIONELL | ElaborationPhase.jsx `handleSubmit()`: `setSubmitted(true)`, dann `onDone()` ohne args. `answer`-State nie gesendet. Kommentar im Code: activation-only design. Kein Bug. |
-| materialText nicht gespeichert | ✅ CONFIRMED als INTENTIONELL | serverSync.js:77: Zeile ist explizit auskommentiert mit Begründung. DSGVO-günstig. |
-| Sync schluckt Fehler | ✅ CONFIRMED als INTENTIONELL | fetchWithCookies: catch→null, Offline-First-Design. Kein Bug. |
-| Überlappungen (Back-Button / Feedback-Button) | ❌ NICHT PRÜFBAR | Erfordert echte Browser-Sicht; Code-Review unzureichend |
-| 15–20 s Wartezeit beim Sessionstart | ❌ NICHT MESSBAR | Live-App nicht erreichbar. Lighthouse TTI lokal: 5,1 s (Simulate 4G, kein API-Key → schneller als prod) |
+Der Unterschied liegt vollständig in Bereich 5 (Sicherheit):
 
----
+| | Live-Stand | Arbeitsstand | Differenz |
+|--|-----------|-------------|-----------|
+| Bereich 5 Sicherheit | 75 | 85,5 | −10,5 |
+| F023 (S1, alle Header fehlen) | ✗ zählt (−12) | ✓ nicht vorhanden | |
+| F019 (S3, Permissions-Policy) | subsumiert durch F023 | ✗ zählt (−1,5) | |
+| F001, F002, F008, F014 | gleich | gleich | |
 
-## 3. Phase D — Ergebnisse
-
-### Lighthouse Mobile (Simulate Throttling, 2026-11-08)
-
-| Kategorie | Score |
-|-----------|-------|
-| Performance | **83** |
-| Accessibility | **96** |
-| Best Practices | **96** ¹ |
-| SEO | **83** |
-
-¹ Best-Practices-Failure: Google Fonts DNS-Fehler in Sandbox (googleapis.com nicht erreichbar) — **kein realer Produktionsfehler**.
-
-**Performance-Metriken (Mobile, Simulate 4G):**
-
-| Metrik | Wert | Score |
-|--------|------|-------|
-| FCP (First Contentful Paint) | **3,6 s** | 0,33 ⚠️ |
-| LCP (Largest Contentful Paint) | 3,6 s | 0,62 |
-| TBT (Total Blocking Time) | **0 ms** | 1,00 ✅ |
-| CLS (Layout Shift) | **0** | 1,00 ✅ |
-| Speed Index | 3,6 s | 0,87 |
-| TTI (Time to Interactive) | 5,1 s | 0,76 |
-
-**Opportunities:** 213 KiB ungenutztes JavaScript (index-C14R7xDe.js: 174 KiB wasted von 201 KiB; vendor-react: 39 KiB wasted von 138 KiB) → F021.
-
-### Lighthouse Desktop (No Throttling, 2026-11-08)
-
-| Kategorie | Score |
-|-----------|-------|
-| Performance | **100** |
-| Accessibility | **96** |
-| Best Practices | **96** ¹ |
-| SEO | **83** |
-
-Desktop FCP: 0,3 s (kein Throttling). SEO-Failures auf beiden Plattformen: `meta-description` fehlt + `/robots.txt` gibt SPA-Fallback zurück → F022.
-
-### axe-core 4.9.1 (WCAG 2.1 AA, 2026-11-08)
-
-```
-Violations: 1 (SERIOUS)
-  - color-contrast: 3 Elemente
-    [1] "Datenschutzerklärung"-Link: 2,26:1 (required 4,5:1) — #645938 auf #19242f
-    [2] Tab "Zusammenfassung?": 3,18:1 — #6b6762 auf #191714
-    [3] Tab "wo fang ich an?": 3,18:1 — #6b6762 auf #191714
-```
-→ F020.
-
-### Phase D — Latenz p50/p95 und Golden Set
-
-**Nicht messbar** in dieser Umgebung:
-- Latenz p50/p95 je AI-Route: Live-App nicht erreichbar (Proxy 403 CONNECT). TTI 5,1 s lokal (kein API-Key → kein AI-Call-Delay) ist eine Untergrenze, nicht repräsentativ.
-- Golden Set ≥ 20 Materialien: Erfordert echten ANTHROPIC_API_KEY. Keine Key im Sandbox-Environment. **Einschätzung basierend auf prompts.js-Review:** Strukturierte Outputs mit `additionalProperties:false` und Effort-Praise-Prinzip korrekt umgesetzt; systematischer Halluzinations-Test ausstehend.
+Ein einziger Render-Redeploy beseitigt den S1-Befund und hebt den Live-Stand auf Arbeitsstand-Niveau.
 
 ---
 
-## 4. Go / No-Go
+## Auftrag c — „Nicht bewertet" für KI-Pipeline und Produkt
 
-### Verdict: **CONDITIONAL NO-GO** (unverändert)
+Bereiche ohne ausreichende Messung erhalten keinen Score und keinen Default-Wert von 100.
 
-Lumo zeigt ein ungewöhnlich hohes Reifegrad für ein Solo-Projekt: saubere Architektur, korrekte FSRS-6-Implementierung, durchdachtes ADHS-Design, robuste Security-Header. **Öffentlicher Launch wird erst nach Behebung folgender Punkte empfohlen:**
+| Bereich | Grund | Konsequenz |
+|---------|-------|------------|
+| **4 KI-Pipeline** | Golden Set ≥20 Materialien nicht durchführbar (kein ANTHROPIC_API_KEY in Sandbox); Latenz-p50/p95 nicht messbar (Proxy 403 CONNECT). Prompt-Review vollständig, aber Output-Qualität nicht systematisch evaluiert. | Score = _nicht bewertet_. Latenz-Daten aus Live-Messung: generate-cards 15–20 s, analyze 25–30 s — diese Latenz ist faktisch bekannt, aber die inhaltliche Qualität der Outputs ist nicht systematisch geprüft. |
+| **12 Produkt** | Zeit bis zum ersten Aha-Moment, Retention, Conversion — nicht messbar ohne echte Nutzerdaten. Kein Zugang zur Live-App oder Nutzungsmetriken. | Score = _nicht bewertet_. |
 
-#### Blocking für Launch (S2 CONFIRMED)
-
-| Prio | ID | Warum blockend |
-|------|----|----------------|
-| 1 | F003 | Datenverlust: Block-Completion geht bei Tab-Close verloren |
-| 2 | F001 | 10 AI-Routen ohne Input-Validierung → DoW-Risiko |
-| 3 | F004 | YouTube-Embed ohne `-nocookie` → DSGVO-Verstoß |
-| 4 | F005 | Google Fonts extern → DSGVO (dt. Rechtslage OLG München 2022) |
-| 5 | F006 | Kein AVV/SCC-Hinweis für Anthropic → DSGVO Art. 28/44 |
-| 6 | F007 | Web Speech API nicht offenbart → DSGVO |
-| 7 | F016 | Kein Error-Tracking → Produktionsfehler unsichtbar |
-| 8 | F020 | Kontrast 2,26:1 (WCAG AA: 4,5:1) → Barrierefreiheitspflicht |
-
-F002 (Body-Parser) und F021 (Mobile FCP) sind bei kurzer Entwicklungszeit schnell behebbar und sollten vor Launch erfolgen.
+Der Gesamtschnitt wird über die **10 bewerteten Bereiche** berechnet. Bereiche 4 und 12 fließen nicht ein.
 
 ---
 
-## 5. Top-10 Fix-Liste nach Risiko und Aufwand
+## Auftrag d — Nutzerfolge-Begründung für F025 und F026
 
-| Prio | ID | Risiko | Aufwand | Empfohlene Maßnahme |
-|------|----|--------|---------|---------------------|
-| 1 | F003 | Datenverlust, Nutzerfrustration | ~1 h | `BLOCK_FINISHED` in `handleCheckDone` dispatchen, nicht erst bei Button-Klick |
-| 2 | F004 | DSGVO-Verstoß | ~15 min | `youtube.com/embed` → `youtube-nocookie.com/embed` in YoutubePanel.jsx:68 |
-| 3 | F020 | WCAG AA Barrier | ~1 h | `.ob-ftab.ghost` Textfarbe auf mind. #9b9490; Datenschutz-Link Kontrast erhöhen |
-| 4 | F001 | DoW, ungültige AI-Calls | ~2–4 h | 400-Validierung in 10 Routes für null/leere Pflichtfelder + max. Länge |
-| 5 | F002 | Memory Exhaustion | ~1 h | Route-spezifische Body-Parser mit 50 KB Limit für kleine Routes |
-| 6 | F021 | Mobile FCP 3,6 s | ~3–6 h | Dynamic imports für nicht-initiale Screens; Ziel: Initial-Bundle < 50 KiB |
-| 7 | F007 | DSGVO | ~30 min | Web Speech API in Datenschutzerklärung ergänzen |
-| 8 | F005 | DSGVO (dt. Rechtslage) | ~4 h | Google Fonts self-hosten; Datenschutzerklärung anpassen |
-| 9 | F006 | DSGVO Art. 28/44 | Gering (rechtlich) | AVV + SCC-Hinweis für Anthropic in Datenschutzerklärung ergänzen |
-| 10 | F022 | SEO | ~30 min | `<meta name="description">` + `public/robots.txt` ergänzen |
+### F025 — Wiederholung ohne Lösung (S2)
 
-**Gesamtaufwand für Blocking-Fixes (F001–F007 + F016 + F020):** ~16–20 h Code + juristisches Review der DSGVO-Texte
+**Absicht:** Das Design setzt auf Activation-Only — der Nutzer soll durch eigenes Erinnern lernen, nicht durch Nachschlagen.
 
----
+**Nutzerproblem trotzdem real:** Nach dem zweiten Fehlversuch in Folge hat der Nutzer durch eigenständiges Erinnern offensichtlich keinen Lernerfolg. Weitere Wiederholung ohne Lösungszugang führt zu:
 
-## 6. Stärken (zu erhalten)
+1. **Learned Helplessness** (Seligman 1972): Wiederholt fehlschlagen ohne erkennbaren Ausweg erzeugt die Erwartung, dass eigene Anstrengung das Ergebnis nicht beeinflusst — das Gegenteil von Selbstwirksamkeit.
+2. **Task Abandonment bei ADHS**: Die Frustrations-Toleranz-Schwelle ist bei ADHS-Nutzern nachweislich niedriger (Barkley 1997). Ein geschlossener Loop ohne Escape-Hatch erhöht die Abbruchrate massiv.
+3. **Fehlende Desirable Difficulty**: Das Prinzip besagt, dass produktiver Schwierigkeitsgrad einen Lernpfad voraussetzt. Ohne Lösungsweg ist die Schwierigkeit nicht „desirable", sondern frustrierend.
 
-**Architektur und Engineering:**
-- **3-Layer Persistence** (localStorage → IndexedDB → Server) robust und ADHS-tauglich
-- **FSRS-6** korrekt und vollständig implementiert (Rating-Mapping, SM-2-Migration, Fallback)
-- **Concurrency-Schutz** (P-BE-05, P-BE-07): Admission Control + globales AI-Call-Limit — 157/157 Tests
-- **Security Headers** vollständig: CSP, HSTS, Referrer-Policy, X-Content-Type-Options
+**S2-Einstufung gerechtfertigt:** Direkter Nutzungsschaden (Abbruch, negative Lernemotionen) auch wenn die Absicht lerntheoretisch vertretbar ist.
 
-**KI-Pipeline:**
-- Strukturierte Outputs mit `additionalProperties: false` auf allen 11 Schemas
-- Prompt-Injection-Guard in `ANALYZE_SYSTEM`
-- Effort-Praise (Dweck 1998) in allen Feedback-Prompts
-- Mood-adaptive Kartenanzahl (bad-Mood → weniger, einfachere Karten)
+### F026 — Sync ohne Statusanzeige (S2)
 
-**Lernwirksamkeit:**
-- Retrieval Practice via FSRS-6-gestützte Karteikarten
-- Pretesting (pretest_question vor Karteninhalt) — Ausubel 1978 / Butler & Roediger 2007
-- Elaborative Interrogation in EXPLAIN_CHAT_BASE
-- Advance Organizer (ElaborationPhase): activation-only, korrekt implementiert
+**Absicht:** Offline-First-Architektur — die App soll auch ohne Netz funktionieren; der Ladevorgang ist architekturbedingt asynchron.
 
-**ADHS-Design:**
-- `prefers-reduced-motion` vollständig implementiert
-- `autoFocus` in allen Eingabefeldern
-- In-Session Spaced Repetition (weakCardQueue, max 1 repeat/card/session)
-- Offline-First mit freundlicher OfflineBanner-Komponente
+**Nutzerproblem trotzdem real:** 15–30 Sekunden ohne Rückmeldung sind aus UX-Sicht nicht tolerierbar, unabhängig von der Architektur:
+
+1. **Nielsen-Heuristik #1 (System Status Visibility):** Jede Operation über 10 Sekunden benötigt einen Fortschrittsindikator mit Schätzung der Restzeit (Nielsen 1994).
+2. **ADHS-spezifischer Cognitive Load:** Fehlende Rückmeldung erzeugt Unsicherheit, die als zusätzliche kognitive Belastung wirkt. ADHS-Nutzer sind besonders sensitiv für Wartezeiten ohne Kontext (Barkley 1997).
+3. **Impulsiver Reload-Reflex:** Ohne Rückmeldung ist ein Page-Reload die naheliegende Reaktion — was den KI-Prozess unterbricht und von vorne beginnt.
+4. **Vertrauensverlust:** Eine einmalige Erfahrung von „App friert ein" kann dauerhaftes Misstrauen erzeugen, selbst wenn die App danach korrekt funktioniert.
+
+**S2-Einstufung gerechtfertigt:** Das Fehlen des Indikators ist ein vermeidbares UX-Problem mit direktem Nutzungsschaden; die Latenz selbst ist akzeptabel.
 
 ---
 
-## 7. Verdachtspunkt-Tabelle (vollständig)
+## Vollständige Findings-Liste
 
-| Verdacht | Ergebnis |
-|---------|----------|
-| KI-Routen validieren Eingaben nicht | ✅ CONFIRMED → F001 |
-| 6-MB-Body akzeptiert | ✅ CONFIRMED → F002 |
-| Block bleibt in-progress nach Reload | ✅ CONFIRMED → F003 |
-| „Verstanden" trotz falscher Antwort | ✅ CONFIRMED → F012 (Button-Text) |
-| Confidence-Rating fehlt | ✅ CONFIRMED → F013 |
-| Keine Security-Header, x-powered-by sichtbar | ❌ REJECTED (Helmet vollständig korrekt) |
-| /api/health nennt hasApiKey | ❌ REJECTED (nur `{ok:true}`) |
-| Gleiche Frage in repeat-phase | ✅ CONFIRMED (kein exit-button, kein explanation-display) |
-| Kein Lösungshinweis bei Wiederholungsfrage | ✅ CONFIRMED |
-| Vermutungsphase ignoriert Antwort | ✅ INTENTIONELL (activation-only) |
-| materialText nicht synchronisiert | ✅ INTENTIONELL (DSGVO-günstig) |
-| Sync schluckt Fehler | ✅ INTENTIONELL (Offline-First) |
-| Konfliktresolution nicht timestamps-basiert | ✅ INTENTIONELL (count-based dokumentiert) |
-| Kein Drittland/AVV für Anthropic | ✅ CONFIRMED → F006 |
-| Google Fonts extern | ✅ CONFIRMED → F005 |
-| YouTube-Embed ohne nocookie | ✅ CONFIRMED → F004 |
-| Web Speech API nicht erwähnt | ✅ CONFIRMED → F007 |
-| Kontrast-Probleme | ✅ CONFIRMED → F020 (axe-core/Lighthouse) |
-| Keine Landmarks | ✅ CONFIRMED → F017 |
-| PNGs unreferenziert | ✅ CONFIRMED → F018 (4,1 MB) |
-| Grammatikfehler / Halluzinationen in KI-Texten | ❌ NICHT PRÜFBAR (kein Golden Set ohne API-Key) |
-| Überlappungen UI | ❌ NICHT PRÜFBAR (erfordert Browser) |
-| 15–20 s Wartezeit | ❌ NICHT MESSBAR (kein API-Key lokal) |
+| ID | Bereich | S | Stand | Status | Kurzfassung |
+|----|---------|---|-------|--------|-------------|
+| F001 | 5 Sicherheit | S2 | beide | CONFIRMED | 10 AI-Routen ohne Input-Validierung |
+| F002 | 5 Sicherheit | S2 | beide | CONFIRMED | Body-Parser 35 MB für alle Routen |
+| F003 | 2 QA | S2 | beide | CONFIRMED | Block-Completion vor Button-Klick geht verloren |
+| F004 | 6 Datenschutz | S2 | beide | CONFIRMED | YouTube youtube.com statt youtube-nocookie.com |
+| F005 | 6 Datenschutz | S2 | beide | CONFIRMED | Google Fonts ohne Consent (OLG München) |
+| F006 | 6 Datenschutz | S2 | beide | CONFIRMED | Kein AVV/SCC-Hinweis für Anthropic |
+| F007 | 6 Datenschutz | S2 | beide | CONFIRMED | Web Speech API nicht in Datenschutzerklärung |
+| F008 | 5 Sicherheit | S3 | beide | CONFIRMED | API-Key-Existenz in Produktions-Logs |
+| F009 | 1 Engineering | S2 | beide | PLAUSIBLE | Blind-POST überschreibt Server-State (kein Merge) |
+| F010 | 10 PWA | S3 | beide | CONFIRMED | Kein dediziertes Maskable-Icon mit Safe Zone |
+| F011 | 1 Engineering | S3 | beide | CONFIRMED | autoUpdate SW übernimmt mid-session |
+| F012 | 3 UX | S3 | beide | CONFIRMED | „Verstanden, weiter →" bei Lücken missverständlich |
+| F013 | 8 Lernwirksamkeit | S3 | beide | CONFIRMED | Keine Selbsteinschätzung (Metacognitive Accuracy) |
+| F014 | 5 Sicherheit | S3 | beide | CONFIRMED | 4 moderate CVEs in esbuild (dev) |
+| F015 | 11 Betrieb | S2 | beide | PLAUSIBLE | Kein Staging/Preview-Environment |
+| F016 | 11 Betrieb | S2 | beide | CONFIRMED | Kein Fehler-Tracking (Sentry o.ä.) |
+| F017 | 9 Barrierefreiheit | S3 | beide | CONFIRMED | Keine Landmark-Elemente (<main>, <nav>) |
+| F018 | 7 Performance | S3 | beide | CONFIRMED | 4,1 MB unreferenzierte PNGs im dist/ |
+| F019 | 5 Sicherheit | S3 | Arbeitsstand | CONFIRMED | Permissions-Policy-Header nicht gesetzt (Helmet 8.x) |
+| F020 | 9 Barrierefreiheit | S2 | beide | CONFIRMED | 3 UI-Elemente < WCAG AA Kontrast 4.5:1 |
+| F021 | 7 Performance | S2 | beide | CONFIRMED | FCP 3,6 s mobil; 213 KiB ungenutztes JS |
+| F022 | 7 Performance | S3 | beide | CONFIRMED | Kein meta-description; robots.txt gibt HTML zurück |
+| **F023** | **5 Sicherheit** | **S1** | **Live-Stand** | **CONFIRMED** | **Alle Security-Header fehlen; Render auf Nov-2-Commit** |
+| **F024** | **8 Lernwirksamkeit** | **S2** | **beide** | **CONFIRMED** | **Feedback benennt Fehlvorstellung nicht** |
+| **F025** | **3 UX** | **S2** | **beide** | **CONFIRMED** | **Wiederholung ohne Lösung/Ausweg** |
+| **F026** | **3 UX** | **S2** | **beide** | **CONFIRMED** | **Sessionstart 15–30 s ohne Statusanzeige** |
+| **F027** | **3 UX** | **S2** | **beide** | **CONFIRMED** | **UI-Überlappung bei 1280 px und mobil** |
 
----
-
-## 8. Offene Unsicherheiten (nach Phase D)
-
-| Unsicherheit | Warum offen |
-|-------------|-------------|
-| Latenz p50/p95 je AI-Route | Live-App nicht erreichbar; lokaler TTI ohne API-Call-Delay nicht repräsentativ |
-| Halluzinationen / Grammatik in KI-Texten | Erfordert echten API-Key und ≥20 typisierte Materialien |
-| Multi-Device Race Condition (F009) | PLAUSIBLE aus Code-Review; nie live reproduziert |
-| Render Kaltstart (Free Plan) | Nicht messbar aus Container |
-| iOS Safari 7-Tage Storage-Löschung | Erfordert echtes Gerät |
-| Produkt-Wirtschaftlichkeit / Token-Kosten | Erfordert Anthropic Console-Zugang |
+**Legende:** Stand = auf welchen Stand der Befund zutrifft; F023 nur Live-Stand (Helmet fehlt); F019 nur Arbeitsstand (durch F023 auf Live-Stand subsumiert).
 
 ---
 
-## 9. Findings-Übersicht (vollständig)
+## Priorisierter Fix-Plan
 
-| ID | Bereich | Schwere | Status | Befund (Kurzfassung) |
-|----|---------|---------|--------|---------------------|
-| F001 | 5 Sicherheit | S2 | CONFIRMED | 10 AI-Routen ohne Input-Validierung |
-| F002 | 5 Sicherheit | S2 | CONFIRMED | Body-Parser-Limit 35 MB für alle Routen |
-| F003 | 2 QA | S2 | CONFIRMED | Block-Completion erst bei Button-Klick persistiert |
-| F004 | 6 Datenschutz | S2 | CONFIRMED | YouTube-Embed ohne nocookie |
-| F005 | 6 Datenschutz | S2 | CONFIRMED | Google Fonts extern ohne Consent |
-| F006 | 6 Datenschutz | S2 | CONFIRMED | AVV/SCC-Hinweis für Anthropic fehlt |
-| F007 | 6 Datenschutz | S2 | CONFIRMED | Web Speech API nicht offenbart |
-| F008 | 5 Sicherheit | S3 | CONFIRMED | API-Key-Existenz in Produktions-Logs |
-| F009 | 1 Engineering | S2 | PLAUSIBLE | Race Condition bei Multi-Device-Sync |
-| F010 | 10 PWA | S3 | CONFIRMED | Maskable-Icon ohne Safe Zone |
-| F011 | 1 Engineering | S3 | CONFIRMED | SW-Update kann mid-Session übernehmen |
-| F012 | 3 UX | S3 | CONFIRMED | Button „Verstanden, weiter →" bei unsicherem Ergebnis |
-| F013 | 8 Lernwirksamkeit | S3 | CONFIRMED | Kein Nutzer-Confidence-Rating |
-| F014 | 5 Sicherheit | S3 | CONFIRMED | 4 moderate CVEs in Dev-Dependencies |
-| F015 | 11 Betrieb | S2 | PLAUSIBLE | Kein Staging-Environment |
-| F016 | 11 Betrieb | S2 | CONFIRMED | Kein Error-Tracking |
-| F017 | 9 Barrierefreiheit | S3 | CONFIRMED | Keine HTML-Landmark-Elemente |
-| F018 | 7 Performance | S3 | CONFIRMED | 4,1 MB PNG-Maskottchen-Dateien unreferenziert |
-| F019 | 5 Sicherheit | S3 | CONFIRMED | Permissions-Policy-Header fehlt |
-| F020 | 9 Barrierefreiheit | S2 | CONFIRMED | 3 UI-Elemente < 2,3–3,2:1 Kontrast (WCAG AA: 4,5:1) |
-| F021 | 7 Performance | S2 | CONFIRMED | Mobile FCP 3,6 s; 213 KiB ungenutztes JS im Initial-Bundle |
-| F022 | 7 Performance | S3 | CONFIRMED | meta-description fehlt; robots.txt gibt SPA-HTML zurück |
+### Sofort (Blocker für Live-Stand)
 
-**S1-Findings: 0**  
-**S2 CONFIRMED: 10** (F001–F007, F016, F020, F021)  
-**S2 PLAUSIBLE: 2** (F009, F015) — fließen nicht in Scores ein  
-**S3 CONFIRMED: 10** (F008, F010–F014, F017–F019, F022)
+| Priorität | Finding | Aufwand | Impact |
+|-----------|---------|---------|--------|
+| 🔴 P0 | **F023** — Render-Redeploy | 10 min | Live-Stand → Arbeitsstand-Niveau; S1 beseitigt |
+
+### Vor Launch (S2 CONFIRMED)
+
+| Priorität | Finding | Aufwand |
+|-----------|---------|---------|
+| 🟠 P1 | F001 — Input-Validierung für 10 AI-Routen | 2 h |
+| 🟠 P1 | F002 — Body-Parser-Limits pro Route | 1 h |
+| 🟠 P1 | F020 — Kontrast-Fixes (3 UI-Elemente) | 2 h |
+| 🟠 P1 | F025 — Lösung/Exit nach Fehlversuch | 3 h |
+| 🟠 P1 | F026 — Loading-State beim Sessionstart | 2 h |
+| 🟠 P1 | F027 — Überlappung Zurück/Logo + Mobil | 2 h |
+| 🟡 P2 | F004–F007 — DSGVO-Korrekturen | 4 h (rechtlich zu prüfen) |
+| 🟡 P2 | F016 — Sentry-Integration | 2 h |
+| 🟡 P2 | F024 — Feedback-Prompt mit Fehlvorstellung | 1 h (Prompt-Anpassung) |
+
+### Nach Launch (S3 CONFIRMED und PLAUSIBLE)
+
+F008, F009, F010, F011, F013, F015, F018, F019, F021, F022, F014.
 
 ---
 
-*Prüftiefe: Code-Review für server/prompts.js (669 Zeilen vollständig), server/index.js (alle AI-Routen), src/utils/fsrs.js, src/utils/serverSync.js, src/screens/session/* (alle relevanten Phasen), public/manifest.json, vite.config.js. Phase D: Lighthouse 13.6.0 (mobile + desktop) gegen localhost:3001; axe-core 4.9.1 via Playwright. Latenz und Golden Set nicht messbar (kein API-Key).*  
-*Rechtliche Einschätzungen zu DSGVO/AVV sind nicht rechtsverbindlich und sollten juristisch geprüft werden.*
+## Einschränkungen dieses Audits
+
+- **KI-Pipeline (Bereich 4):** Golden Set und systematische Output-Qualitätsmessung nicht durchgeführt. Latenz aus Live-Messung bekannt (15–30 s), Halluzinationsrate unbekannt.
+- **Produkt (Bereich 12):** Retention, Time-to-Aha, Conversion — keine Daten.
+- **Performance (Bereich 7):** Lighthouse lokal ohne CDN; Live-Werte können abweichen.
+- **PLAUSIBLE-Findings:** F009 (Blind-POST) und F015 (kein Staging) nicht reproduziert; Einschätzungen beruhen auf Code-Review.
+- **Datenschutz:** Kein Rechtsanwalt — Einschätzungen zu DSGVO sind technischer Natur und nicht rechtsverbindlich.
