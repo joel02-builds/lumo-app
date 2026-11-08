@@ -4,7 +4,7 @@
   "description": "Strukturiert lernen. Wirklich verstehen.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0F1920",
+  "background_color": "#0A0806",
   "theme_color": "#D4A843",
   "orientation": "portrait",
   "categories": ["education", "productivity"],

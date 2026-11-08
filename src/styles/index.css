@@ -11,7 +11,7 @@
   --gold-light: #FFE8A0;
   --gold-glow: rgba(212, 168, 67, 0.18);
   --text-primary: #F2EFE9;
-  --text-secondary: #8A9BAE;
+  --text-secondary: #9A8E78;
   --green: #3D9E6E;
   --green-soft: rgba(61, 158, 110, 0.12);
   --yellow: #D4A843;
@@ -24,7 +24,7 @@
   --amber-soft: rgba(196, 122, 43, 0.12);
   --border: rgba(255, 255, 255, 0.07);
   --border-gold: rgba(212, 168, 67, 0.22);
-  --input-bg: #0F1A20;
+  --input-bg: #0E0C0A;
   --input-border: rgba(212, 168, 67, 0.25);
   /* Tiefe / Layering */
   --shadow-card: 0 2px 16px rgba(0,0,0,0.45), 0 1px 3px rgba(0,0,0,0.3);
@@ -101,6 +101,20 @@ p {
 
 button {
   font-family: inherit;
+}
+
+/* Keyboard focus indicator — sichtbar nur bei Tastaturnavigation (nicht bei Maus/Touch).
+   Basis: WCAG 2.1 SC 2.4.7 — interaktive Elemente müssen einen sichtbaren Fokusindikator haben.
+   Gold-Outline passt ins Lumo-Farbsystem und ist auf allen dunklen Hintergründen sichtbar. */
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* Maus/Touch: kein Default-Outline (Browser-Standard entfernen, da wir :focus-visible nutzen) */
+:focus:not(:focus-visible) {
+  outline: none;
 }
 
 textarea,
@@ -190,11 +204,27 @@ input::placeholder {
   white-space: nowrap;
 }
 
+/* Reduced Motion — Accessibility (WCAG 2.3.3, prefers-reduced-motion).
+   0.01ms war funktional instant aber semantisch falsch und kann in seltenen
+   Fällen Frames rendern, die visuell stören (vestibular disorders).
+   0s stoppt Animationen vollständig. animation-delay ebenfalls auf 0s, damit
+   kein verzögertes Flash-Frame erscheint. .screen fade-in explizit disabled,
+   da dieser die primäre Eintrittsbewegung ist. */
 @media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }
+
+  /* Screen-Fade explizit deaktivieren — Opacity-Start bei 0 würde sonst
+     eingefroren bleiben wenn animation-duration: 0s gesetzt ist */
+  .screen {
+    animation: none !important;
   }
 }
 
@@ -267,6 +297,40 @@ input::placeholder {
   70%  { transform: scale(1.08); }
   85%  { transform: scale(0.98); }
   100% { transform: scale(1); }
+}
+
+/* ── Dusk-Modus ──────────────────────────────────────────────────────────────
+   Automatisch aktiv: 20:00–05:59 Uhr (gesetzt von useChronoBias())
+   Wissenschaft: Bijlenga et al. 2019 — 73% ADHS-Erwachsene: Delayed Sleep Phase
+   Syndrome (DSPS). Das natürliche Fokus-Fenster liegt abends. Amber (#E87828)
+   statt Gold (#D4A843): wärmere Töne, weniger Blauanteil, zirkadianer Rhythmus
+   bleibt intakt.
+   Spezifität: html[data-dusk] (0,1,1) > :root (0,1,0) → Overrides funktionieren
+   ──────────────────────────────────────────────────────────────────────────── */
+html[data-dusk] {
+  --gold: #E87828;
+  --gold-soft: rgba(232, 120, 40, 0.12);
+  --gold-light: #FFCF8A;
+  --gold-glow: rgba(232, 120, 40, 0.20);
+  --bg: #0C0702;
+  --bg-elevated: #1A1008;
+  --bg-card: #221510;
+  --bg-card-bright: #2A1C14;
+  --input-bg: #120B06;
+  --border-gold: rgba(232, 120, 40, 0.22);
+  --input-border: rgba(232, 120, 40, 0.28);
+  --shadow-gold: 0 4px 28px rgba(232, 120, 40, 0.38), 0 2px 10px rgba(232, 120, 40, 0.20);
+}
+
+/* Screen-Hintergrund: die Gold-rgba-Werte sind hardcoded im .screen-Block,
+   deshalb brauchen sie einen eigenen Override (CSS-Variablen funktionieren
+   dort nicht, weil der Gradient inline definiert ist). */
+html[data-dusk] .screen {
+  background:
+    radial-gradient(ellipse 100% 45% at 50% 0%, rgba(232, 120, 40, 0.28) 0%, rgba(232, 120, 40, 0.10) 55%, transparent 80%),
+    radial-gradient(ellipse 65% 50% at 50% 45%, rgba(232, 120, 40, 0.15) 0%, transparent 65%),
+    radial-gradient(ellipse 100% 100% at 50% 100%, rgba(0, 0, 0, 0.50) 0%, transparent 60%),
+    var(--bg);
 }
 
 /* ── Mobile Optimierung ── */

@@ -59,9 +59,14 @@ function LazyFallback() {
   return <div style={{ position: 'fixed', inset: 0, background: '#0E0C09' }} />;
 }
 import { calculateNextReview } from './utils/fsrs.js';
+import { useChronoBias } from './hooks/useChronoBias.js';
 
 export default function App() {
   const [state, dispatch] = useReducer(appReducer, null, () => createInitialState(loadProject()));
+
+  // Chronobiology-basierter Dusk-Modus: ab 20:00 Uhr → Amber-Palette
+  // Basis: Bijlenga et al. 2019 — DSPS bei 73% der ADHS-Erwachsenen
+  useChronoBias();
 
   // Wird von SessionScreen gemeldet: true während einer Phase mit eigenem
   // Header (CardLearningPhase, ExplainChatPhase, CheckUnderstandingPhase), die
