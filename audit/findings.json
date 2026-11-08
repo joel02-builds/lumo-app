@@ -197,4 +197,49 @@
     "konfidenz": "hoch",
     "status": "CONFIRMED"
   }
+,
+  {
+    "id": "F019",
+    "bereich": "5 Sicherheit",
+    "schwere": "S3",
+    "befund": "Der Permissions-Policy-Header ist nicht gesetzt. Helmet 8.x setzt ihn nicht standardmäßig. Ohne diesen Header können Drittanbieter-Skripte im Browser potenziell auf Kamera, Mikrofon, Geolocation und weitere Device-APIs zugreifen. Besonders relevant da die App Web Speech API (Mikrofon) nutzt.",
+    "beleg": "Lokaler Helm-Test gegen localhost:3001: permissions-policy: (NOT SET). Helmet-Konfiguration server/index.js Zeilen 138–179: kein expliziter permissionsPolicy-Block. Helmet 8.3.0 Dokumentation: permissionsPolicy wird nicht automatisch gesetzt.",
+    "reproduktion": "curl -sI http://localhost:3001/ | grep -i permissions — kein Treffer.",
+    "fix": "In Helmet-Konfiguration ergänzen: permissionsPolicy({ features: { camera: [], microphone: ['self'], geolocation: [], payment: [] } }). Features auf das nötige Minimum beschränken.",
+    "konfidenz": "hoch",
+    "status": "CONFIRMED"
+  },
+  {
+    "id": "F020",
+    "bereich": "9 Barrierefreiheit und ADHS-Design",
+    "schwere": "S2",
+    "befund": "3 UI-Elemente unterschreiten das WCAG 2 AA Kontrastverhältnis von 4.5:1 für kleinen Text: (1) 'Datenschutzerklärung'-Link: 2.26:1 (Farbe var(--gold)=#645938 auf #19242f), (2) Tab 'Zusammenfassung?': 3.18:1 (Klasse .ob-ftab.ghost, #6b6762 auf #191714), (3) Tab 'wo fang ich an?': 3.18:1 (gleiche Klasse). WCAG 2.1 SC 1.4.3 Level AA.",
+    "beleg": "Lighthouse Desktop Accessibility 96/100 (color-contrast audit). axe-core 4.9.1 Scan: 1 Violation SERIOUS, 3 nodes. Konkrete Werte von Lighthouse: foreground #645938, background #19242f, ratio 2.26 (required 4.5); foreground #6b6762, background #191714, ratio 3.18.",
+    "reproduktion": "Playwright + axe-core gegen localhost:3001 ausführen: 'color-contrast' Violation, 3 Elemente. Oder: Lighthouse Accessibility-Audit.",
+    "fix": "(1) 'Datenschutzerklärung'-Link: Farbwert von var(--gold) auf Hintergrundfarbe anpassen, mindestens 4.5:1 erfüllen. (2) .ob-ftab.ghost Klasse: Textfarbe aufhellen auf mindestens #9b9490 (ergibt ~4.6:1 auf #191714). Tools: https://webaim.org/resources/contrastchecker/",
+    "konfidenz": "hoch",
+    "status": "CONFIRMED"
+  },
+  {
+    "id": "F021",
+    "bereich": "7 Performance",
+    "schwere": "S2",
+    "befund": "Lighthouse mobile: Performance 83/100. FCP 3.6 s (Score 0.33 = 'Poor'), TTI 5.1 s. Hauptursache: 213 KiB ungenutztes JavaScript im Initial-Bundle (index-C14R7xDe.js: 174 KiB Waste von 201 KiB gesamt; vendor-react: 39 KiB Waste von 138 KiB). Das Main-Bundle enthält Code für selten genutzte Screens (FlashcardScreen, ExamResultScreen, SettingsScreen etc.), die erst bei Bedarf geladen werden sollten. ADHS-Nutzer sind sensibel für Wartezeiten; FCP > 3s wird als wahrnehmbare Verzögerung erlebt.",
+    "beleg": "Lighthouse mobile (Simulate throttling) gegen localhost:3001: performance=83, fcp=3.6s (0.33), lcp=3.6s (0.62), tbi=0ms (1.0), cls=0 (1.0), tti=5.1s (0.76). Opportunity: unused-javascript Est. savings 213 KiB (index-C14R7xDe.js 174 KiB, vendor-react 39 KiB). Desktop: Performance 100 (FCP 0.3s). Einschränkung: Test auf localhost ohne CDN; Produktionswerte können abweichen.",
+    "reproduktion": "Lighthouse mobile-Audit gegen localhost:3001 ausführen (simulate throttling). Kategorie Performance.",
+    "fix": "Code-Splitting optimieren: Dynamic import() für alle nicht-initialen Screens (FlashcardScreen, ExamResultScreen, SettingsScreen, ProjectsScreen etc.). Ziel: Initial-Bundle < 50 KiB. Vite manualChunks in vite.config.js verwenden um screen-spezifische Chunks zu erzwingen.",
+    "konfidenz": "mittel",
+    "status": "CONFIRMED"
+  },
+  {
+    "id": "F022",
+    "bereich": "7 Performance",
+    "schwere": "S3",
+    "befund": "SEO-Score Lighthouse 83/100 auf beiden Form Factors. Zwei Mängel: (1) Keine <meta name='description'> in index.html — Suchmaschinen zeigen generierte Snippets statt einer kontrollierten Beschreibung. (2) GET /robots.txt gibt die SPA-Fallback-HTML (index.html) zurück statt einer gültigen robots.txt-Datei — Crawler können keine Crawling-Direktiven lesen.",
+    "beleg": "Lighthouse Desktop SEO 83/100: Audits 'meta-description' (score 0) und 'robots-txt' (score 0) sind failed. curl http://localhost:3001/robots.txt → HTTP 200 mit <!doctype html> statt text/plain.",
+    "reproduktion": "curl -s http://localhost:3001/robots.txt | head -3 → zeigt HTML. Lighthouse SEO-Audit → meta-description und robots-txt failed.",
+    "fix": "(1) index.html: <meta name='description' content='Lumo – KI-gestütztes Lernbegleiter-System für strukturiertes und effektives Lernen'> ergänzen. (2) public/robots.txt erstellen: 'User-agent: *\\nAllow: /\\nSitemap: https://lumo-app.up.railway.app/sitemap.xml'. Vite kopiert Dateien aus public/ automatisch in dist/.",
+    "konfidenz": "hoch",
+    "status": "CONFIRMED"
+  }
 ]
