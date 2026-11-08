@@ -734,7 +734,7 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
 
           {/* Mascot centered */}
           <div className="ob-chaos-mascot">
-            <LumoMascot mood="thinking" size={108} style={{ borderRadius: '50%', opacity: 0.62 }} />
+            <LumoMascot state="thinking" size={108} style={{ borderRadius: '50%', opacity: 0.62 }} />
           </div>
         </div>
 
@@ -760,7 +760,7 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
           <div className="ob-demo-card">
             <div className="ob-dc-header">
               <div className="ob-dc-avatar">
-                <LumoMascot mood="cheer" size={34} />
+                <LumoMascot state="cheer" size={34} />
               </div>
               <div>
                 <div className="ob-dc-greeting">KI-Lernassistentin</div>
@@ -820,7 +820,7 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
       <div id="ob-s2" className={`ob-screen ${isActive('s2')}`}>
         <div className="ob-q-mascot-row">
           <div className="ob-q-mascot">
-            <LumoMascot mood="wave" size={36} />
+            <LumoMascot state="wave" size={36} />
           </div>
           <span className="ob-q-lumo-label">Lumo möchte dich kennenlernen</span>
         </div>
@@ -893,7 +893,7 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
       <div id="ob-s3" className={`ob-screen ${isActive('s3')}`}>
         <div className="ob-r-mascot-row">
           <div className="ob-r-mascot">
-            <LumoMascot mood="cheer" size={72} />
+            <LumoMascot state="cheer" size={72} />
           </div>
           <div className="ob-r-pulse-dot" />
         </div>

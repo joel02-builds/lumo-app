@@ -37,6 +37,13 @@
   --glow-center: radial-gradient(ellipse 70% 55% at 50% 50%, rgba(212, 168, 67, 0.07) 0%, rgba(212, 168, 67, 0.02) 40%, transparent 70%);
   --glow-top: radial-gradient(ellipse 90% 40% at 50% 0%, rgba(212, 168, 67, 0.09) 0%, rgba(212, 168, 67, 0.03) 50%, transparent 75%);
   --glow-vignette: radial-gradient(ellipse 100% 100% at 50% 50%, transparent 50%, rgba(0,0,0,0.35) 100%);
+  /* Mascot-Glow — RGBA-Tokens für LumoMascot drop-shadow().
+     Drei Intensitätsstufen je Zustand. Als CSS-Variable in React inline styles:
+     der Browser löst var() zur Paint-Zeit auf → automatisches Dusk-Update
+     ohne Re-render der Komponente. */
+  --mascot-glow-pulse:    rgba(212, 168, 67, 0.70);  /* glowPulse-Prop: stärkster Glow */
+  --mascot-glow-complete: rgba(212, 168, 67, 0.60);  /* state=complete: mittlerer Glow */
+  --mascot-glow-streak:   rgba(212, 168, 67, 0.80);  /* state=streak: intensivster Glow */
 }
 
 * {
@@ -320,6 +327,10 @@ html[data-dusk] {
   --border-gold: rgba(232, 120, 40, 0.22);
   --input-border: rgba(232, 120, 40, 0.28);
   --shadow-gold: 0 4px 28px rgba(232, 120, 40, 0.38), 0 2px 10px rgba(232, 120, 40, 0.20);
+  /* Mascot-Glow Dusk-Overrides — Amber statt Gold */
+  --mascot-glow-pulse:    rgba(232, 120, 40, 0.70);
+  --mascot-glow-complete: rgba(232, 120, 40, 0.60);
+  --mascot-glow-streak:   rgba(232, 120, 40, 0.80);
 }
 
 /* Screen-Hintergrund: die Gold-rgba-Werte sind hardcoded im .screen-Block,

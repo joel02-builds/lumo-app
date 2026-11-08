@@ -33,6 +33,7 @@ const MASCOT_IMAGES = {
   'first-complete': '/mascot/lumo-cheer.webp',   // Erste Block-Vollendung → Jubel
   streak:          '/mascot/lumo-cheer.webp',     // Streak-Meilenstein → Jubel
   absence:         '/mascot/lumo-thinking.webp',  // Lange Pause → nachdenklich
+  wave:            '/mascot/lumo-idle.webp',       // Begrüßungsgeste → idle (kein eigenes Asset)
 };
 
 // ─── SVG-Fallback Komponente ────────────────────────────────────────────────
@@ -158,12 +159,15 @@ export default function LumoMascot({
     ? 'lumo-bounce 0.8s ease-in-out infinite alternate'
     : 'none';
 
+  // CSS Custom Properties werden vom Browser zur Paint-Zeit aufgelöst,
+  // auch in React-inline-styles. Damit wechselt der Glow automatisch
+  // zwischen Gold (Standard) und Amber (Dusk-Modus) ohne Re-render.
   const imageFilter = glowPulse
-    ? 'drop-shadow(0 0 18px rgba(212,168,67,0.7))'
+    ? 'drop-shadow(0 0 18px var(--mascot-glow-pulse))'
     : isComplete
-    ? 'drop-shadow(0 0 12px rgba(212,168,67,0.6))'
+    ? 'drop-shadow(0 0 12px var(--mascot-glow-complete))'
     : state === 'streak'
-    ? 'drop-shadow(0 0 16px rgba(212,168,67,0.8))'
+    ? 'drop-shadow(0 0 16px var(--mascot-glow-streak))'
     : 'none';
 
   return (
