@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  test:
+    name: Test · Build · Smoke
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      # better-sqlite3 braucht native build-tools (node-gyp).
+      # ubuntu-latest hat python3 und build-essential bereits.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests (219 tests, 9 suites)
+        run: npm test
+        # security-hardening.test.js ausgelassen — 4 vorbestehende
+        # Audit-Findings (S-04–S-07) noch nicht gefixt; werden
+        # nach der jeweiligen Fix-Freigabe ergänzt.
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Smoke test — Server /api/health
+        run: |
+          DB_PATH=/tmp \
+          ANTHROPIC_API_KEY=sk-ant-test123 \
+          FRONTEND_URL=http://localhost:5173 \
+          node server/index.js &
+          SERVER_PID=$!
+
+          # Warte bis der Server bereit ist (max. 15s)
+          for i in $(seq 1 15); do
+            HEALTH=$(curl -s http://localhost:3001/api/health 2>/dev/null || true)
+            if [ "$HEALTH" = '{"ok":true}' ]; then
+              echo "✓ /api/health OK"
+              kill $SERVER_PID
+              exit 0
+            fi
+            sleep 1
+          done
+
+          echo "✗ Server nicht bereit nach 15s"
+          kill $SERVER_PID 2>/dev/null || true
+          exit 1
