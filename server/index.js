@@ -60,6 +60,21 @@ import {
   YOUTUBE_SEARCH_SYSTEM,
   youtubeSearchSchema,
 } from './prompts.js';
+import {
+  validate,
+  ANALYZE_REQ,
+  EXPLAIN_CHAT_REQ,
+  UNDERSTANDING_HINT_REQ,
+  EVALUATE_UNDERSTANDING_REQ,
+  GENERATE_CARDS_REQ,
+  EVALUATE_CARD_ANSWER_REQ,
+  GENERATE_LERNZETTEL_REQ,
+  REEXPLAIN_REQ,
+  EXPLAIN_TERM_REQ,
+  GENERATE_CONCEPT_MAP_REQ,
+  GENERATE_FLASHCARDS_REQ,
+  YOUTUBE_VIDEOS_REQ,
+} from './validation.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -123,6 +138,19 @@ const SESSION_TOKEN_RE = /^[0-9a-f]{64}$/;
 const LEGACY_UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const app = express();
+
+// E-01: Trust Proxy für Render + Cloudflare-Topologie
+// Topologie: Client → Cloudflare Edge → Render LB → App
+// XFF im App: "real_client_ip, cloudflare_edge_ip"
+// socket.remoteAddress: Render-LB-IP
+// proxy-addr baut: [render_lb, cloudflare_edge, real_client_ip]
+// trust proxy: 2 → req.ip = real_client_ip (addrs[2]) ✓
+// trust proxy: 1 → req.ip = cloudflare_edge            ✗
+// trust proxy: 3 → req.ip = angreifer-kontrolliert     ✗
+// Spoof-Schutz: Cloudflare setzt XFF an seiner Edge neu (überschreibt
+// alle upstream-Einträge), daher sind die zwei rechten Hops immer
+// Cloudflare + Render LB — kein Angreifer kann sich einschleichen.
+app.set('trust proxy', 2);
 
 // S-02: HTTP Security Headers via Helmet
 // Helmet setzt eine sichere Basis für HTTP-Headers. Die CSP wird nach den
@@ -203,12 +231,13 @@ app.use(cors({
   credentials: true, // für Cookie-Handling nötig
 }));
 app.use(cookieParser());
-// P-BE-05: Globaler Body-Parser überspringt /api/analyze POST.
+// P-BE-05: Globaler Body-Parser überspringt /api/analyze POST und /api/state POST.
 // Admission Control muss BEFORE dem Body gelesen wird greifen.
-// Der Route-Handler bringt seinen eigenen route-spezifischen Parser mit.
+// Die Route-Handler bringen ihren eigenen route-spezifischen Parser mit.
 app.use((req, res, next) => {
   if (req.method === 'POST' && req.path === '/api/analyze') return next();
-  express.json({ limit: '35mb' })(req, res, next);
+  if (req.method === 'POST' && req.path === '/api/state') return next();
+  express.json({ limit: '100kb' })(req, res, next);
 });
 
 // ─── Session-Middleware ───────────────────────────────────────────────────
@@ -322,6 +351,14 @@ export function __setClientForTesting(c) { _client = c; }
 export function __getActiveAnalyzeCountForTesting() { return _activeAnalyzeCount; }
 
 async function askLumo({ system, userContent, schema, maxTokens = 2048, signal: externalSignal } = {}) {
+  // P-BE-07: Globales Concurrency-Gate — wirft AiCapacityError wenn MAX_CONCURRENT_AI erreicht.
+  if (_activeAiCalls >= MAX_CONCURRENT_AI) {
+    const e = new Error('ai_at_capacity');
+    e.name = 'AiCapacityError';
+    throw e;
+  }
+  _activeAiCalls++;
+
   // H-03: AbortController deckt den vollständigen Anfragelebenszyklus ab:
   // Verbindungsaufbau, Streaming und finalMessage() laufen alle unter einer Deadline.
   // Der SDK-Timeout (timeout: CLAUDE_TIMEOUT_MS) schützt nur die initiale
@@ -367,6 +404,9 @@ async function askLumo({ system, userContent, schema, maxTokens = 2048, signal: 
       throw new Error('request_timeout');
     }
     throw err;
+  } finally {
+    // P-BE-07: Slot immer freigeben — auch bei Fehler, Timeout oder Client-Abbruch.
+    _activeAiCalls--;
   }
 }
 
@@ -387,6 +427,14 @@ function isTimeoutError(err) {
 }
 
 function sendFriendlyError(res, err) {
+  // P-BE-07: KI-Kapazität erschöpft → 429 statt 500 (kein Logging nötig, kein API-Fehler)
+  if (err?.name === 'AiCapacityError' || err?.message === 'ai_at_capacity') {
+    return res.status(429).json({
+      error: 'KI-Service kurz ausgelastet – bitte einen Moment warten und nochmal versuchen.',
+      retryAfter: 5,
+    });
+  }
+
   const details = describeAnthropicError(err);
   console.error('Lumo API-Fehler:', details);
 
@@ -414,6 +462,16 @@ function sendFriendlyError(res, err) {
 // globaler Koordinations-Mechanismus vorhanden — das ist dokumentiert (finding P-BE-05).
 let _activeAnalyzeCount = 0;
 const MAX_CONCURRENT_ANALYZE = 3;
+
+// P-BE-07: Globales Limit paralleler KI-Aufrufe über alle Endpunkte.
+// Ergänzt P-BE-05 (das nur /api/analyze schützt) um einen gemeinsamen Zähler für alle
+// askLumo-Aufrufe (generate-cards, chat, youtube, reexplain, …).
+// MAX_CONCURRENT_AI = 5 erlaubt simultane KI-Nutzung mehrerer User ohne vollständige
+// Blockierung, begrenzt aber gleichzeitig den Anthropic-API-Druck und RAM-Verbrauch.
+let _activeAiCalls = 0;
+const MAX_CONCURRENT_AI = 5;
+// Nur für Tests:
+export function __getActiveAiCallsForTesting() { return _activeAiCalls; }
 
 app.post('/api/analyze',
   // 1. Admission Control — BEFORE Body wird eingelesen
@@ -463,6 +521,10 @@ app.post('/api/analyze',
 
   try {
     const { topic, materialText, fileBase64, fileMediaType, files: filesArray, goalType, goalDate, sprintMode } = req.body || {};
+
+    // F001/F002: topic-Pflichtfeld prüfen — verhindert hängende Requests bei {}
+    const _analyzeCheck = validate(ANALYZE_REQ, req.body);
+    if (!_analyzeCheck.ok) return res.status(400).json({ error: _analyzeCheck.error });
 
     // S-07: Free-Block-Limit serverseitig prüfen
     // Lese den server-seitigen Zähler (nicht den Client-bereitgestellten).
@@ -609,6 +671,9 @@ const MAX_HISTORY_TOTAL_CHARS = MAX_HISTORY_MESSAGES * MAX_MESSAGE_CHARS; // 40.
 
 app.post('/api/explain-chat', async (req, res) => {
   try {
+    const _explainChatCheck = validate(EXPLAIN_CHAT_REQ, req.body);
+    if (!_explainChatCheck.ok) return res.status(400).json({ error: _explainChatCheck.error });
+
     const { blockTitle, blockContent, difficulty, depth, history } = req.body || {};
     const system = getExplainChatSystem(depth, difficulty);
 
@@ -656,6 +721,9 @@ app.post('/api/explain-chat', async (req, res) => {
 
 app.post('/api/understanding-hint', async (req, res) => {
   try {
+    const _uhCheck = validate(UNDERSTANDING_HINT_REQ, req.body);
+    if (!_uhCheck.ok) return res.status(400).json({ error: _uhCheck.error });
+
     const { blockTitle, blockContent } = req.body || {};
     const userContent = `Block-Titel: ${blockTitle}\nInhalt:\n${blockContent}`;
     const data = await askLumo({
@@ -672,6 +740,9 @@ app.post('/api/understanding-hint', async (req, res) => {
 
 app.post('/api/evaluate-understanding', async (req, res) => {
   try {
+    const _euCheck = validate(EVALUATE_UNDERSTANDING_REQ, req.body);
+    if (!_euCheck.ok) return res.status(400).json({ error: _euCheck.error });
+
     const { blockTitle, blockContent, userExplanation } = req.body || {};
     const userContent = `Block-Titel: ${blockTitle}\nInhalt des Blocks:\n${blockContent}\n\nErklärung des Nutzers in eigenen Worten:\n"${userExplanation}"`;
     const data = await askLumo({
@@ -688,6 +759,9 @@ app.post('/api/evaluate-understanding', async (req, res) => {
 
 app.post('/api/generate-cards', async (req, res) => {
   try {
+    const _gcCheck = validate(GENERATE_CARDS_REQ, req.body);
+    if (!_gcCheck.ok) return res.status(400).json({ error: _gcCheck.error });
+
     const { blockTitle, blockContent, difficulty, goalType, mood, learningStyle } = req.body || {};
     const data = await askLumo({
       system: getCardSystem(goalType, mood, learningStyle),
@@ -703,6 +777,9 @@ app.post('/api/generate-cards', async (req, res) => {
 
 app.post('/api/evaluate-card-answer', async (req, res) => {
   try {
+    const _ecaCheck = validate(EVALUATE_CARD_ANSWER_REQ, req.body);
+    if (!_ecaCheck.ok) return res.status(400).json({ error: _ecaCheck.error });
+
     const { concept, explanation, question, userAnswer } = req.body || {};
     const data = await askLumo({
       system: EVALUATE_CARD_ANSWER_SYSTEM,
@@ -717,8 +794,11 @@ app.post('/api/evaluate-card-answer', async (req, res) => {
 });
 
 app.post('/api/generate-lernzettel', async (req, res) => {
-  const { blockTitle, blockContent, cards, goalType } = req.body || {};
   try {
+    const _glCheck = validate(GENERATE_LERNZETTEL_REQ, req.body);
+    if (!_glCheck.ok) return res.status(400).json({ error: _glCheck.error });
+
+    const { blockTitle, blockContent, cards, goalType } = req.body || {};
     const data = await askLumo({
       system: getLernzettelSystem(goalType),
       userContent: `Block: ${blockTitle}\nInhalt: ${blockContent}\nGelernte Konzepte: ${cards?.map((c) => c.concept + ': ' + c.explanation).join('\n') || ''}`,
@@ -732,8 +812,11 @@ app.post('/api/generate-lernzettel', async (req, res) => {
 });
 
 app.post('/api/reexplain', async (req, res) => {
-  const { concept, originalExplanation, blockTitle } = req.body || {};
   try {
+    const _reCheck = validate(REEXPLAIN_REQ, req.body);
+    if (!_reCheck.ok) return res.status(400).json({ error: _reCheck.error });
+
+    const { concept, originalExplanation, blockTitle } = req.body || {};
     const data = await askLumo({
       system: REEXPLAIN_SYSTEM,
       userContent: `Block: ${blockTitle}\nKonzept: ${concept}\nUrsprüngliche Erklärung: ${originalExplanation}`,
@@ -747,8 +830,11 @@ app.post('/api/reexplain', async (req, res) => {
 });
 
 app.post('/api/explain-term', async (req, res) => {
-  const { term, blockTitle, blockContext } = req.body || {};
   try {
+    const _etCheck = validate(EXPLAIN_TERM_REQ, req.body);
+    if (!_etCheck.ok) return res.status(400).json({ error: _etCheck.error });
+
+    const { term, blockTitle, blockContext } = req.body || {};
     const data = await askLumo({
       system: TERM_EXPLAIN_SYSTEM,
       userContent: `Block: ${blockTitle}\nKontext: ${blockContext}\nBegriff: ${term}`,
@@ -762,8 +848,11 @@ app.post('/api/explain-term', async (req, res) => {
 });
 
 app.post('/api/generate-concept-map', async (req, res) => {
-  const { blockTitle, blockContent, cards } = req.body || {};
   try {
+    const _cmCheck = validate(GENERATE_CONCEPT_MAP_REQ, req.body);
+    if (!_cmCheck.ok) return res.status(400).json({ error: _cmCheck.error });
+
+    const { blockTitle, blockContent, cards } = req.body || {};
     const data = await askLumo({
       system: CONCEPT_MAP_SYSTEM,
       userContent: `Block: ${blockTitle}\nKernkonzepte: ${cards?.map((c) => c.concept).join(', ') || ''}\nInhalt: ${blockContent}`,
@@ -777,8 +866,11 @@ app.post('/api/generate-concept-map', async (req, res) => {
 });
 
 app.post('/api/generate-flashcards', async (req, res) => {
-  const { blockTitle, uncertainConcepts, blockContent } = req.body || {};
   try {
+    const _gfCheck = validate(GENERATE_FLASHCARDS_REQ, req.body);
+    if (!_gfCheck.ok) return res.status(400).json({ error: _gfCheck.error });
+
+    const { blockTitle, uncertainConcepts, blockContent } = req.body || {};
     const data = await askLumo({
       system: FLASHCARD_SYSTEM,
       userContent: `Block: ${blockTitle}\nNoch unsichere Konzepte:\n${(uncertainConcepts || []).map((c, i) => `${i + 1}. ${c}`).join('\n')}\nKontext: ${blockContent?.slice(0, 1000) || ''}`,
@@ -792,6 +884,9 @@ app.post('/api/generate-flashcards', async (req, res) => {
 });
 
 app.post('/api/youtube-videos', async (req, res) => {
+  const _ytCheck = validate(YOUTUBE_VIDEOS_REQ, req.body);
+  if (!_ytCheck.ok) return res.status(400).json({ error: _ytCheck.error });
+
   const { concept, blockTitle } = req.body || {};
   const apiKey = process.env.YOUTUBE_API_KEY;
 
@@ -893,13 +988,25 @@ const MAX_STATE_DEPTH = 10;              // Max. Verschachtelungstiefe
  * @param {number} [current=0]
  * @returns {boolean} true wenn Tiefe überschritten
  */
-function isTooDeep(val, maxDepth, current = 0) {
-  if (current > maxDepth) return true;
-  if (val && typeof val === 'object' && !Array.isArray(val)) {
-    return Object.values(val).some((v) => isTooDeep(v, maxDepth, current + 1));
-  }
-  if (Array.isArray(val)) {
-    return val.some((v) => isTooDeep(v, maxDepth, current + 1));
+// P-BE-06: Iterative Tiefenprüfung statt Rekursion.
+// Vorteile gegenüber der alten rekursiven Version:
+//   • Kein Call-Stack-Overflow bei ungewöhnlich tiefen, breiten Strukturen.
+//   • Früher Abbruch: sobald ein Knoten maxDepth überschreitet, kehrt die
+//     Funktion sofort zurück (wie früher via .some() – jetzt via while-break).
+//   • Kein Overhead für N Stack-Frames pro Rekursionsebene.
+// Semantik ist identisch zur rekursiven Version.
+function isTooDeep(val, maxDepth) {
+  const stack = [[val, 0]];
+  while (stack.length > 0) {
+    const [node, depth] = stack.pop();
+    if (depth > maxDepth) return true;
+    if (node === null || typeof node !== 'object') continue;
+    const nextDepth = depth + 1;
+    if (Array.isArray(node)) {
+      for (const child of node) stack.push([child, nextDepth]);
+    } else {
+      for (const child of Object.values(node)) stack.push([child, nextDepth]);
+    }
   }
   return false;
 }
@@ -929,8 +1036,10 @@ function hasDangerousKeys(obj) {
 /**
  * POST /api/state — Speichert den State für diesen User.
  * Body: { state: { ... } }
+ * Eigener Parser mit 1 MB Limit — State kann bis zu 1 MB groß sein
+ * (viele Projekte, FSRS-Karten etc.). Globaler Parser überspringt diese Route.
  */
-app.post('/api/state', (req, res) => {
+app.post('/api/state', express.json({ limit: '1mb' }), (req, res) => {
   try {
     const { state } = req.body || {};
 
@@ -939,11 +1048,14 @@ app.post('/api/state', (req, res) => {
       return res.status(400).json({ error: 'Ungültiger State: erwartet ein Objekt.' });
     }
 
-    // S-06: Payload-Größe prüfen (JSON-Serialisierung als Proxy für Speicherbedarf)
+    // S-06: Payload-Größe prüfen (tatsächliche UTF-8-Bytes des serialisierten JSON).
+    // Buffer.byteLength(str, 'utf8') zählt Bytes, nicht JS-String-Länge (UTF-16 Code-Units).
+    // Für ASCII-Payloads sind beide identisch; für CJK/Emoji ist Buffer.byteLength korrekt.
     const stateJson = JSON.stringify(state);
-    if (stateJson.length > MAX_STATE_JSON_BYTES) {
+    const stateByteSize = Buffer.byteLength(stateJson, 'utf8');
+    if (stateByteSize > MAX_STATE_JSON_BYTES) {
       return res.status(400).json({
-        error: `State zu groß (${Math.round(stateJson.length / 1024)} KB, max. ${MAX_STATE_JSON_BYTES / 1024} KB).`,
+        error: `State zu groß (${Math.round(stateByteSize / 1024)} KB, max. ${MAX_STATE_JSON_BYTES / 1024} KB).`,
       });
     }
 
@@ -1013,6 +1125,10 @@ app.get('/api/health', (req, res) => {
 app.use((err, req, res, _next) => {
   if (err.type === 'entity.parse.failed') {
     return res.status(400).json({ error: 'Ungültige Anfrage: Fehlerhaftes JSON.' });
+  }
+  // F002: Body zu groß → 413 statt 500
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ error: 'Anfrage zu groß. Bitte kleinere Daten senden.' });
   }
   // Alle anderen Fehler: Standard-Express-Behandlung
   res.status(err.status || 500).json({ error: 'Interner Serverfehler.' });

@@ -108,6 +108,9 @@ export default function App() {
 
   // Storage-Status für Warning Banner
   const [storageLayer, setStorageLayer] = useState(null); // null = noch nicht geprüft
+
+  // Server-Sync-Fehler: wird true wenn syncToServer false zurückgibt (z. B. 413, Netzwerk)
+  const [syncError, setSyncError] = useState(false);
   const idbHydrated = useRef(false);
   const idbDebounceRef = useRef(null); // P-FE-01: Debounce für IDB-Write
 
@@ -230,7 +233,7 @@ export default function App() {
     // Server-Sync — nur bei erteiletem Cookie-Consent (ePrivacy)
     const cookieConsent = (() => { try { return localStorage.getItem('lumo_cookie_consent'); } catch { return null; } })();
     if (cookieConsent === 'accepted') {
-      scheduleSyncToServer(snapshot);
+      scheduleSyncToServer(snapshot, () => setSyncError(true));
     }
   }, [state.topic, state.fileName, state.goalType, state.goalDate, state.sprintMode, state.blocks, state.recommendedOrder, state.subjectColor, state.learningStyle, state.subjectHistory, state.projects, state.activeProjectId, state.examResult, state.examResultAskedAt, state.blocksAnalyzedTotal, state.sessionsTotal, state.flashcards]);
 
@@ -458,6 +461,15 @@ export default function App() {
         <>
       {!isOnline && <OfflineBanner />}
       {storageLayer === 'localStorage' && <StorageWarningBanner />}
+      {syncError && (
+        <div role="alert" style={{
+          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
+          background: '#b91c1c', color: '#fff', textAlign: 'center',
+          padding: '10px 16px', fontSize: '14px', cursor: 'pointer',
+        }} onClick={() => setSyncError(false)}>
+          Sync fehlgeschlagen — Dein Lernfortschritt wurde lokal gesichert. Tippen zum Schließen.
+        </div>
+      )}
       <InstallBanner />
       <BetaFeedbackButton />
 
@@ -565,6 +577,7 @@ export default function App() {
         <FlashcardScreen
           flashcards={state.flashcards}
           onUpdateFlashcard={(id, updates) => dispatch({ type: 'UPDATE_FLASHCARD', payload: { id, updates } })}
+          onUpdateFlashcardsBatch={(updates) => dispatch({ type: 'UPDATE_FLASHCARDS_BATCH', payload: updates })}
           onRemoveFlashcard={(id) => dispatch({ type: 'REMOVE_FLASHCARD', payload: id })}
           onBack={() => dispatch({ type: 'RETURN_TO_DASHBOARD' })}
         />
