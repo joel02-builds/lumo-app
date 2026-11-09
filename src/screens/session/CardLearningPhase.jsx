@@ -228,20 +228,10 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
       }
       setPhase('feedback');
     } catch (err) {
-      // Fallback auf lokale Bewertung wenn API fehlt
-      const words = answer.trim().split(/\s+/).length;
-      const isGood = words >= 8;
-      setFeedback(isGood
-        ? 'Das klingt richtig.'
-        : 'Beschreib es etwas ausführlicher.'
-      );
-      setIsGoodAnswer(isGood);
-      // K-01: answerResults + weakCardQueue werden in handleRating gesetzt (Fallback-Pfad)
-      if (isGood) {
-        setRewardMessage(REWARD_MESSAGES[Math.floor(Math.random() * REWARD_MESSAGES.length)]);
-        setShowRewardBurst(true);
-        setTimeout(() => setShowRewardBurst(false), 600);
-      }
+      // F001-Client: Kein Wort-Zähl-Fallback — keine stille Fehlbewertung.
+      // isGood=false stellt sicher, dass keine Belohnung ausgelöst wird.
+      setFeedback('Bewertung gerade nicht möglich.');
+      setIsGoodAnswer(false);
       setPhase('feedback');
     } finally {
       setSending(false);
@@ -378,10 +368,9 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
       setRepeatFeedback(result.feedback);
       setRepeatIsGood(result.isGood);
     } catch {
-      const words = repeatAnswer.trim().split(/\s+/).length;
-      const isGood = words >= 8;
-      setRepeatFeedback(isGood ? 'Das klingt richtig.' : 'Beschreib es etwas ausführlicher.');
-      setRepeatIsGood(isGood);
+      // F001-Client: Kein Wort-Zähl-Fallback — keine stille Fehlbewertung.
+      setRepeatFeedback('Bewertung gerade nicht möglich.');
+      setRepeatIsGood(false);
     } finally {
       setRepeatSending(false);
     }
@@ -447,7 +436,8 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
       });
       setFinalFeedback(result);
     } catch {
-      setFinalFeedback({ isGood: true, feedback: 'Du hast dich durch den ganzen Block gearbeitet.' });
+      // F001-Client: Kein falsches isGood=true bei API-Fehler.
+      setFinalFeedback({ isGood: false, feedback: 'Bewertung gerade nicht möglich.' });
     } finally {
       setFinalSending(false);
     }

@@ -244,7 +244,14 @@ export function appReducer(state, action) {
         ),
       };
 
-    case 'BLOCK_FINISHED':
+    case 'BLOCK_FINISHED': {
+      // F003-Idempotenz: Wenn der Block bereits abgeschlossen ist (z. B. durch
+      // den useEffect-Trigger beim Betreten des COMPLETE-Screens + späterer
+      // Button-Klick oder Reload), sessionsTotal NICHT nochmals erhöhen.
+      // block.status wird trotzdem aktualisiert (kein Schaden; completedAt bleibt frisch).
+      const alreadyCompleted = state.blocks.some(
+        (b) => b.id === action.blockId && b.status === 'completed'
+      );
       return {
         ...state,
         blocks: state.blocks.map((b) =>
@@ -259,8 +266,11 @@ export function appReducer(state, action) {
               }
             : b
         ),
-        sessionsTotal: (state.sessionsTotal || 0) + 1,
+        sessionsTotal: alreadyCompleted
+          ? state.sessionsTotal
+          : (state.sessionsTotal || 0) + 1,
       };
+    }
 
     case 'SAVE_BLOCK_CARDS':
       return {
@@ -291,21 +301,28 @@ export function appReducer(state, action) {
       return { ...state, screen: SCREENS.ONBOARDING, onboardingStep: 1 };
 
     case 'ADD_FLASHCARDS': {
-      // P-FE-04: Set-basierte Deduplication (O(n+m) statt O(n*m))
-      const existingIds = new Set(state.flashcards.map(c => c.id));
-      const newCards = action.payload.filter(newCard => !existingIds.has(newCard.id));
+      // P-FE-04: Set-basierte Deduplication (O(n+m) statt O(n*m)).
+      // seenIds wächst während des Filterns: verhindert Duplikate sowohl
+      // gegenüber gespeicherten Karten als auch innerhalb desselben Payloads.
+      // Bei mehrfacher neuer ID gewinnt die erste Stelle im Payload.
+      const seenIds = new Set(state.flashcards.map(c => c.id));
+      const newCards = action.payload.filter(newCard => {
+        if (seenIds.has(newCard.id)) return false;
+        seenIds.add(newCard.id);
+        return true;
+      });
       return { ...state, flashcards: [...state.flashcards, ...newCards] };
     }
 
+    // P-FE-05: findIndex statt .map() – erzeugt nur 1 neues Objekt (die geänderte Karte)
+    // statt N neuer Objekte. Besonders relevant bei vielen Karten (500+).
     case 'UPDATE_FLASHCARD': {
-      return {
-        ...state,
-        flashcards: state.flashcards.map(card =>
-          card.id === action.payload.id
-            ? { ...card, ...action.payload.updates, lastReviewed: new Date().toISOString() }
-            : card
-        ),
-      };
+      const { id, updates } = action.payload;
+      const idx = state.flashcards.findIndex(c => c.id === id);
+      if (idx === -1) return state;
+      const flashcards = [...state.flashcards];
+      flashcards[idx] = { ...flashcards[idx], ...updates, lastReviewed: new Date().toISOString() };
+      return { ...state, flashcards };
     }
 
     // P-FE-02: Batch-Update für mehrere Karten nach einer Session.

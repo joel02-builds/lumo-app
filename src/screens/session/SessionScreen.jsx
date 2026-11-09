@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import FocusRitualPhase from './FocusRitualPhase.jsx';
 import CardLearningPhase from './CardLearningPhase.jsx';
 import DepthChoicePhase from './DepthChoicePhase.jsx';
@@ -139,6 +139,23 @@ export default function SessionScreen({ block, blocks, flashcards, goalType, spr
     setPhase(PHASES.COMPLETE);
   }, []);
 
+  // F003: Abschluss sofort beim Betreten des COMPLETE-Screens auslösen,
+  // nicht erst nach Button-Klick. Damit bleibt der Block auch dann completed,
+  // wenn der Nutzer den Tab schließt oder neu lädt.
+  //
+  // completionFiredRef verhindert Doppel-Dispatch (React StrictMode führt
+  // useEffect zweimal aus; auch idempotenter Reducer als zweite Sicherung).
+  const completionFiredRef = useRef(false);
+  useEffect(() => {
+    if (phase !== PHASES.COMPLETE) return;
+    if (completionFiredRef.current) return;
+    completionFiredRef.current = true;
+    onRecordCompletion(result);
+  // onRecordCompletion ist stabil (useCallback in App.jsx), result ändert sich
+  // nach dem Setzen durch handleCheckDone nicht mehr.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
+
   if (phase === PHASES.FOCUS_RITUAL) {
     return (
       // P1-UX-01: onBack={onPause} ermöglicht Nutzer, die Session jederzeit
@@ -187,14 +204,8 @@ export default function SessionScreen({ block, blocks, flashcards, goalType, spr
         onAddFlashcards={onAddFlashcards}
         sprintMode={sprintMode}
         allBlocks={blocks}
-        onContinue={() => {
-          onRecordCompletion(result);
-          setPhase(PHASES.LERNZETTEL);
-        }}
-        onPause={() => {
-          onRecordCompletion(result);
-          onPause();
-        }}
+        onContinue={() => setPhase(PHASES.LERNZETTEL)}
+        onPause={() => onPause()}
       />
     );
   }

@@ -23,6 +23,9 @@
  * • DSGVO-konform: kein personenbezogenes Datum
  */
 
+// Dev-only persistence instrumentation (tree-shaken in production by Vite)
+import { logServerSync } from './persistenceLogger.js';
+
 const SYNC_DEBOUNCE_MS = 2000; // 2s debounce — nicht bei jedem Keystroke speichern
 const BASE_URL = import.meta.env.VITE_API_URL || '';
 
@@ -61,17 +64,34 @@ export async function loadServerState() {
 /**
  * Speichert den State zum Server (debounced).
  * Wird bei jedem State-Update aufgerufen.
+ * @param {object} state - Aktueller App-State
+ * @param {function} [onError] - Optionaler Callback bei Sync-Fehler (z. B. 413 / Netzwerkfehler)
  */
-export function scheduleSyncToServer(state) {
+export function scheduleSyncToServer(state, onError) {
   if (syncTimer) clearTimeout(syncTimer);
   syncTimer = setTimeout(async () => {
-    await syncToServer(state);
+    const ok = await syncToServer(state);
+    if (!ok) onError?.();
   }, SYNC_DEBOUNCE_MS);
 }
 
 export async function syncToServer(state) {
   // Materialdaten nicht senden (zu groß)
   const { fileBase64, materialText, ...syncState } = state;
+
+  if (import.meta.env.DEV) {
+    // ── Dev-Instrumentierung ─────────────────────────────────────────────
+    const t0 = performance.now();
+    const result = await fetchWithCookies('/api/state', {
+      method: 'POST',
+      body: JSON.stringify({ state: syncState }),
+    });
+    const durationMs = +(performance.now() - t0).toFixed(2);
+    logServerSync({ durationMs, ok: result?.ok === true });
+    if (result?.ok) lastSyncedAt = Date.now();
+    return result?.ok || false;
+    // ────────────────────────────────────────────────────────────────────
+  }
 
   const result = await fetchWithCookies('/api/state', {
     method: 'POST',
