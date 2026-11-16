@@ -61,6 +61,8 @@ function LazyFallback() {
 import { calculateNextReview } from './utils/fsrs.js';
 import { useChronoBias } from './hooks/useChronoBias.js';
 
+const OFFLINE_CONFIRM_DELAY_MS = 2000;
+
 export default function App() {
   const [state, dispatch] = useReducer(appReducer, null, () => createInitialState(loadProject()));
 
@@ -180,14 +182,21 @@ export default function App() {
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
   useEffect(() => {
     function handleOnline() {
+      clearTimeout(offlineTimer);
       setIsOnline(true);
     }
+    // 'offline' feuert auf manchen Geräten kurz beim Netzwechsel oder wenn der
+    // Tab aus dem Hintergrund kommt, obwohl die Verbindung steht. Das Banner
+    // erscheint deshalb erst, wenn navigator.onLine nach 2 s immer noch false ist.
+    let offlineTimer = null;
     function handleOffline() {
-      setIsOnline(false);
+      clearTimeout(offlineTimer);
+      offlineTimer = setTimeout(() => setIsOnline(navigator.onLine), OFFLINE_CONFIRM_DELAY_MS);
     }
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     return () => {
+      clearTimeout(offlineTimer);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
@@ -474,10 +483,12 @@ export default function App() {
       {syncError && (
         <div role="alert" style={{
           position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
-          background: '#b91c1c', color: '#fff', textAlign: 'center',
+          // Amber statt Rot (Kein-Rot-Regel): der Fortschritt ist lokal sicher,
+          // es ist ein Hinweis, kein Alarm.
+          background: 'var(--amber)', color: '#1a1206', textAlign: 'center', fontWeight: 600,
           padding: '10px 16px', fontSize: '14px', cursor: 'pointer',
         }} onClick={() => setSyncError(false)}>
-          Sync fehlgeschlagen — Dein Lernfortschritt wurde lokal gesichert. Tippen zum Schließen.
+          Abgleich mit dem Server gerade nicht möglich – dein Fortschritt ist auf diesem Gerät gesichert. Tippen zum Schließen.
         </div>
       )}
       <InstallBanner />

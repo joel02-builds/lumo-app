@@ -32,13 +32,20 @@ async function post(path, body) {
 
   if (!res.ok) {
     let message = GENERIC_ERROR;
+    let retryAfter = null;
     try {
       const errBody = await res.json();
       if (errBody?.error) message = errBody.error;
+      if (typeof errBody?.retryAfter === 'number') retryAfter = errBody.retryAfter;
     } catch {
       // keep generic message
     }
-    throw new Error(message);
+    // status + retryAfter mitgeben: bei 429 (Server ausgelastet) kann die UI
+    // sagen, wann ein neuer Versuch sinnvoll ist, statt nur "Fehler".
+    const err = new Error(message);
+    err.status = res.status;
+    err.retryAfter = retryAfter;
+    throw err;
   }
 
   let json;
