@@ -8,7 +8,8 @@
     "reproduktion": "POST /api/generate-cards mit Body {} (leeres Objekt) — Server antwortet mit 200 und einem Claude-Ergebnis, das 'blockTitle: undefined' enthält. Rate-Limit (200/15min) schützt, limitiert aber nicht auf plausible Payload-Größe.",
     "fix": "Für jede Route: null/leere Pflichtfelder mit 400-Antwort ablehnen (z.B. if (!blockTitle?.trim()) return res.status(400).json({error:'blockTitle fehlt'})), maximale Stringlänge prüfen (z.B. blockContent max. 50 KB), analog zu /api/explain-chat.",
     "konfidenz": "hoch",
-    "status": "CONFIRMED"
+    "status": "FIXED",
+    "fix_nachweis": "Bereits auf main behoben (ba75dc8): server/validation.js + <ROUTE>_REQ-Schemas, tests/input-validation.test.js. Verifiziert 2026-11-16: 289 Tests grün."
   },
   {
     "id": "F002",
@@ -19,7 +20,8 @@
     "reproduktion": "POST /api/evaluate-card-answer mit 34 MB großem JSON-Body (concept: 'A'.repeat(34*1024*1024)) — Server parsed den Body vollständig in RAM.",
     "fix": "Separaten Body-Parser pro Route oder Route-Gruppe mit kleineren Limits setzen. Z.B. /api/evaluate-card-answer, /api/generate-cards, etc. auf 50 KB begrenzen; nur /api/analyze und /api/reexplain benötigen größere Limits.",
     "konfidenz": "hoch",
-    "status": "CONFIRMED"
+    "status": "FIXED",
+    "fix_nachweis": "Bereits auf main behoben (ba75dc8): globaler Parser 100 KB, /api/analyze und /api/state mit eigenem Parser. Verifiziert 2026-11-16 (IV-bodylimit-Test)."
   },
   {
     "id": "F003",
@@ -30,7 +32,8 @@
     "reproduktion": "1. Session starten, Karteikartenphase und Check-Phase vollständig durchlaufen. 2. Auf dem COMPLETE-Screen (BlockCompletePhase) OHNE Klick die Seite neu laden. 3. App neu laden → Block steht noch auf 'in-progress', sessionsTotal = 0, Streak = 0. Bestätigt durch Audit-Brief-Suspect.",
     "fix": "BLOCK_FINISHED bereits im handleCheckDone-Callback (SessionScreen.jsx Zeile 137) dispatchen, nicht erst beim Button-Klick. Oder: bei Phase-Transition in COMPLETE den State sofort committen (dispatch + saveProject).",
     "konfidenz": "hoch",
-    "status": "CONFIRMED"
+    "status": "FIXED",
+    "fix_nachweis": "Bereits auf main behoben (dd236c9): onRecordCompletion beim Betreten von COMPLETE, BLOCK_FINISHED idempotent. Verifiziert 2026-11-16: tests/block-completion.test.js."
   },
   {
     "id": "F004",
@@ -373,5 +376,27 @@
     "konfidenz": "hoch",
     "status": "CONFIRMED",
     "fix_nachweis": "Dokumentation ergänzt am 2026-11-16; Datenverlust bei Deploy bleibt bis zur Persistenz-Entscheidung bestehen."
+  },
+  {
+    "id": "F034",
+    "bereich": "1 Engineering",
+    "schwere": "S3",
+    "befund": "Toter Code: 2 ungenutzte Dateien (src/screens/onboarding/OnboardingScreen2.jsx, src/utils/apiCostEstimate.js) und 25 ungenutzte Exporte, u. a. die komplette alte SM-2-Berechnung in src/utils/sm2.js (calculateNextReview, isDueForReview, getDueCards), PRETEST_SYSTEM/pretestSchema, getOrCreateUser in server/db.js, getUpcomingCards, getLastSyncedAt.",
+    "beleg": "npx knip am 2026-11-16 auf Branch docs/render-env: Unused files (2), Unused exports (25), Duplicate exports (3).",
+    "reproduktion": "npx -y knip --no-progress",
+    "fix": "Dateien und Exporte entfernen (eigener PR, Phase 3.9).",
+    "konfidenz": "hoch",
+    "status": "CONFIRMED"
+  },
+  {
+    "id": "F035",
+    "bereich": "1 Engineering",
+    "schwere": "S3",
+    "befund": "Messung ohne Befund, zur Dokumentation: keine zirkulären Importe (madge, 74 Dateien); Code-Duplikate gering (jscpd: 11 Klone, 189 Zeilen = 0,85 %); keine Schlüsselmuster in der gesamten Git-Historie (Suche nach sk-ant-, AIza, ghp_, rnd_, PRIVATE KEY: 0 Treffer; keine .env je committet).",
+    "beleg": "npx madge --circular src server; npx jscpd src server --min-lines 12; git log -p --all | grep -cE <Muster> am 2026-11-16.",
+    "reproduktion": "siehe Beleg",
+    "fix": "keiner nötig",
+    "konfidenz": "mittel – die Schlüsselsuche ist ein Muster-Grep, kein vollwertiger gitleaks-Lauf",
+    "status": "PLAUSIBLE"
   }
 ]
