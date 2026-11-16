@@ -55,7 +55,9 @@ class ErrorBoundary extends Component {
           </button>
           {/* Debug-Info: nur sichtbar wenn man draufklickt */}
           <details style={{ marginTop: '8px' }}>
-            <summary style={{ fontSize: '12px', color: '#8A9BAE', cursor: 'pointer', opacity: 0.5 }}>
+            {/* F020: opacity 0.5 drückte den Kontrast auf 2,5:1; ohne opacity und mit
+                hellerer Farbe sind es 9,6:1. */}
+            <summary style={{ fontSize: '12px', color: '#B4C0CE', cursor: 'pointer' }}>
               Fehlerdetails
             </summary>
             <pre style={{

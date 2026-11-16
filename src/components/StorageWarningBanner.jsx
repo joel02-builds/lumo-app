@@ -55,7 +55,9 @@ export default function StorageWarningBanner() {
         right: 0,
         zIndex: 9999,
         background: 'var(--amber, #C47A2B)',
-        color: '#fff',
+        // F020: Weiß auf diesem Amber hatte nur 3,4:1 (der ✕-Knopf mit 80 % Weiß
+        // sogar 2,7:1). Dunkles #1a1206 wie auf allen goldenen Flächen: 5,4:1.
+        color: '#1a1206',
         padding: '10px 16px',
         display: 'flex',
         alignItems: 'center',
@@ -78,10 +80,10 @@ export default function StorageWarningBanner() {
           onClick={handleExport}
           disabled={exporting}
           style={{
-            background: 'rgba(255,255,255,0.2)',
-            border: '1px solid rgba(255,255,255,0.5)',
+            background: 'rgba(26,18,6,0.12)',
+            border: '1px solid rgba(26,18,6,0.5)',
             borderRadius: '8px',
-            color: '#fff',
+            color: '#1a1206',
             fontSize: '13px',
             fontWeight: '600',
             padding: '5px 12px',
@@ -89,8 +91,8 @@ export default function StorageWarningBanner() {
             whiteSpace: 'nowrap',
             transition: 'background 0.15s ease',
           }}
-          onMouseOver={(e) => { if (!exporting) e.target.style.background = 'rgba(255,255,255,0.3)'; }}
-          onMouseOut={(e) => { e.target.style.background = 'rgba(255,255,255,0.2)'; }}
+          onMouseOver={(e) => { if (!exporting) e.target.style.background = 'rgba(26,18,6,0.22)'; }}
+          onMouseOut={(e) => { e.target.style.background = 'rgba(26,18,6,0.12)'; }}
         >
           {exporting ? 'Läuft…' : exported ? '✓ Gespeichert' : 'Backup herunterladen'}
         </button>
@@ -101,7 +103,7 @@ export default function StorageWarningBanner() {
           style={{
             background: 'none',
             border: 'none',
-            color: 'rgba(255,255,255,0.8)',
+            color: '#1a1206',
             fontSize: '18px',
             cursor: 'pointer',
             padding: '0 4px',

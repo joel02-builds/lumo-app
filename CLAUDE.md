@@ -159,6 +159,7 @@ node --test tests/input-validation.test.js    # run one test file
 - Text: `--text-primary`, `--text-secondary`
 - Meaning: `--green` (understood), `--amber` (warning), `--red` (an orange tone, real errors only)
 - Text on a gold surface is always `#1a1206`, never white.
+- Contrast: small text needs 4.5:1 (WCAG AA). Never dim text with `opacity` (it stacks with parent opacity and ignores dusk mode); pick a lighter colour token instead. Text on amber (`--amber`) is `#1a1206`, never white (white is only 3.4:1).
 
 **No red.** Red triggers shame and shutdown in this audience. Gaps, wrong answers, "no idea", low retention, deadlines and bad grades are shown in gold, amber or neutral grey. `--red` is only for genuine failures (network, API) inside `.error-banner`. One existing exception is not a licence: YouTube's brand red in `YoutubePanel.jsx`.
 

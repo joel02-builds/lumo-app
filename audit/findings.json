@@ -221,7 +221,8 @@
     "reproduktion": "Playwright + axe-core gegen localhost:3001 ausführen: 'color-contrast' Violation, 3 Elemente. Oder: Lighthouse Accessibility-Audit.",
     "fix": "(1) 'Datenschutzerklärung'-Link: Farbwert von var(--gold) auf Hintergrundfarbe anpassen, mindestens 4.5:1 erfüllen. (2) .ob-ftab.ghost Klasse: Textfarbe aufhellen auf mindestens #9b9490 (ergibt ~4.6:1 auf #191714). Tools: https://webaim.org/resources/contrastchecker/",
     "konfidenz": "hoch",
-    "status": "CONFIRMED"
+    "status": "FIXED",
+    "fix_nachweis": "2026-11-16: Cookie-Link (Ursache: opacity 0.5 am umgebenden p, nicht nur 0.8 am Link) 13,0:1 normal / 10,9:1 Dusk und .ob-ftab.ghost 6,4:1 im Browser gemessen (computed style, opacity eingerechnet, normal + data-dusk). ErrorBoundary-Summary 9,6:1 und Storage-Banner (Text und X) 5,4:1 aus den Quellfarben berechnet, nicht im Browser gemessen. Neuer Fehlvorstellungs-Block 12,7:1 / 13,5:1 (Dusk 10,5 / 13,2) berechnet."
   },
   {
     "id": "F021",

@@ -129,7 +129,7 @@ export default function CookieConsent({ onAccept, onDecline }) {
           </div>
         </div>
 
-        <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: 0, opacity: 0.5, textAlign: 'center' }}>
+        <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: 0, textAlign: 'center' }}>
           <span
             role="button"
             tabIndex={0}
@@ -141,7 +141,10 @@ export default function CookieConsent({ onAccept, onDecline }) {
                 window.dispatchEvent(new CustomEvent('lumo:show-legal'));
               }
             }}
-            style={{ color: 'var(--gold)', textDecoration: 'underline', cursor: 'pointer', opacity: 0.8 }}
+            // F020: Der Link war doppelt abgedunkelt (opacity 0.8 am Link mal 0.5 am
+            // umgebenden <p>) und fiel auf ca. 2:1. Jetzt --gold-light ohne jede
+            // opacity: 13,0:1 normal, 10,9:1 im Dusk-Modus (im Browser gemessen).
+            style={{ color: 'var(--gold-light)', textDecoration: 'underline', cursor: 'pointer' }}
           >
             Datenschutzerklärung
           </span>
