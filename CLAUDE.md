@@ -36,7 +36,7 @@ There is **no TypeScript, no router, no state library, no CSS framework, no comp
    - `localStorage` key `lumo_project`: written synchronously on every change.
    - IndexedDB (`lumo_db` / `lumo_v2`): written 300 ms debounced. Primary store.
    - Server SQLite via `POST /api/state`: 2 s debounced, **only if** `localStorage.lumo_cookie_consent === 'accepted'`.
-5. The user is anonymous. An httpOnly cookie `lumo_uid` holds a random session token; only its SHA-256 hash is stored.
+5. The user is anonymous. An httpOnly cookie `lumo_uid` holds a random session token; only its SHA-256 hash is stored. The server creates a session (and sets the cookie) **only on `/api/state*`**, which the client calls only after consent. Every other route reads an existing cookie but never sets one, so `req.userId` can be `null` there. Any new client call to a sync route must be guarded by the consent check (`tests/cookie-consent.test.js`).
 
 ### One learning session (`src/screens/session/SessionScreen.jsx`)
 
@@ -97,7 +97,7 @@ npm ci                 # install exactly what package-lock.json says (needs Node
 npm run dev            # frontend http://localhost:5173 + backend http://localhost:3001
 npm run build          # production build into dist/
 npm start              # run the server only (production mode needs NODE_ENV, DB_PATH, FRONTEND_URL)
-npm test               # 278 tests in 12 files, no network, no API cost (Anthropic client is mocked)
+npm test               # 285 tests in 13 files, no network, no API cost (Anthropic client is mocked)
 node --test tests/input-validation.test.js    # run one test file
 ```
 
@@ -229,15 +229,16 @@ Check each still exists before relying on it. Do not fix them unasked, but do no
 
 1. `exportProgressReport` in `utils/projectExport.js` reads `project.topic`, `b.completed`, `b.completionCount` and goal `'essay'`. None exist in saved data, so the report shows 0 %.
 2. "Nochmal versuchen" and "Neu analysieren" call `runAnalysis` without `sprintMode`, which silently turns sprint mode off.
-3. The session middleware sets the `lumo_uid` cookie on every `/api/` request, including the `/api/health` keep-alive ping, before the user has answered the cookie banner.
-4. Streak logic exists in `App.jsx`, `WelcomeBackScreen`, `DashboardScreen`, `ProjectsScreen` and `server/db.js`. `WelcomeBackScreen` writes the streak on mount.
-5. Notes use two schemes (`lumo_notes` and `lumo_note_<block>_<concept>`). Export and "clear" each cover only one.
-6. `SAVE_CURRENT_PROJECT` / `LOAD_PROJECT` do not carry `goalDate`, `sprintMode`, `learningStyle`; switching subjects keeps the previous subject's values.
-7. The card prompt for mood `bad` says "set `pretest_question` to null", but the schema type is `string`.
-8. The sync-error bar in `App.jsx` is red (`#b91c1c`).
-9. The reducer writes to `localStorage` in `CONFIRM_MATERIAL` and `RESET_TO_ONBOARDING`.
-10. Unused: `components/LumoMascot.css`, `screens/onboarding/OnboardingScreen2.jsx`, `calculateNextReview` in `sm2.js`, `PRETEST_SYSTEM`, actions `GO_TO_STEP2` and `BACK_TO_STEP1`, prop `blockCount` of `AnalyzingScreen`, the `.png` mascot files.
-11. `render.yaml` sets neither `DB_PATH` nor `FRONTEND_URL`; with `NODE_ENV=production` the server exits without `DB_PATH`.
+3. Streak logic exists in `App.jsx`, `WelcomeBackScreen`, `DashboardScreen`, `ProjectsScreen` and `server/db.js`. `WelcomeBackScreen` writes the streak on mount.
+4. Notes use two schemes (`lumo_notes` and `lumo_note_<block>_<concept>`). Export and "clear" each cover only one.
+5. `SAVE_CURRENT_PROJECT` / `LOAD_PROJECT` do not carry `goalDate`, `sprintMode`, `learningStyle`; switching subjects keeps the previous subject's values.
+6. The card prompt for mood `bad` says "set `pretest_question` to null", but the schema type is `string`.
+7. The sync-error bar in `App.jsx` is red (`#b91c1c`).
+8. The reducer writes to `localStorage` in `CONFIRM_MATERIAL` and `RESET_TO_ONBOARDING`.
+9. Unused: `components/LumoMascot.css`, `screens/onboarding/OnboardingScreen2.jsx`, `calculateNextReview` in `sm2.js`, `PRETEST_SYSTEM`, actions `GO_TO_STEP2` and `BACK_TO_STEP1`, prop `blockCount` of `AnalyzingScreen`, the `.png` mascot files.
+10. `render.yaml` sets neither `DB_PATH` nor `FRONTEND_URL`; with `NODE_ENV=production` the server exits without `DB_PATH`.
+11. Users who chose "Nur lokal" have no server identity, so the server-side free-block limit (S-07) cannot apply to them; only the IP rate limit does. Owner decision pending.
+12. `syncStreak()` returns an object, but `App.jsx` checks `typeof serverStreak === 'number'`, so the server streak is never written back.
 
 ## 10. How to work here
 

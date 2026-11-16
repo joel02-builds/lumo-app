@@ -251,13 +251,25 @@ app.use('/api/', (req, res, next) => {
     let userId = null;
     let newToken = null;
 
+    // ePrivacy: lumo_uid ist kein technisch notwendiges Cookie. Eine NEUE
+    // anonyme Session (und damit ein Cookie) entsteht deshalb nur auf den
+    // Sync-Routen /api/state*, die der Client ausschließlich nach erteilter
+    // Einwilligung aufruft. Alle anderen Routen (auch /api/health und die
+    // KI-Routen) lesen ein vorhandenes Cookie, setzen aber nie eines.
+    // Folge: wer "Nur lokal" wählt, hat serverseitig keine Identität.
+    const maySetCookie = req.path === '/state' || req.path.startsWith('/state/');
+    const startAnonymousSession = () => {
+      if (!maySetCookie) return;
+      userId = createNewUser();
+      newToken = userId ? createSession(userId) : null;
+    };
+
     if (cookieVal && SESSION_TOKEN_RE.test(cookieVal)) {
       // ── Neues Format: Session-Token ──────────────────────────────────────
       userId = validateSession(cookieVal);
       if (!userId) {
-        // Token unbekannt oder widerrufen → neue anonyme Session
-        userId = createNewUser();
-        newToken = userId ? createSession(userId) : null;
+        // Token unbekannt oder widerrufen → neue anonyme Session (nur auf Sync-Routen)
+        startAnonymousSession();
       }
       // Kein Cookie-Refresh bei gültigem Token (spart unnötige Writes)
 
@@ -271,14 +283,12 @@ app.use('/api/', (req, res, next) => {
       } else {
         // Unbekannte UUID ODER bereits migrierter User (session_hash ≠ NULL):
         // Kein Zugriff → neue anonyme Session. Verhindert UUID-Injection.
-        userId = createNewUser();
-        newToken = userId ? createSession(userId) : null;
+        startAnonymousSession();
       }
 
     } else {
       // ── Kein Cookie oder unbekanntes Format → neue anonyme Session ────────
-      userId = createNewUser();
-      newToken = userId ? createSession(userId) : null;
+      startAnonymousSession();
     }
 
     if (newToken) {

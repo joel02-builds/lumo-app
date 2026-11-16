@@ -336,5 +336,17 @@
     "konfidenz": "hoch",
     "status": "FIXED",
     "fix_nachweis": "npm test 2026-11-16: 278/278 grün, davon 51 in security-hardening."
+  },
+  {
+    "id": "F031",
+    "bereich": "6 Datenschutz und Recht",
+    "schwere": "S2",
+    "befund": "Die Session-Middleware legte bei JEDEM /api/-Request ohne gültiges Cookie einen anonymen Nutzer an und setzte lumo_uid – auch beim /api/health-Keep-alive-Ping direkt nach dem Laden, also vor der Antwort auf das Cookie-Banner und auch bei \"Nur lokal\". Zusätzlich rief App.jsx syncStreak() ohne Einwilligungs-Prüfung auf.",
+    "beleg": "server/index.js app.use(\"/api/\", …) vor dem Fix; src/utils/keepAlive.js pingt /api/health beim Start.",
+    "reproduktion": "Frischer Browser, Seite laden, Cookie-Banner nicht beantworten: lumo_uid ist gesetzt.",
+    "fix": "Neue Sessions nur noch auf /api/state*; syncStreak hinter der Einwilligung.",
+    "konfidenz": "hoch",
+    "status": "FIXED",
+    "fix_nachweis": "tests/cookie-consent.test.js (7 Fälle) grün am 2026-11-16."
   }
 ]
