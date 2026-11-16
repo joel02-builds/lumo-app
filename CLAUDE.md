@@ -47,7 +47,7 @@ Side path from cards: "frei nachfragen" → `DEPTH_CHOICE` → `EXPLAIN` (chat) 
 ### Value vocabularies (use these exact strings)
 
 - Block `status`: `'not-started' | 'in-progress' | 'completed'`
-- Block `confidence`: `'sicher' | 'unsicher' | 'grosse_luecken' | null`
+- Block `confidence`: `'sicher' | 'unsicher' | 'grosse_luecken' | null` (set only by the AI grading). Block `selfRating` (`'sicher' | 'unsicher' | 'noch_nicht' | null`) is the user's own optional rating after grading; it is stored but does not change `confidence`.
 - `difficulty`: `'leicht' | 'mittel' | 'schwer'`
 - `goalType`: `'exam' | 'homework' | 'understand'`
 - `learningStyle`: `'examples' | 'connections' | 'stepbystep' | 'analogies'`
@@ -97,7 +97,7 @@ npm ci                 # install exactly what package-lock.json says (needs Node
 npm run dev            # frontend http://localhost:5173 + backend http://localhost:3001
 npm run build          # production build into dist/
 npm start              # run the server only (production mode needs NODE_ENV, DB_PATH, FRONTEND_URL)
-npm test               # 297 tests in 15 files, no network, no API cost (Anthropic client is mocked)
+npm test               # 303 tests in 16 files, no network, no API cost (Anthropic client is mocked)
 node --test tests/input-validation.test.js    # run one test file
 ```
 

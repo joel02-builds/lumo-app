@@ -9,7 +9,7 @@
  * – ADHS-safe: Bewegung ist subtil, nicht ablenkend
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 // Globale CSS-Animation — wird nur einmal injiziert
 let shimmerInjected = false;
@@ -154,8 +154,18 @@ export function SkeletonBlockList({ count = 3 }) {
  * Vollbild-Skeleton für den Karten-Loading-State
  * Imitiert die echte CardLearningPhase-Struktur (Header + Karte)
  */
-export function SkeletonCardScreen() {
+// F026: Die Skeleton-Karte allein zeigte 15–20 s lang keinerlei Text – der
+// Nutzer konnte nicht erkennen, ob die App arbeitet oder hängt (impulsiver
+// Reload). Jetzt: Statuszeile, nach 8 s eine ehrliche Zusatzzeile.
+const SLOW_HINT_AFTER_MS = 8000;
+
+export function SkeletonCardScreen({ message = 'Lumo bereitet deine Karten vor …' }) {
   injectShimmerCSS();
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setSlow(true), SLOW_HINT_AFTER_MS);
+    return () => clearTimeout(t);
+  }, []);
   return (
     <div style={{
       minHeight: 'var(--dvh, 100dvh)',
@@ -222,6 +232,17 @@ export function SkeletonCardScreen() {
           flexDirection: 'column',
           gap: '20px',
         }}>
+          {/* F026: Statuszeile. role=status macht sie für Screenreader hörbar. */}
+          <div role="status" aria-live="polite" style={{ textAlign: 'center' }}>
+            <p style={{ fontSize: '16px', color: 'var(--text-primary)', fontWeight: 600, margin: 0 }}>
+              {message}
+            </p>
+            {slow && (
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '6px 0 0', lineHeight: 1.5 }}>
+                Das dauert heute etwas länger. Ich bin gleich so weit – du musst nichts tun.
+              </p>
+            )}
+          </div>
           <SkeletonCard />
         </div>
       </div>

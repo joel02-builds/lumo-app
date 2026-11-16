@@ -387,7 +387,7 @@ export default function BlockCompletePhase({ block, result, cards, onContinue, o
         gap: '10px',
       }}>
         <Button onClick={onContinue} style={{ width: '100%' }}>
-          {isLastSprintBlock ? 'Sprint beendet – Zurück zum Überblick' : isGood ? 'Weiter lernen →' : 'Verstanden, weiter →'}
+          {isLastSprintBlock ? 'Sprint beendet – Zurück zum Überblick' : isGood ? 'Weiter lernen →' : 'Notiert, weiter →'}
         </Button>
         <button
           onClick={onPause}

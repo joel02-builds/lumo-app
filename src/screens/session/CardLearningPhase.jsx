@@ -415,6 +415,16 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
     }
   }
 
+  // F025: Nach einem Fehlversuch in der Wiederholung gibt es einen echten
+  // Ausweg: Lösung sehen (steht schon da), weitergehen oder bewusst nochmal
+  // versuchen. Der Fehlversuch zählt nicht – erfasst wird nur, was beim
+  // Weitergehen auf dem Bildschirm stand.
+  function handleRepeatRetry() {
+    setRepeatAnswer('');
+    setRepeatFeedback(null);
+    setRepeatIsGood(false);
+  }
+
   async function handleTermClick(term) {
     if (activeTerm === term) {
       setActiveTerm(null);
@@ -606,6 +616,23 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
               Kurze Wiederholung
             </div>
           </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          {/* F025: Escape-Hatch – die Wiederholungsrunde war eine Sackgasse ohne
+              Pause oder Ausstieg (Learned Helplessness, Task Abandonment). */}
+          <button
+            type="button"
+            onClick={onExit}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-secondary)',
+              fontSize: '14px',
+              cursor: 'pointer',
+              padding: '8px',
+            }}
+          >
+            Pause
+          </button>
           {/* Fortschrittsbalken — kein Zähler */}
           <div style={{
             height: '3px',
@@ -621,6 +648,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
               width: `${repeatProgress * 100}%`,
               transition: 'width 0.3s ease',
             }} />
+          </div>
           </div>
         </div>
 
@@ -678,6 +706,33 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                 lineHeight: 1.55,
               }}>
                 {repeatFeedback}
+              </p>
+            </div>
+          )}
+
+          {/* F025: Lösung nach einem Fehlversuch – ohne sie hing der Nutzer in einer
+              Schleife mit derselben Frage. Neutral gerahmt ("Hier die Antwort"),
+              Gold statt Rot. */}
+          {repeatFeedback && !repeatIsGood && (
+            <div style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border)',
+              borderLeft: '3px solid var(--gold)',
+              borderRadius: '14px',
+              padding: '16px 20px',
+            }}>
+              <p style={{
+                fontSize: '11px',
+                fontWeight: '700',
+                letterSpacing: '1.2px',
+                textTransform: 'uppercase',
+                color: 'var(--gold)',
+                margin: '0 0 8px',
+              }}>
+                Hier die Antwort
+              </p>
+              <p style={{ fontSize: '15px', color: 'var(--text-primary)', margin: 0, lineHeight: 1.55 }}>
+                {(repeatCard.explanation || '').replace(/\*\*/g, '')}
               </p>
             </div>
           )}
@@ -748,6 +803,12 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
               {repeatIndex >= weakCardQueue.length - 1
                 ? 'Fertig ✓'
                 : 'Weiter →'}
+            </button>
+          )}
+
+          {repeatFeedback && !repeatIsGood && (
+            <button className="text-link" onClick={handleRepeatRetry} style={{ alignSelf: 'center' }}>
+              Nochmal versuchen
             </button>
           )}
         </div>

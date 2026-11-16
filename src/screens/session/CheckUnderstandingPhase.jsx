@@ -18,6 +18,8 @@ export default function CheckUnderstandingPhase({ block, onDone, onExit }) {
   const [failedAction, setFailedAction] = useState(null); // 'submit' | 'hint'
   // P2-UX-04: Musterantwort — opt-in Accordion nach Ergebnis
   const [showSampleAnswer, setShowSampleAnswer] = useState(false);
+  // F013: optionale Selbsteinschätzung nach dem Feedback (Metakognition).
+  const [selfRating, setSelfRating] = useState(null);
 
   async function handleSubmit() {
     if (!answer.trim() || submitting || hintLoading) return;
@@ -197,8 +199,48 @@ export default function CheckUnderstandingPhase({ block, onDone, onExit }) {
             </div>
           )}
 
+          {/* F013: Wie sicher fühlst du dich jetzt? Optional und ohne Wertung – Selbst-
+              und Fremdbild nebeneinander schärfen die Einschätzung (Koriat & Bjork
+              2005); ADHS-Nutzer neigen zu Überschätzung. Ändert den Status NICHT. */}
+          <div style={{ width: '100%', textAlign: 'center' }}>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 8px' }}>
+              Wie sicher fühlst du dich jetzt? <span style={{ opacity: 1 }}>(optional)</span>
+            </p>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              {[
+                { value: 'sicher', label: 'Ziemlich sicher' },
+                { value: 'unsicher', label: 'Eher unsicher' },
+                { value: 'noch_nicht', label: 'Noch nicht' },
+              ].map(({ value, label }) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={selfRating === value}
+                  onClick={() => setSelfRating(selfRating === value ? null : value)}
+                  style={{
+                    background: selfRating === value ? 'var(--gold-soft)' : 'var(--bg-card)',
+                    color: 'var(--text-primary)',
+                    border: `1px solid ${selfRating === value ? 'var(--gold)' : 'var(--border)'}`,
+                    borderRadius: '999px',
+                    padding: '10px 16px',
+                    minHeight: '44px',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            {selfRating === 'sicher' && result.status !== 'sicher' && (
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '10px 0 0', lineHeight: 1.5 }}>
+                Du fühlst dich sicherer, als ich es gerade sehe. Das ist normal – deshalb schauen wir später nochmal drauf.
+              </p>
+            )}
+          </div>
+
           <button
-            onClick={() => onDone(result)}
+            onClick={() => onDone(selfRating ? { ...result, selfRating } : result)}
             style={{
               width: '100%',
               background: 'var(--gold)',
@@ -212,7 +254,7 @@ export default function CheckUnderstandingPhase({ block, onDone, onExit }) {
               marginTop: '8px',
             }}
           >
-            {result.status === 'sicher' ? 'Weiter →' : 'Verstanden, weiter'}
+            {result.status === 'sicher' ? 'Weiter →' : 'Notiert, weiter →'}
           </button>
         </div>
       <style>{`
