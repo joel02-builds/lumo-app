@@ -118,7 +118,13 @@ export default function LumoMascot({
 }) {
   const src = MASCOT_IMAGES[state] || MASCOT_IMAGES.idle;
   // small=40, medium=56, normal=120, large=160
-  const px = size === 'small' ? 40 : size === 'medium' ? 56 : size === 'large' ? 160 : 120;
+  // Zahl = Pixel direkt. Vorher kannte die Komponente nur die Namen oben;
+  // ein Zahlenwert (z. B. size={34}) fiel still auf 120 px zurück. Im 34-px-Kreis
+  // des Onboarding-Karten-Headers (overflow: hidden) blieb so nur ein winziger
+  // Ausschnitt des Kopfes sichtbar.
+  const px = typeof size === 'number'
+    ? size
+    : size === 'small' ? 40 : size === 'medium' ? 56 : size === 'large' ? 160 : 120;
 
   const [imgVisible, setImgVisible] = useState(true);
   const [currentSrc, setCurrentSrc] = useState(src);
