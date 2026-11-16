@@ -377,16 +377,21 @@ export default function App() {
     // geräteübergreifend; sein Wert ist autoritativer als localStorage.
     // Fire-and-forget: UI blockiert nicht, bei Netzwerkfehler greift der
     // lokale Wert als Fallback.
-    syncStreak().then(serverStreak => {
-      if (typeof serverStreak === 'number' && serverStreak > 0) {
-        try {
-          localStorage.setItem('lumo_streak', JSON.stringify({
-            days: serverStreak,
-            lastDate: new Date().toDateString(),
-          }));
-        } catch {}
-      }
-    }).catch(() => {}); // Netzwerkfehler still ignorieren
+    // Nur mit Einwilligung: /api/state/streak ist eine Sync-Route und würde
+    // sonst auch bei "Nur lokal" eine Server-Session samt Cookie anlegen.
+    const cookieConsent = (() => { try { return localStorage.getItem('lumo_cookie_consent'); } catch { return null; } })();
+    if (cookieConsent === 'accepted') {
+      syncStreak().then(serverStreak => {
+        if (typeof serverStreak === 'number' && serverStreak > 0) {
+          try {
+            localStorage.setItem('lumo_streak', JSON.stringify({
+              days: serverStreak,
+              lastDate: new Date().toDateString(),
+            }));
+          } catch {}
+        }
+      }).catch(() => {}); // Netzwerkfehler still ignorieren
+    }
 
     dispatch({ type: 'BLOCK_FINISHED', blockId: currentBlock?.id, ...result });
   }, [currentBlock?.id]);
