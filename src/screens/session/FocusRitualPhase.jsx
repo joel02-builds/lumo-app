@@ -488,7 +488,7 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
                   fontWeight: '700',
                   letterSpacing: '1.5px',
                   textTransform: 'uppercase',
-                  color: mood === 'bad' ? 'var(--text-secondary)' : 'var(--gold)',
+                  color: (mood === 'tired' || mood === 'overwhelmed') ? 'var(--text-secondary)' : 'var(--gold)',
                   margin: '0 0 10px',
                 }}>
                   {(mood === 'tired' || mood === 'overwhelmed')
