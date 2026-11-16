@@ -30,6 +30,7 @@ import {
   truncateMaterialText,
   processLumoResponse,
   normalizeMisconceptions,
+  normalizeCardMisconception,
   escapeLernmaterialTags,
   validateAnalyzeData,
 } from './materialUtils.js';
@@ -825,9 +826,9 @@ app.post('/api/evaluate-card-answer', async (req, res) => {
       system: EVALUATE_CARD_ANSWER_SYSTEM,
       userContent: `Konzept: ${concept}\nErklärung: ${concept} bedeutet: ${explanation}\nFrage: ${question}\nAntwort des Nutzers: ${userAnswer}`,
       schema: evaluateCardAnswerSchema,
-      maxTokens: 200,
+      maxTokens: 400, // feedback (≤15 Wörter) + ggf. misconception (1–2 Sätze)
     });
-    res.json({ data });
+    res.json({ data: normalizeCardMisconception(data) });
   } catch (err) {
     sendFriendlyError(res, err);
   }

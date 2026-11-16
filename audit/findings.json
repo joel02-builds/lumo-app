@@ -271,7 +271,7 @@
     "stand": "beide",
     "konfidenz": "hoch",
     "status": "CONFIRMED",
-    "teilfix": "2026-11-16 (PR 2.1): evaluate-understanding liefert jetzt misconceptions, UI-Block „Fehlvorstellung erkannt“ in CheckUnderstandingPhase. OFFEN: das Karten-Feedback (evaluate-card-answer), auf das sich der Befund-Text bezieht – dort wird die Fehlvorstellung noch nicht benannt (Phase 3.1)."
+    "teilfix": "2026-11-16 (PR 2.1): evaluate-understanding liefert jetzt misconceptions, UI-Block „Fehlvorstellung erkannt“ in CheckUnderstandingPhase. 2026-11-16 (PR 3.1): auch evaluate-card-answer liefert jetzt `misconception` (Prompt-Regel Lücke ≠ Fehlvorstellung, Pflicht-String, UI-Block in Karten-Feedback und Wiederholungsrunde). Technik per gemockten Tests belegt; die Wirkung des Modells ist erst mit dem Golden Set (3.2) mit echten Aufrufen belegt – deshalb noch nicht FIXED."
   },
   {
     "id": "F025",

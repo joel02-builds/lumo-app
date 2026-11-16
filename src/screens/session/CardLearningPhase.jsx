@@ -16,6 +16,8 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
   const [phase, setPhase] = useState('loading'); // loading | reading | answering | feedback | final-recall | done
   const [answer, setAnswer] = useState('');
   const [feedback, setFeedback] = useState(null);
+  // F024: aktive Fehlvorstellung aus der Karten-Bewertung ('' = keine).
+  const [misconception, setMisconception] = useState('');
   const [error, setError] = useState(null);
   // Zählt Lade-Versuche hoch: "Nochmal versuchen" lädt nur die Karten neu,
   // statt die ganze Seite neu zu laden (das warf den Nutzer aus der Session).
@@ -72,6 +74,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
   const [repeatIndex, setRepeatIndex] = useState(0);        // aktueller Index in weakCardQueue
   const [repeatAnswer, setRepeatAnswer] = useState('');
   const [repeatFeedback, setRepeatFeedback] = useState(null);
+  const [repeatMisconception, setRepeatMisconception] = useState('');
   const [repeatIsGood, setRepeatIsGood] = useState(false);
   const [repeatSending, setRepeatSending] = useState(false);
   // Retry-Ergebnisse: nicht persistiert, nicht für FSRS verwendet.
@@ -233,6 +236,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
         userAnswer: answer,
       });
       setFeedback(result.feedback);
+      setMisconception(typeof result.misconception === 'string' ? result.misconception : '');
       setIsGoodAnswer(result.isGood);
       // K-01: answerResults + weakCardQueue werden jetzt in handleRating gesetzt
       // (wenn der User eine der 4 Rating-Buttons klickt), nicht hier.
@@ -246,6 +250,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
       // F001-Client: Kein Wort-Zähl-Fallback — keine stille Fehlbewertung.
       // isGood=false stellt sicher, dass keine Belohnung ausgelöst wird.
       setFeedback('Bewertung gerade nicht möglich.');
+      setMisconception('');
       setIsGoodAnswer(false);
       setPhase('feedback');
     } finally {
@@ -290,6 +295,8 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
   function resetCardState() {
     setAnswer('');
     setFeedback(null);
+
+    setMisconception('');
     setHint('');
     setHintLoading(false);
     setClickedCheck(false);
@@ -322,6 +329,8 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
             setRepeatIndex(0);
             setRepeatAnswer('');
             setRepeatFeedback(null);
+
+            setRepeatMisconception('');
             setRepeatIsGood(false);
             setPhase('repeat-bridge');
           } else {
@@ -360,6 +369,8 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
       // Nochmal: sofort nochmal versuchen (Reset ohne Karten-Index-Sprung)
       setAnswer('');
       setFeedback(null);
+
+      setMisconception('');
       setIsGoodAnswer(false);
       setPhase('answering');
     } else {
@@ -381,10 +392,12 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
         userAnswer: repeatAnswer,
       });
       setRepeatFeedback(result.feedback);
+      setRepeatMisconception(typeof result.misconception === 'string' ? result.misconception : '');
       setRepeatIsGood(result.isGood);
     } catch {
       // F001-Client: Kein Wort-Zähl-Fallback — keine stille Fehlbewertung.
       setRepeatFeedback('Bewertung gerade nicht möglich.');
+      setRepeatMisconception('');
       setRepeatIsGood(false);
     } finally {
       setRepeatSending(false);
@@ -412,6 +425,8 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
       setRepeatIndex((i) => i + 1);
       setRepeatAnswer('');
       setRepeatFeedback(null);
+
+      setRepeatMisconception('');
       setRepeatIsGood(false);   // ← reset erst nach Erfassung
     }
   }
@@ -423,6 +438,8 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
   function handleRepeatRetry() {
     setRepeatAnswer('');
     setRepeatFeedback(null);
+
+    setRepeatMisconception('');
     setRepeatIsGood(false);
   }
 
@@ -531,6 +548,8 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
             setRepeatIndex(0);
             setRepeatAnswer('');
             setRepeatFeedback(null);
+
+            setRepeatMisconception('');
             setRepeatIsGood(false);
             setPhase('repeat-card');
           }}
@@ -707,6 +726,26 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                 lineHeight: 1.55,
               }}>
                 {repeatFeedback}
+              </p>
+            </div>
+          )}
+
+          {/* F024: aktive Fehlvorstellung (nicht bloß eine Lücke). Amber statt Rot;
+              Text in --text-primary, damit der Kontrast auch im Dusk-Modus hält. */}
+          {repeatMisconception && (
+            <div style={{
+              background: 'var(--amber-soft)',
+              border: '1px solid rgba(196, 122, 43, 0.4)',
+              borderLeft: '3px solid var(--amber)',
+              borderRadius: '12px',
+              padding: '14px 16px',
+              marginBottom: '12px',
+            }}>
+              <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--gold-light)', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                Fehlvorstellung erkannt
+              </p>
+              <p style={{ fontSize: '14px', color: 'var(--text-primary)', margin: 0, lineHeight: '1.5' }}>
+                {repeatMisconception}
               </p>
             </div>
           )}
@@ -1452,6 +1491,8 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                       setPhase('reading');
                       setAnswer('');
                       setFeedback(null);
+
+                      setMisconception('');
                       setClickedCheck(false);
                       setAlternativeExplanation('');
                       setActiveTerm(null);
@@ -1777,6 +1818,26 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                   {feedback}
                 </p>
               </div>
+
+              {/* F024: aktive Fehlvorstellung (nicht bloß eine Lücke). Amber statt Rot;
+                  Text in --text-primary, damit der Kontrast auch im Dusk-Modus hält. */}
+              {misconception && (
+                <div style={{
+                  background: 'var(--amber-soft)',
+                  border: '1px solid rgba(196, 122, 43, 0.4)',
+                  borderLeft: '3px solid var(--amber)',
+                  borderRadius: '12px',
+                  padding: '14px 16px',
+                  marginBottom: '12px',
+                }}>
+                  <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--gold-light)', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                    Fehlvorstellung erkannt
+                  </p>
+                  <p style={{ fontSize: '14px', color: 'var(--text-primary)', margin: 0, lineHeight: '1.5' }}>
+                    {misconception}
+                  </p>
+                </div>
+              )}
 
               {/* Gap 4 – "Warum war das falsch? Lumo erklärt es nochmal."
                   Konkurrenz-Lücke: Kein Tool erklärt beim falschen Antworten aktiv den Grund.

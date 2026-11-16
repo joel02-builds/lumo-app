@@ -189,7 +189,7 @@ node --test tests/input-validation.test.js    # run one test file
 - The cookie banner publishes its height as `--cookie-banner-h` on `<html>`; `.ob-screen` and the feedback tab keep clear of it. Use the variable for any new bottom-aligned element that must not sit under the banner.
 - The fixed wordmark has a fade strip behind it (`LumoWordmark.jsx`). A screen whose content starts at the top needs about 64px top padding so its header does not sit under the logo.
 
-**Misconceptions.** `/api/evaluate-understanding` returns `misconceptions` (array of strings, usually empty; a gap is not a misconception). The server normalises it (`normalizeMisconceptions`), the UI shows it in amber above "Das fehlte noch". The card-level feedback (`evaluate-card-answer`) does not name misconceptions yet.
+**Misconceptions.** `/api/evaluate-understanding` returns `misconceptions` (array of strings, usually empty; a gap is not a misconception). The server normalises it (`normalizeMisconceptions`), the UI shows it in amber above "Das fehlte noch". The card-level feedback (`evaluate-card-answer`) returns `misconception` the same way (a string, `''` = none; `normalizeCardMisconception`); `CardLearningPhase.jsx` shows it in amber in the feedback phase and in the repeat round. Whether the model really names real misconceptions and stays quiet on gaps is only measured by the Golden Set, not by the mocked tests.
 
 **Voice of Lumo** (`LUMO_PERSONA` in `server/prompts.js`): calm, warm, direct, first person "ich", max 3 short sentences, no emojis in AI text, no empty praise, one thing at a time. UI copy you write must sound the same.
 

@@ -466,15 +466,26 @@ Pflicht-Prinzip für feedback (Effort-Praise, Dweck 1998):
   - VERBOTEN: "Du bist gut.", "Richtig!", "Stark.", "Klasse.", "Super.", leeres Lob ohne Inhalt
   - Bei guter Antwort: Was wurde konkret richtig durchdacht oder erkannt? Einziger Satz.
   - Bei schlechter Antwort: Was fehlt noch im Verständnis? Kein "Versuch es nochmal" ohne Inhalt.
-  - Niemals wertend über die Person, nur über den Denkprozess und den Inhalt`;
+  - Niemals wertend über die Person, nur über den Denkprozess und den Inhalt
+
+FEHLVORSTELLUNG (misconception) – eine Lücke ist KEINE Fehlvorstellung:
+- Eine Lücke ist etwas, das FEHLT (dünne, unvollständige oder ratlose Antwort). Sie bekommt KEINE Fehlvorstellung; das feedback benennt, was noch fehlt.
+- Eine Fehlvorstellung liegt nur vor, wenn die Antwort etwas BEHAUPTET, das der Erklärung widerspricht oder fachlich falsch ist (z. B. zwei Begriffe verwechselt, Ursache und Wirkung vertauscht).
+- Dann steht in misconception ein bis zwei kurze Sätze: was der Nutzer angenommen hat und was stattdessen stimmt – etwa "Du hast angenommen, X. Tatsächlich ist es Y, weil Z."
+- Sachlich über den Gedanken sprechen, nie über die Person. Kein "Fehler", kein "falsch" als Urteil.
+- Der leere String "" ist der NORMALFALL. Gib "", wenn nichts Falsches behauptet wird – auch bei einer schwachen oder fehlenden Antwort.
+- Erfinde niemals eine Fehlvorstellung, nur um etwas zu nennen.`;
 
 export const evaluateCardAnswerSchema = {
   type: 'object',
   properties: {
     isGood: { type: 'boolean' },
     feedback: { type: 'string' },
+    // F024: aktive Fehlvorstellung ("" = keine). Pflichtfeld, damit das Modell
+    // sich bewusst entscheidet; Lücken gehören ins feedback, nicht hierher.
+    misconception: { type: 'string' },
   },
-  required: ['isGood', 'feedback'],
+  required: ['isGood', 'feedback', 'misconception'],
   additionalProperties: false,
 };
 
