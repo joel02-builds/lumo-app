@@ -42,12 +42,16 @@
  *   S07-4  incrementBlocksAnalyzed() addiert atomar auf DB-Ebene
  */
 
-import { it, describe, before, after } from 'node:test';
+import { it, describe, before, after, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'crypto';
 import { processLumoResponse, escapeLernmaterialTags, validateAnalyzeData } from '../server/materialUtils.js';
 
 // ─── Server-Handles ───────────────────────────────────────────────────────────
+
+// true → der Mock-Client wirft wie die echte API bei ungültigem Key (für S-11).
+let mockShouldFail = false;
+afterEach(() => { mockShouldFail = false; });
 
 let server, port, db, getBlocksAnalyzedTotal, incrementBlocksAnalyzed, FREE_BLOCK_LIMIT;
 
@@ -55,7 +59,37 @@ before(async () => {
   process.env.ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || 'test-key-sec-s02s07';
   process.env.NODE_ENV = 'test';
 
-  const { app } = await import('../server/index.js');
+  const { app, __setClientForTesting } = await import('../server/index.js');
+  // Nie echte Anthropic-Aufrufe aus Tests: gültige Requests (S04-3, S05-2)
+  // erreichen askLumo() und würden sonst Geld kosten oder am Netz scheitern.
+  __setClientForTesting({
+    messages: {
+      stream() {
+        return {
+          async finalMessage() {
+            if (mockShouldFail) {
+              const err = new Error('401 {"type":"error","error":{"type":"authentication_error","message":"invalid x-api-key"}}');
+              err.status = 401;
+              throw err;
+            }
+            return {
+              stop_reason: 'end_turn',
+              content: [{
+                type: 'text',
+                text: JSON.stringify({
+                  reply: 'mock',
+                  blocks: [{ id: 1, title: 'Mock', difficulty: 'leicht', estimatedMinutes: 5, content: 'Mock-Inhalt', subtopics: [] }],
+                  totalBlocks: 1,
+                  recommendedOrder: [1],
+                  subject: 'biologie',
+                }),
+              }],
+            };
+          },
+        };
+      },
+    },
+  });
   const dbMod = await import('../server/db.js');
   db = dbMod.db;
   getBlocksAnalyzedTotal = dbMod.getBlocksAnalyzedTotal;
@@ -209,12 +243,12 @@ describe('S-04: history[]-Limits in /api/explain-chat', () => {
 
   it('S04-3: Exakt 20 history[]-Einträge passiert Validierung (kein 400 wegen history)', async () => {
     const history = Array.from({ length: 20 }, () => makeMsg(10));
+    // blockTitle/blockContent sind seit F001 Pflichtfelder – ohne sie käme der
+    // 400 aus der Pflichtfeld-Prüfung und der Test sagte nichts über history aus.
     const r = await req('POST', '/api/explain-chat', {
-      body: { history, userMessage: 'x', materialText: 'y' },
+      body: { history, blockTitle: 'Titel', blockContent: 'Inhalt' },
     });
-    // 400 ist nur für history-Validierungsfehler unzulässig;
-    // 500 / 403 / anderer Code kann durch fehlende Anthropic-API entstehen
-    assert.notEqual(r.status, 400, 'Valide history sollte keinen 400 auslösen');
+    assert.equal(r.status, 200, `Valide history sollte durchgehen, erhalten ${r.status}: ${r.text}`);
   });
 });
 
@@ -232,19 +266,18 @@ describe('S-05: files[]-Limit in /api/analyze', () => {
 
   it('S05-1: 6 Dateien → 400 (MAX_FILES = 5)', async () => {
     const r = await req('POST', '/api/analyze', {
-      body: { files: Array.from({ length: 6 }, makeFile) },
+      body: { topic: 'Test', files: Array.from({ length: 6 }, makeFile) },
     });
     assert.equal(r.status, 400, `Erwartet 400, erhalten ${r.status}: ${r.text}`);
     assert.ok(r.json?.error, 'Fehlermeldung erwartet');
   });
 
   it('S05-2: 5 Dateien passiert Dateizahl-Prüfung (kein 400 wegen Dateianzahl)', async () => {
+    // topic ist seit F001 Pflichtfeld (siehe S04-3).
     const r = await req('POST', '/api/analyze', {
-      body: { files: Array.from({ length: 5 }, makeFile) },
+      body: { topic: 'Test', files: Array.from({ length: 5 }, makeFile) },
     });
-    // 400 nur wegen Dateianzahl-Validierung ist nicht akzeptabel;
-    // anderer Code (500 / 403 / 401) kann durch fehlende API entstehen
-    assert.notEqual(r.status, 400, 'Fünf Dateien sollte keinen 400 auslösen');
+    assert.equal(r.status, 200, `Fünf Dateien sollten durchgehen, erhalten ${r.status}: ${r.text}`);
   });
 });
 
@@ -260,12 +293,22 @@ describe('S-06: /api/state Payload-Validierung', () => {
     return obj;
   }
 
-  it('S06-1: Payload > 500 KB → 400', async () => {
-    const bigString = 'x'.repeat(512 * 1024);  // 512 KB
+  it('S06-1: Payload über dem 1-MB-Limit wird abgelehnt', async () => {
+    // Limit wurde mit P-DB-01 von 500 KB auf 1 MB angehoben. Je nachdem, ob
+    // der Body-Parser (413) oder die State-Prüfung (400) zuerst greift, sind
+    // beide Codes korrekt – entscheidend ist: nicht 200.
+    const bigString = 'x'.repeat(1100 * 1024);  // 1,1 MB
     const r = await req('POST', '/api/state', {
       body: { state: { data: bigString } },
     });
-    assert.equal(r.status, 400, `Erwartet 400, erhalten: ${r.status}`);
+    assert.ok([400, 413].includes(r.status), `Erwartet 400 oder 413, erhalten: ${r.status}`);
+  });
+
+  it('S06-1b: Payload knapp unter dem Limit (900 KB) wird angenommen', async () => {
+    const r = await req('POST', '/api/state', {
+      body: { state: { data: 'x'.repeat(900 * 1024) } },
+    });
+    assert.equal(r.status, 200, `Erwartet 200, erhalten: ${r.status}`);
   });
 
   it('S06-2: state ist Array → 400', async () => {
@@ -408,7 +451,7 @@ describe('S-07: Free-Block-Limit (serverseitig)', () => {
 
     // Analyze-Request soll jetzt 403 liefern
     const r = await req('POST', '/api/analyze', {
-      body: { files: [{ name: 'x.txt', type: 'text/plain', base64: Buffer.from('hi').toString('base64'), size: 2 }] },
+      body: { topic: 'Test', files: [{ name: 'x.txt', type: 'text/plain', base64: Buffer.from('hi').toString('base64'), size: 2 }] },
       cookie: `lumo_uid=${cookie}`,
     });
     assert.equal(r.status, 403, `Erwartet 403 nach Limit, erhalten: ${r.status}`);
@@ -493,7 +536,8 @@ describe('S-10: /api/health – minimale Response', () => {
 
 describe('S-11: Fehlerbehandlung – Response-Struktur', () => {
   it('S11-1: API-Fehler liefert friendly error message als String', async () => {
-    // Trigger: valide Session, aber ungültiger API-Key → Anthropic gibt auth-Fehler
+    // Trigger: valide Session, Mock wirft wie Anthropic bei ungültigem API-Key
+    mockShouldFail = true;
     const cookie = await newSession();
     const r = await req('POST', '/api/analyze', {
       body: {
@@ -514,6 +558,7 @@ describe('S-11: Fehlerbehandlung – Response-Struktur', () => {
     // describeAnthropicError extrahiert nur message/name/status/type/requestId/body –
     // niemals .stack. Dieser Test prüft, dass stack_trace nicht über details.stack
     // oder direkt im Fehler-Objekt erscheint.
+    mockShouldFail = true;
     const cookie = await newSession();
     const r = await req('POST', '/api/analyze', {
       body: {

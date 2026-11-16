@@ -111,7 +111,7 @@ describe('getBase64RawBytes', () => {
     assert.equal(getBase64RawBytes(null), 0);
   });
 
-  it('erkennt 24 MB raw-Daten korrekt', () => {
+  it('erkennt Rohdaten am Limit korrekt', () => {
     const b64 = makeBase64ForBytes(MAX_PDF_BYTES_RAW);
     const result = getBase64RawBytes(b64);
     // Erlaubt ±1 Byte wegen Integer-Rounding
@@ -420,8 +420,8 @@ describe('Konstanten', () => {
     assert.equal(MAX_MATERIAL_CHARS, 32000);
   });
 
-  it('MAX_PDF_BYTES_RAW ist 24 MB', () => {
-    assert.equal(MAX_PDF_BYTES_RAW, 24 * 1024 * 1024);
+  it('MAX_PDF_BYTES_RAW ist 7 MB (passt unter das 10-MB-Body-Limit)', () => {
+    assert.equal(MAX_PDF_BYTES_RAW, 7 * 1024 * 1024);
   });
 
   it('DOCX_MIME_TYPE entspricht dem Standard', () => {

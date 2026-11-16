@@ -30,8 +30,9 @@ const TIMEOUT_ERROR  = 'Lumo braucht einen Moment länger. Warte kurz oder versu
 const FRIENDLY_ERROR = 'Lumo hat gerade ein kleines Problem. Versuch es gleich nochmal.';
 const MAX_TOKENS_ERR = 'Das Material ist für eine einzelne Analyse zu umfangreich. Bitte teile es in kleinere Abschnitte auf.';
 
-// Oversized base64: floor(33554436 * 0.75) = 25165827 > 25165824 = MAX_PDF_BYTES_RAW
-const OVER_LIMIT_B64 = 'A'.repeat(33554436);
+// Knapp über dem PDF-Limit, aber unter dem 10-MB-Body-Limit von /api/analyze:
+// floor(9786712 * 0.75) = 7340034 > 7340032 = MAX_PDF_BYTES_RAW (7 MB)
+const OVER_LIMIT_B64 = 'A'.repeat(9786712);
 
 // Sicherheitsnetz: maximale Wartezeit pro fetch()-Aufruf
 const FETCH_TIMEOUT = 12_000;

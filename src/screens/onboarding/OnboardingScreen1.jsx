@@ -12,7 +12,14 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import LumoMascot from '../../components/LumoMascot.jsx';
 import { readFileAsBase64, readFileAsText } from '../../utils/fileReader.js';
 
-const MAX_FILE_SIZE = 25 * 1024 * 1024;
+// Muss zum Server passen: /api/analyze nimmt höchstens 10 MB JSON an
+// (server/index.js). base64 vergrößert Dateien um ein Drittel → 7 MB Rohdaten
+// insgesamt, verteilt auf höchstens 5 Dateien (MAX_FILES im Server).
+const MAX_TOTAL_FILE_SIZE = 7 * 1024 * 1024;
+const MAX_FILE_SIZE = MAX_TOTAL_FILE_SIZE;
+const MAX_FILES = 5;
+// base64-Länge → ungefähre Rohgröße in Bytes
+const rawBytes = (b64) => Math.floor((b64?.length || 0) * 0.75);
 const MIN_WORDS = 100;
 const MAX_CHARS = 50000;
 // H-01a/H-01c: Serverseitiges Limit für Materialtext — Warnung, wenn materialText
@@ -134,7 +141,7 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
   const processFile = useCallback(async (file) => {
     if (!file) return null;
     if (file.size > MAX_FILE_SIZE) {
-      setFileError('Datei zu groß (max. 25 MB)');
+      setFileError('Diese Datei ist zu groß (max. 7 MB). Tipp: PDF verkleinern oder den Text direkt einfügen.');
       return null;
     }
     // H-01b: DOCX wird abgelehnt — FileReader.readAsText() liest ZIP-Binärdaten
@@ -163,7 +170,23 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
         // Deduplicate by name
         const existingNames = new Set(prev.map(f => f.name));
         const newFiles = valid.filter(f => !existingNames.has(f.name));
-        return [...prev, ...newFiles];
+        // Anzahl und Gesamtgröße begrenzen – sonst lehnt der Server den
+        // Upload erst nach dem Hochladen mit einer Fehlermeldung ab.
+        const next = [...prev];
+        let total = prev.reduce((sum, f) => sum + rawBytes(f.base64), 0);
+        for (const f of newFiles) {
+          if (next.length >= MAX_FILES) {
+            setFileError(`Mehr als ${MAX_FILES} Dateien gehen nicht auf einmal.`);
+            break;
+          }
+          if (total + rawBytes(f.base64) > MAX_TOTAL_FILE_SIZE) {
+            setFileError('Zusammen sind die Dateien zu groß (max. 7 MB insgesamt).');
+            break;
+          }
+          total += rawBytes(f.base64);
+          next.push(f);
+        }
+        return next;
       });
       // H-03: Alle TXT-Dateien zusammenführen — nur text/plain-Dateien liefern
       // nutzbaren Klartext; PDFs werden serverseitig als document-Blocks verarbeitet.
@@ -979,12 +1002,12 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
             {hasFiles ? (
               <>
                 <div className="ob-drop-main">Weitere Datei hinzufügen</div>
-                <div className="ob-drop-sub">PDF oder TXT · max. 25 MB</div>
+                <div className="ob-drop-sub">PDF oder TXT · max. 7 MB</div>
               </>
             ) : (
               <>
                 <div className="ob-drop-main">Dateien ablegen oder tippen</div>
-                <div className="ob-drop-sub">Mehrere PDFs oder TXT möglich · max. 25 MB pro Datei</div>
+                <div className="ob-drop-sub">Bis zu 5 PDFs oder TXT · zusammen max. 7 MB</div>
               </>
             )}
           </div>

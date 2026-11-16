@@ -19,7 +19,10 @@ export const MAX_MATERIAL_CHARS = 32000;
  * Quelle: Anthropic Vision-Dokumentation (Stand Nov 2025, "up to 32MB base64").
  * Wir rechnen konservativ mit 24 MB raw, um Randwertproblemen vorzubeugen.
  */
-export const MAX_PDF_BYTES_RAW = 24 * 1024 * 1024; // 24 MB
+// Seit dem 10-MB-Body-Limit von /api/analyze gilt praktisch: 7 MB Rohdaten
+// (≈ 9,4 MB base64). Der Wert muss unter dem Body-Limit bleiben, sonst antwortet
+// der Parser mit einem pauschalen 413 statt mit dieser verständlichen Meldung.
+export const MAX_PDF_BYTES_RAW = 7 * 1024 * 1024; // 7 MB
 
 export const DOCX_MIME_TYPE =
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document';

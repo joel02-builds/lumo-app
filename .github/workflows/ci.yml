@@ -28,9 +28,6 @@ jobs:
 
       - name: Run tests
         run: npm test
-        # security-hardening.test.js ausgelassen — 4 vorbestehende
-        # Audit-Findings (S-04–S-07) noch nicht gefixt; werden
-        # nach der jeweiligen Fix-Freigabe ergänzt.
 
       - name: Build frontend
         run: npm run build

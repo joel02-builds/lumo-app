@@ -497,7 +497,10 @@ app.post('/api/analyze',
     next();
   },
   // 2. Route-spezifischer Body-Parser — nur nach erfolgreichem Slot-Erwerb
-  express.json({ limit: '35mb' }),
+  // Limit passend zum Client: dort sind höchstens 7 MB Rohdaten insgesamt
+  // erlaubt (MAX_TOTAL_FILE_SIZE in OnboardingScreen1.jsx), base64 macht daraus
+  // ca. 9,4 MB. 35 MB waren unnötige Angriffsfläche (RAM pro parallelem Upload).
+  express.json({ limit: '10mb' }),
   // 3. Eigentlicher Handler
   async (req, res) => {
   // H-03: Browser-Abbruch (Tab schließen, Navigation) bis zur Anthropic-Anfrage weiterleiten.
@@ -581,7 +584,7 @@ app.post('/api/analyze',
         if (rawBytes > MAX_PDF_BYTES_RAW) {
           const mb = (rawBytes / 1024 / 1024).toFixed(1);
           return res.status(400).json({
-            error: `PDF "${f.name || 'Datei'}" ist zu groß (${mb} MB, max. 24 MB). Bitte komprimiere die Datei oder teile sie auf.`,
+            error: `PDF "${f.name || 'Datei'}" ist zu groß (${mb} MB, max. 7 MB). Bitte komprimiere die Datei oder teile sie auf.`,
           });
         }
         userContent.push({
