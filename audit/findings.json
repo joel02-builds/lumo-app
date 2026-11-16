@@ -373,5 +373,27 @@
     "konfidenz": "hoch",
     "status": "CONFIRMED",
     "fix_nachweis": "Dokumentation ergänzt am 2026-11-16; Datenverlust bei Deploy bleibt bis zur Persistenz-Entscheidung bestehen."
+  },
+  {
+    "id": "F034",
+    "bereich": "1 Engineering",
+    "schwere": "S3",
+    "befund": "Toter Code: 2 ungenutzte Dateien (src/screens/onboarding/OnboardingScreen2.jsx, src/utils/apiCostEstimate.js) und 25 ungenutzte Exporte, u. a. die komplette alte SM-2-Berechnung in src/utils/sm2.js (calculateNextReview, isDueForReview, getDueCards), PRETEST_SYSTEM/pretestSchema, getOrCreateUser in server/db.js, getUpcomingCards, getLastSyncedAt.",
+    "beleg": "npx knip am 2026-11-16 auf Branch docs/render-env: Unused files (2), Unused exports (25), Duplicate exports (3).",
+    "reproduktion": "npx -y knip --no-progress",
+    "fix": "Dateien und Exporte entfernen (eigener PR, Phase 3.9).",
+    "konfidenz": "hoch",
+    "status": "CONFIRMED"
+  },
+  {
+    "id": "F035",
+    "bereich": "1 Engineering",
+    "schwere": "S3",
+    "befund": "Messung ohne Befund, zur Dokumentation: keine zirkulären Importe (madge, 74 Dateien); Code-Duplikate gering (jscpd: 11 Klone, 189 Zeilen = 0,85 %); keine Schlüsselmuster in der gesamten Git-Historie (Suche nach sk-ant-, AIza, ghp_, rnd_, PRIVATE KEY: 0 Treffer; keine .env je committet).",
+    "beleg": "npx madge --circular src server; npx jscpd src server --min-lines 12; git log -p --all | grep -cE <Muster> am 2026-11-16.",
+    "reproduktion": "siehe Beleg",
+    "fix": "keiner nötig",
+    "konfidenz": "mittel – die Schlüsselsuche ist ein Muster-Grep, kein vollwertiger gitleaks-Lauf",
+    "status": "PLAUSIBLE"
   }
 ]
