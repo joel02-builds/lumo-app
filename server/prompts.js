@@ -256,6 +256,14 @@ VERBOTEN:
 Der summaryText ist ein warmer, kurzer Satz (maximal 2 Sätze) direkt an den Nutzer, der die Bewertung einordnet.
 Sei niemals entmutigend, auch bei großen Lücken – bleib ermutigend und prozessorientiert.
 
+FEHLVORSTELLUNGEN (misconceptions) – eine Lücke ist KEINE Fehlvorstellung:
+- Eine Lücke ist etwas, das FEHLT. Sie gehört in uncertainPoints.
+- Eine Fehlvorstellung liegt nur vor, wenn die Erklärung des Nutzers etwas BEHAUPTET, das dem Block-Inhalt widerspricht oder fachlich falsch ist (z. B. zwei Begriffe verwechselt, Ursache und Wirkung vertauscht).
+- Pro Fehlvorstellung ein Eintrag (maximal 2) in ein bis zwei kurzen Sätzen: was der Nutzer angenommen hat und was stattdessen stimmt – etwa "Du hast angenommen, X. Tatsächlich ist es Y, weil Z."
+- Sachlich über den Gedanken sprechen, nie über die Person. Kein "Fehler", kein "falsch" als Urteil.
+- Das leere Array ist der NORMALFALL. Gib [], wenn nichts Falsches behauptet wird – auch dann, wenn die Antwort dünn, unvollständig oder ratlos ist.
+- Erfinde niemals eine Fehlvorstellung, nur um etwas zu nennen.
+
 Gib außerdem eine kurze sampleAnswer (2-3 Sätze) – eine kompakte Erklärung wie eine gute Antwort auf diesen Block hätte klingen können.
 Ton: lehrend, nicht wertend. Kein "Die richtige Antwort wäre..." – direkt erklärend, als würde Lumo einem Freund die Kernidee auf den Punkt bringen.
 Die sampleAnswer zeigt dem Nutzer, wie er es hätte formulieren können – nicht als Kritik, sondern als Orientierung.`;
@@ -266,12 +274,16 @@ export const evaluateUnderstandingSchema = {
     status: { type: 'string', enum: ['sicher', 'unsicher', 'grosse_luecken'] },
     goodPoints: { type: 'array', items: { type: 'string' } },
     uncertainPoints: { type: 'array', items: { type: 'string' } },
+    // F024: aktive Fehlvorstellungen – etwas Falsches, das der Nutzer behauptet.
+    // Eine bloße Lücke gehört in uncertainPoints. Leeres Array ist gültig und der
+    // Normalfall. Kein maxItems im Schema (Limits stehen im Prompt).
+    misconceptions: { type: 'array', items: { type: 'string' } },
     summaryText: { type: 'string' },
     // P2-UX-04: Musterantwort — zeigt dem Nutzer nach der Bewertung wie eine gute Erklärung
     // hätte klingen können. Opt-in (Accordion) um Ablenkung vor Ergebnis zu vermeiden.
     sampleAnswer: { type: 'string' },
   },
-  required: ['status', 'goodPoints', 'uncertainPoints', 'summaryText', 'sampleAnswer'],
+  required: ['status', 'goodPoints', 'uncertainPoints', 'misconceptions', 'summaryText', 'sampleAnswer'],
   additionalProperties: false,
 };
 

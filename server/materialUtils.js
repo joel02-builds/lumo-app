@@ -145,6 +145,26 @@ export function validateAnalyzeData(data) {
 }
 
 /**
+ * F024: Stellt sicher, dass die Bewertung ein gültiges `misconceptions`-Array hat.
+ * Das Schema verlangt das Feld, aber ältere Antworten, Mocks und Randfälle
+ * können es weglassen – die UI darf dann nicht abstürzen. Einträge, die keine
+ * nichtleeren Strings sind, werden verworfen; mehr als 2 werden abgeschnitten
+ * (Limit steht im Prompt, nicht im Schema).
+ *
+ * @param {unknown} data — geparste evaluate-understanding-Antwort
+ * @returns {unknown} dasselbe Objekt, mit normalisiertem Feld
+ */
+export function normalizeMisconceptions(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return data;
+  const list = Array.isArray(data.misconceptions) ? data.misconceptions : [];
+  data.misconceptions = list
+    .filter((m) => typeof m === 'string' && m.trim().length > 0)
+    .map((m) => m.trim())
+    .slice(0, 2);
+  return data;
+}
+
+/**
  * Verarbeitet die Claude-Antwort nach stream.finalMessage():
  * - Prüft stop_reason (max_tokens → unvollständige JSON-Antwort)
  * - Extrahiert den Text-Block

@@ -267,7 +267,8 @@
     "fix": "Prompt für evaluate-card-answer erweitern: 'Wenn die Antwort einen konkreten Denkfehler enthält, benenne ihn explizit (z.B. \"Du hast Elektronen mit Neurotransmittern verwechselt\") und erkläre, warum die korrekte Antwort stimmt.' UI-Erweiterung: Neben der Musterantwort eine separate Zeile 'Wo dein Fehler lag: ...' einfügen.",
     "stand": "beide",
     "konfidenz": "hoch",
-    "status": "CONFIRMED"
+    "status": "CONFIRMED",
+    "teilfix": "2026-11-16 (PR 2.1): evaluate-understanding liefert jetzt misconceptions, UI-Block „Fehlvorstellung erkannt“ in CheckUnderstandingPhase. OFFEN: das Karten-Feedback (evaluate-card-answer), auf das sich der Befund-Text bezieht – dort wird die Fehlvorstellung noch nicht benannt (Phase 3.1)."
   },
   {
     "id": "F025",

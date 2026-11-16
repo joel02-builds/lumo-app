@@ -29,6 +29,7 @@ import {
   getBase64RawBytes,
   truncateMaterialText,
   processLumoResponse,
+  normalizeMisconceptions,
   escapeLernmaterialTags,
   validateAnalyzeData,
 } from './materialUtils.js';
@@ -765,7 +766,7 @@ app.post('/api/evaluate-understanding', async (req, res) => {
       schema: evaluateUnderstandingSchema,
       maxTokens: 1024,
     });
-    res.json({ data });
+    res.json({ data: normalizeMisconceptions(data) });
   } catch (err) {
     sendFriendlyError(res, err);
   }

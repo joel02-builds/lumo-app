@@ -97,7 +97,7 @@ npm ci                 # install exactly what package-lock.json says (needs Node
 npm run dev            # frontend http://localhost:5173 + backend http://localhost:3001
 npm run build          # production build into dist/
 npm start              # run the server only (production mode needs NODE_ENV, DB_PATH, FRONTEND_URL)
-npm test               # 289 tests in 14 files, no network, no API cost (Anthropic client is mocked)
+npm test               # 297 tests in 15 files, no network, no API cost (Anthropic client is mocked)
 node --test tests/input-validation.test.js    # run one test file
 ```
 
@@ -186,6 +186,8 @@ node --test tests/input-validation.test.js    # run one test file
 - Mascot: `<LumoMascot state size />`, `.webp` files only.
 - Icons: use `<Icon name size />` from `src/components/Icon.jsx` (inline SVG, inherits text colour). Do not add new emoji as icons; they look different on every platform. Many old emoji icons remain and are replaced step by step.
 - The fixed wordmark has a fade strip behind it (`LumoWordmark.jsx`). A screen whose content starts at the top needs about 64px top padding so its header does not sit under the logo.
+
+**Misconceptions.** `/api/evaluate-understanding` returns `misconceptions` (array of strings, usually empty; a gap is not a misconception). The server normalises it (`normalizeMisconceptions`), the UI shows it in amber above "Das fehlte noch". The card-level feedback (`evaluate-card-answer`) does not name misconceptions yet.
 
 **Voice of Lumo** (`LUMO_PERSONA` in `server/prompts.js`): calm, warm, direct, first person "ich", max 3 short sentences, no emojis in AI text, no empty praise, one thing at a time. UI copy you write must sound the same.
 
