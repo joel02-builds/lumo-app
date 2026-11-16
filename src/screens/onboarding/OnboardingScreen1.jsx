@@ -763,7 +763,7 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
 
           {/* Mascot centered */}
           <div className="ob-chaos-mascot">
-            <LumoMascot state="thinking" size={108} style={{ borderRadius: '50%', opacity: 0.62 }} />
+            <LumoMascot state="thinking" size={108} />
           </div>
         </div>
 
