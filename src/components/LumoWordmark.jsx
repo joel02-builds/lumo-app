@@ -4,6 +4,23 @@
 // (z. B. CardLearningPhase, ExplainChatPhase), die sonst mit ihr kollidieren.
 export default function LumoWordmark({ onClick, hidden = false }) {
   return (
+    <>
+    {/* Blende hinter der Wordmark: ohne sie scrollt Seiteninhalt sichtbar unter
+        dem fixierten Schriftzug durch und beide Texte überlagern sich. */}
+    <div
+      aria-hidden="true"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 'calc(68px + env(safe-area-inset-top, 0px))',
+        background: 'linear-gradient(to bottom, var(--bg) 60%, transparent)',
+        zIndex: 9,
+        pointerEvents: 'none',
+        display: hidden ? 'none' : 'block',
+      }}
+    />
     <button
       type="button"
       className="lumo-wordmark-wrapper"
@@ -46,5 +63,6 @@ export default function LumoWordmark({ onClick, hidden = false }) {
         lumo
       </span>
     </button>
+    </>
   );
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import LumoMascot from '../components/LumoMascot.jsx';
 import { getSubjectColor } from '../utils/subjectColors.js';
+import Icon from '../components/Icon.jsx';
 
 function getStreakDays() {
   try {
@@ -89,7 +90,7 @@ export default function ProjectsScreen({ projects, onLoad, onNew, onDelete }) {
                 fontWeight: '700',
                 color: 'var(--gold)',
               }}>
-                🔥 {streak}
+                <Icon name="flame" size={14} /> {streak}
               </div>
             )}
             <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
@@ -198,9 +199,13 @@ export default function ProjectsScreen({ projects, onLoad, onNew, onDelete }) {
                 onClick={() => onLoad(p.id)}
                 style={{
                   width: '100%',
-                  background: isComplete ? 'var(--bg-elevated)' : color,
-                  color: isComplete ? 'var(--text-secondary)' : '#1a1206',
-                  border: isComplete ? '1px solid var(--border)' : 'none',
+                  // Getönt statt vollflächig in Fachfarbe: mehrere knallbunte
+                  // Buttons untereinander (Grün, Lila, …) konkurrierten
+                  // miteinander und mit dem Gold als einziger Akzentfarbe.
+                  // Die Fachfarbe bleibt über Rand, Balken und Tönung erkennbar.
+                  background: isComplete ? 'var(--bg-elevated)' : `${color}1F`,
+                  color: isComplete ? 'var(--text-secondary)' : 'var(--text-primary)',
+                  border: isComplete ? '1px solid var(--border)' : `1px solid ${color}66`,
                   borderRadius: '10px',
                   padding: '10px',
                   fontSize: '14px',

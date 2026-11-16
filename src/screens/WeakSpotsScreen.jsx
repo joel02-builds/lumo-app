@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import LumoMascot from '../components/LumoMascot.jsx';
 import { getBlockColor } from '../utils/subjectColors.js';
+import Icon from '../components/Icon.jsx';
 
 // uncertainPoints stammt aus der freien Lücken-Einschätzung der KI (Gesamtblock-
 // Recall) und cards aus der separaten Konzept-Liste – beide Listen sind nicht
@@ -137,7 +138,7 @@ export default function WeakSpotsScreen({ blocks, flashcards, onBack, onStartBlo
               textAlign: 'left',
             }}
           >
-            <span style={{ fontSize: '24px' }}>🃏</span>
+            <Icon name="cards" size={22} style={{ color: 'var(--gold)' }} />
             <div style={{ flex: 1 }}>
               <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--gold)', margin: '0 0 2px' }}>
                 {pendingFlashcards} Karteikarten warten
@@ -195,8 +196,12 @@ export default function WeakSpotsScreen({ blocks, flashcards, onBack, onStartBlo
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
+                  // .screen-content zentriert Text; in einer Listenzeile mit
+                  // linkem Farbrand wirkt zentrierter Titel über linksbündiger
+                  // Statuszeile wie ein Layoutfehler.
+                  textAlign: 'left',
                 }}>
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ fontSize: '15px', fontWeight: '500', color: 'var(--text-primary)', margin: '0 0 2px' }}>
                       {b.title}
                     </p>
