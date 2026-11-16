@@ -236,9 +236,9 @@ Check each still exists before relying on it. Do not fix them unasked, but do no
 6. The card prompt for mood `bad` says "set `pretest_question` to null", but the schema type is `string`.
 7. The reducer writes to `localStorage` in `CONFIRM_MATERIAL` and `RESET_TO_ONBOARDING`.
 8. Unused: `components/LumoMascot.css`, `screens/onboarding/OnboardingScreen2.jsx`, `calculateNextReview` in `sm2.js`, `PRETEST_SYSTEM`, actions `GO_TO_STEP2` and `BACK_TO_STEP1`, prop `blockCount` of `AnalyzingScreen`, the `.png` mascot files.
-9. `render.yaml` sets neither `DB_PATH` nor `FRONTEND_URL`; with `NODE_ENV=production` the server exits without `DB_PATH`.
 10. Users who chose "Nur lokal" have no server identity, so the server-side free-block limit (S-07) cannot apply to them; only the IP rate limit does. Owner decision pending.
-11. `syncStreak()` returns an object, but `App.jsx` checks `typeof serverStreak === 'number'`, so the server streak is never written back.
+1. `syncStreak()` returns an object, but `App.jsx` checks `typeof serverStreak === 'number'`, so the server streak is never written back.
+2. On Render Free the filesystem is ephemeral: with `DB_PATH=/tmp` every deploy wipes all server-side state. Owner decision pending (persistent disk or external database). See README "Deployment (Render)".
 
 ## 10. How to work here
 

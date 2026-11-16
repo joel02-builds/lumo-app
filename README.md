@@ -28,6 +28,20 @@ KI-gestützter Lernbegleiter für neurodivergente Studierende (ADHS-freundlich).
 
 Dunkler Hintergrund, ein warmer Goldakzent, große Schrift (≥18px), maximal ein aktionsforderndes Element pro Bildschirm, kurze Textabschnitte, warme statt technische Fehlermeldungen. Details siehe `server/prompts.js` (System-Prompts) und `src/styles/`.
 
+## Deployment (Render)
+
+Der Live-Stand läuft auf Render (Auto-Deploy von `main`). Im Render-Dashboard unter "Environment" müssen gesetzt sein:
+
+| Variable | Wert | Wozu |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | dein Anthropic-Key | KI-Aufrufe |
+| `NODE_ENV` | `production` | Production-Modus (Security-Header, Rate-Limits, `dist/` ausliefern) |
+| `FRONTEND_URL` | öffentliche URL der App, z. B. `https://lumo-app-pbgc.onrender.com` | CORS-Whitelist – fehlt sie, scheitern alle Browser-Anfragen |
+| `DB_PATH` | beschreibbares Verzeichnis | Ablageort der SQLite-Datei `lumo.db` – fehlt sie, bricht der Server beim Start ab |
+| `YOUTUBE_API_KEY` | optional | eingebettete Video-Vorschläge |
+
+**Achtung Datenverlust:** Auf Render Free ist das Dateisystem flüchtig. Mit `DB_PATH=/tmp` gehen bei **jedem Deploy und Neustart** alle serverseitig gespeicherten Lernstände, Sessions und Free-Limit-Zähler verloren. Die Daten im Browser der Nutzer (IndexedDB/localStorage) bleiben erhalten. Vor einem öffentlichen Launch braucht es eine Persistent Disk (kostenpflichtig, dann z. B. `DB_PATH=/data`) oder eine externe Datenbank.
+
 ## Deployment (Railway.app)
 
 Production-Modus: **ein einziger Prozess** – Express liefert sowohl die API als auch den fertigen Frontend-Build aus (`dist/`) über denselben Origin. Dadurch gibt es kein CORS-Problem und keinen zweiten Server, der separat konfiguriert werden müsste.
