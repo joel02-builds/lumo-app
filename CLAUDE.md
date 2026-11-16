@@ -99,6 +99,7 @@ npm run build          # production build into dist/
 npm start              # run the server only (production mode needs NODE_ENV, DB_PATH, FRONTEND_URL)
 npm test               # 306 tests in 17 files, no network, no API cost (Anthropic client is mocked)
 node --test tests/input-validation.test.js    # run one test file
+node scripts/golden-set-eval.mjs --quick --yes   # 10 REAL Claude calls (~5 cents) against the running dev server; without --yes it is a dry run. Measures F024 (misconceptions found / invented).
 ```
 
 - Required Node version is **22** (`engines`, `.node-version`).
