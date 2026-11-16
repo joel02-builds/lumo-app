@@ -324,5 +324,17 @@
     "konfidenz": "hoch",
     "status": "FIXED",
     "fix_nachweis": "Browser 2026-11-16: mit 3 neuen Karten zeigt das Dashboard \"3 Karten heute fällig\"."
+  },
+  {
+    "id": "F030",
+    "bereich": "5 Sicherheit",
+    "schwere": "S3",
+    "befund": "tests/security-hardening.test.js (S-02 bis S-11) lief weder in npm test noch in der CI. Die Schutzmaßnahmen S-04 bis S-07 sind im Server vorhanden, vier Tests waren aber veraltet (fehlende Pflichtfelder seit F001, State-Limit seit P-DB-01 1 MB) und zwei Tests lösten echte Anthropic-Anfragen aus. Zusätzlich nahm /api/analyze 35 MB an, obwohl der Client je Datei 25 MB und beliebig viele Dateien zuließ.",
+    "beleg": "node --test tests/security-hardening.test.js am 2026-11-16: 46/50 grün, Log zeigt 401 von api.anthropic.com.",
+    "reproduktion": "node --test tests/security-hardening.test.js auf Stand df3139f.",
+    "fix": "Tests korrigiert und gemockt, in npm test und CI aufgenommen. /api/analyze 10 MB, PDF-Limit 7 MB, Client: 7 MB gesamt und max. 5 Dateien.",
+    "konfidenz": "hoch",
+    "status": "FIXED",
+    "fix_nachweis": "npm test 2026-11-16: 278/278 grün, davon 51 in security-hardening."
   }
 ]

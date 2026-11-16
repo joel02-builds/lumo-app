@@ -97,7 +97,7 @@ npm ci                 # install exactly what package-lock.json says (needs Node
 npm run dev            # frontend http://localhost:5173 + backend http://localhost:3001
 npm run build          # production build into dist/
 npm start              # run the server only (production mode needs NODE_ENV, DB_PATH, FRONTEND_URL)
-npm test               # 227 tests in 11 files, no network, no API cost (Anthropic client is mocked)
+npm test               # 278 tests in 12 files, no network, no API cost (Anthropic client is mocked)
 node --test tests/input-validation.test.js    # run one test file
 ```
 
@@ -105,7 +105,6 @@ node --test tests/input-validation.test.js    # run one test file
 - `.env` needs `ANTHROPIC_API_KEY`. See `.env.example` for the rest.
 - In dev the backend port comes from `LUMO_API_PORT`, **not** `PORT`. Preview tools set `PORT` to the frontend port, which is why the code ignores it in dev.
 - In Claude's desktop app, start the app with the `lumo` entry in `.claude/launch.json`. Never start a second dev server while one runs (`strictPort` makes it fail).
-- `tests/security-hardening.test.js` is deliberately **not** in `npm test`. Do not add it without being asked.
 
 ### On the owner's Windows machine (checked 2026-11-13)
 
@@ -148,7 +147,7 @@ node --test tests/input-validation.test.js    # run one test file
 **Limits that must stay in sync** (change both sides together)
 - Timeouts: client 60 s (`src/api/lumo.js`) > server 55 s (`CLAUDE_TIMEOUT_MS`).
 - Material text: server cuts at 32,000 chars (`MAX_MATERIAL_CHARS`); the onboarding form warns at the same number (`BACKEND_LIMIT`).
-- Files: max 5 (checked on the server only), PDF max 24 MB raw, client file limit 25 MB, DOCX rejected on both sides.
+- Files: max 5 and 7 MB raw in total (`MAX_FILES`, `MAX_TOTAL_FILE_SIZE` in `OnboardingScreen1.jsx`; `MAX_FILES` in `server/index.js`, `MAX_PDF_BYTES_RAW` in `materialUtils.js`). The `/api/analyze` body limit is 10 MB because base64 adds a third. DOCX rejected on both sides.
 - Free limit: 20 blocks, defined in both `server/db.js` and `src/utils/planLimits.js`.
 
 ## 6. Design rules
