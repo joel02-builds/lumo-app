@@ -439,8 +439,9 @@ function isTimeoutError(err) {
 function sendFriendlyError(res, err) {
   // P-BE-07: KI-Kapazität erschöpft → 429 statt 500 (kein Logging nötig, kein API-Fehler)
   if (err?.name === 'AiCapacityError' || err?.message === 'ai_at_capacity') {
-    return res.status(429).json({
-      error: 'KI-Service kurz ausgelastet – bitte einen Moment warten und nochmal versuchen.',
+    // Retry-After auch als HTTP-Header (Standard), nicht nur im JSON-Body.
+    return res.status(429).set('Retry-After', '5').json({
+      error: 'Gerade lernen viele gleichzeitig. Warte ein paar Sekunden, dann geht es weiter.',
       retryAfter: 5,
     });
   }
@@ -487,8 +488,8 @@ app.post('/api/analyze',
   // 1. Admission Control — BEFORE Body wird eingelesen
   (req, res, next) => {
     if (_activeAnalyzeCount >= MAX_CONCURRENT_ANALYZE) {
-      return res.status(429).json({
-        error: 'Server überlastet – zu viele parallele Analysen aktiv. Bitte kurz warten.',
+      return res.status(429).set('Retry-After', '10').json({
+        error: 'Gerade analysiere ich schon mehrere Unterlagen. Warte kurz, dann bin ich für dich da.',
         retryAfter: 10,
       });
     }

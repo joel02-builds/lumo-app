@@ -348,5 +348,17 @@
     "konfidenz": "hoch",
     "status": "FIXED",
     "fix_nachweis": "tests/cookie-consent.test.js (7 Fälle) grün am 2026-11-16."
+  },
+  {
+    "id": "F032",
+    "bereich": "3 Produktdesign und UX",
+    "schwere": "S2",
+    "befund": "Fehlerverhalten in der Session: (a) Kartenlade-Fehler bot nur window.location.reload() – der Nutzer fiel aus der Session; (b) bei API-Fehler der Warum-Frage erschien erfundenes Feedback (\"Interessanter Gedanke. Weiter.\"); (c) die Sync-Fehler-Leiste war rot (#b91c1c); (d) 429-Antworten hatten keinen Retry-After-Header und technische Texte.",
+    "beleg": "src/screens/session/CardLearningPhase.jsx, src/App.jsx, server/index.js vor dem Fix.",
+    "reproduktion": "generate-cards mit 429 beantworten lassen und \"Nochmal versuchen\" tippen.",
+    "fix": "retryKey statt Reload, Wartezeit-Anzeige bei 429, neutrales Fehlerfeedback, Leiste in Amber, Retry-After-Header.",
+    "konfidenz": "hoch",
+    "status": "FIXED",
+    "fix_nachweis": "tests/error-behaviour.test.js (4 Fälle); Browser 2026-11-16 mit gestubbtem fetch: 429-Banner mit Countdown, danach Retry lädt Karten ohne Reload."
   }
 ]

@@ -97,7 +97,7 @@ npm ci                 # install exactly what package-lock.json says (needs Node
 npm run dev            # frontend http://localhost:5173 + backend http://localhost:3001
 npm run build          # production build into dist/
 npm start              # run the server only (production mode needs NODE_ENV, DB_PATH, FRONTEND_URL)
-npm test               # 285 tests in 13 files, no network, no API cost (Anthropic client is mocked)
+npm test               # 289 tests in 14 files, no network, no API cost (Anthropic client is mocked)
 node --test tests/input-validation.test.js    # run one test file
 ```
 
@@ -159,7 +159,7 @@ node --test tests/input-validation.test.js    # run one test file
 - Meaning: `--green` (understood), `--amber` (warning), `--red` (an orange tone, real errors only)
 - Text on a gold surface is always `#1a1206`, never white.
 
-**No red.** Red triggers shame and shutdown in this audience. Gaps, wrong answers, "no idea", low retention, deadlines and bad grades are shown in gold, amber or neutral grey. `--red` is only for genuine failures (network, API) inside `.error-banner`. Two existing exceptions are not a licence: YouTube's brand red in `YoutubePanel.jsx`, and the sync-error bar in `App.jsx` (a known violation).
+**No red.** Red triggers shame and shutdown in this audience. Gaps, wrong answers, "no idea", low retention, deadlines and bad grades are shown in gold, amber or neutral grey. `--red` is only for genuine failures (network, API) inside `.error-banner`. One existing exception is not a licence: YouTube's brand red in `YoutubePanel.jsx`.
 
 **Dusk mode.** From 20:00 to 05:59 `useChronoBias` sets `data-dusk` on `<html>` and the gold tokens turn amber. A hard-coded `#D4A843` or `rgba(212,168,67,…)` will not switch. In new code use the tokens.
 
@@ -233,12 +233,11 @@ Check each still exists before relying on it. Do not fix them unasked, but do no
 4. Notes use two schemes (`lumo_notes` and `lumo_note_<block>_<concept>`). Export and "clear" each cover only one.
 5. `SAVE_CURRENT_PROJECT` / `LOAD_PROJECT` do not carry `goalDate`, `sprintMode`, `learningStyle`; switching subjects keeps the previous subject's values.
 6. The card prompt for mood `bad` says "set `pretest_question` to null", but the schema type is `string`.
-7. The sync-error bar in `App.jsx` is red (`#b91c1c`).
-8. The reducer writes to `localStorage` in `CONFIRM_MATERIAL` and `RESET_TO_ONBOARDING`.
-9. Unused: `components/LumoMascot.css`, `screens/onboarding/OnboardingScreen2.jsx`, `calculateNextReview` in `sm2.js`, `PRETEST_SYSTEM`, actions `GO_TO_STEP2` and `BACK_TO_STEP1`, prop `blockCount` of `AnalyzingScreen`, the `.png` mascot files.
-10. `render.yaml` sets neither `DB_PATH` nor `FRONTEND_URL`; with `NODE_ENV=production` the server exits without `DB_PATH`.
-11. Users who chose "Nur lokal" have no server identity, so the server-side free-block limit (S-07) cannot apply to them; only the IP rate limit does. Owner decision pending.
-12. `syncStreak()` returns an object, but `App.jsx` checks `typeof serverStreak === 'number'`, so the server streak is never written back.
+7. The reducer writes to `localStorage` in `CONFIRM_MATERIAL` and `RESET_TO_ONBOARDING`.
+8. Unused: `components/LumoMascot.css`, `screens/onboarding/OnboardingScreen2.jsx`, `calculateNextReview` in `sm2.js`, `PRETEST_SYSTEM`, actions `GO_TO_STEP2` and `BACK_TO_STEP1`, prop `blockCount` of `AnalyzingScreen`, the `.png` mascot files.
+9. `render.yaml` sets neither `DB_PATH` nor `FRONTEND_URL`; with `NODE_ENV=production` the server exits without `DB_PATH`.
+10. Users who chose "Nur lokal" have no server identity, so the server-side free-block limit (S-07) cannot apply to them; only the IP rate limit does. Owner decision pending.
+11. `syncStreak()` returns an object, but `App.jsx` checks `typeof serverStreak === 'number'`, so the server streak is never written back.
 
 ## 10. How to work here
 

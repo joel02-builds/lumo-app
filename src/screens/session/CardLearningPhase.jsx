@@ -16,6 +16,11 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
   const [answer, setAnswer] = useState('');
   const [feedback, setFeedback] = useState(null);
   const [error, setError] = useState(null);
+  // Zählt Lade-Versuche hoch: "Nochmal versuchen" lädt nur die Karten neu,
+  // statt die ganze Seite neu zu laden (das warf den Nutzer aus der Session).
+  const [retryKey, setRetryKey] = useState(0);
+  // Sekunden bis zum nächsten sinnvollen Versuch (nur bei 429 vom Server).
+  const [retryWait, setRetryWait] = useState(0);
   const [animating, setAnimating] = useState(false);
   const [sending, setSending] = useState(false);
   const [isGoodAnswer, setIsGoodAnswer] = useState(false);
@@ -138,10 +143,19 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
         onCardsReady?.(data.cards);
       }
     }).catch((err) => {
-      if (!cancelled) setError(err.message);
+      if (cancelled) return;
+      setError(err.message);
+      setRetryWait(err.status === 429 ? (err.retryAfter || 5) : 0);
     });
     return () => { cancelled = true; };
-  }, [block.id]);
+  }, [block.id, retryKey]);
+
+  // Countdown für die Wartezeit nach einem 429
+  useEffect(() => {
+    if (retryWait <= 0) return undefined;
+    const t = setTimeout(() => setRetryWait((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [retryWait]);
 
   // Startet den 20-Minuten-Timer genau einmal, sobald die Karten geladen sind –
   // nicht bei jedem Phasenwechsel neu (sonst würde jede Antwort den Countdown
@@ -448,7 +462,11 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
       <div className="screen">
         <div className="screen-content">
           <LumoMascot state="idle" />
-          <ErrorBanner message={error} onRetry={() => window.location.reload()} onExit={onExit} />
+          <ErrorBanner
+            message={retryWait > 0 ? `${error} (noch ${retryWait} s)` : error}
+            onRetry={retryWait > 0 ? undefined : () => { setError(null); setPhase('loading'); setRetryKey((k) => k + 1); }}
+            onExit={onExit}
+          />
         </div>
       </div>
     );
@@ -1810,7 +1828,9 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                         });
                         setWhyFeedback(result.feedback);
                       } catch {
-                        setWhyFeedback('Interessanter Gedanke. Weiter.');
+                        // Kein erfundenes Feedback bei API-Fehler (wie bei den
+                        // anderen Bewertungen in dieser Datei).
+                        setWhyFeedback('Bewertung gerade nicht möglich.');
                       } finally {
                         setWhySending(false);
                       }
