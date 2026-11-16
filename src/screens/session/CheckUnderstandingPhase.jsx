@@ -95,6 +95,28 @@ export default function CheckUnderstandingPhase({ block, onDone, onExit }) {
               ))}
             </div>
           )}
+          {/* F024: aktive Fehlvorstellung – etwas Falsches, das der Nutzer behauptet
+              hat (nicht bloß eine Lücke). Amber statt Rot (Kein-Rot-Regel); Text in
+              --text-primary, damit der Kontrast auch im Dusk-Modus über 4,5:1 bleibt. */}
+          {result.misconceptions?.length > 0 && (
+            <div style={{
+              width: '100%',
+              background: 'var(--amber-soft)',
+              border: '1px solid rgba(196, 122, 43, 0.4)',
+              borderLeft: '3px solid var(--amber)',
+              borderRadius: '12px',
+              padding: '14px 18px',
+            }}>
+              <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--gold-light)', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                Fehlvorstellung erkannt
+              </p>
+              {result.misconceptions.map((m, i) => (
+                <p key={i} style={{ fontSize: '14px', color: 'var(--text-primary)', margin: '0 0 6px', lineHeight: '1.5' }}>
+                  {m}
+                </p>
+              ))}
+            </div>
+          )}
           {result.uncertainPoints.length > 0 && (
             <div style={{
               width: '100%',
