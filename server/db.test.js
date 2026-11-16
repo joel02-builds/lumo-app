@@ -19,7 +19,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, chmodSync, rmSync, accessSync, constants, writeFileSync, unlinkSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import path from 'path';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -106,7 +106,9 @@ function computeIsProduction() {
  */
 function spawnInitDB(env) {
   // Absoluter Pfad, damit './db.js' unabhängig vom Skript-Verzeichnis auflöst
-  const dbJsPath = JSON.stringify(path.join(__dirname, 'db.js'));
+  // file://-URL statt Dateipfad: unter Windows ist "C:\..." kein gültiger
+  // ESM-Specifier (ERR_UNSUPPORTED_ESM_URL_SCHEME); die URL funktioniert überall.
+  const dbJsPath = JSON.stringify(pathToFileURL(path.join(__dirname, 'db.js')).href);
   const script = `
 import { initDB } from ${dbJsPath};
 const result = initDB();
@@ -571,7 +573,7 @@ function spawnScript(env, code) {
   return result;
 }
 
-const DB_JS = JSON.stringify(path.join(__dirname, 'db.js'));
+const DB_JS = JSON.stringify(pathToFileURL(path.join(__dirname, 'db.js')).href);
 
 // ── 5a. Neue Datenbank → Version 4 + beide Tabellen ─────────────────────────
 

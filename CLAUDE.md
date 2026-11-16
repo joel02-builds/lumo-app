@@ -110,7 +110,7 @@ node --test tests/input-validation.test.js    # run one test file
 ### On the owner's Windows machine (checked 2026-11-13)
 
 - Installed Node is 24, not 22, and there are no C++ build tools. Plain `npm ci` fails while compiling `better-sqlite3` **and leaves `node_modules` empty**. Use `npm ci --ignore-scripts`. Build, dev server and SQLite worked after that.
-- `npm test` gives 209 pass, 15 fail. All 15 are in `server/db.test.js` and fail with `ERR_UNSUPPORTED_ESM_URL_SCHEME` (a Windows path passed to `import()`). That is the known local baseline, not something you broke. CI on Linux is the reference for those tests.
+- `npm test` passes completely (224 tests) with `npm ci --ignore-scripts`.
 - Work is often done in cloud sessions and pushed to GitHub, so this folder can be far behind. **Run `git fetch` and `git status -sb` before reading or changing anything.** If it says "behind", say so and fast-forward first.
 
 ## 5. Coding rules
@@ -241,7 +241,6 @@ Check each still exists before relying on it. Do not fix them unasked, but do no
 11. The reducer writes to `localStorage` in `CONFIRM_MATERIAL` and `RESET_TO_ONBOARDING`.
 12. Unused: `components/LumoMascot.css`, `screens/onboarding/OnboardingScreen2.jsx`, `calculateNextReview` in `sm2.js`, `PRETEST_SYSTEM`, actions `GO_TO_STEP2` and `BACK_TO_STEP1`, prop `blockCount` of `AnalyzingScreen`, the `.png` mascot files.
 13. `render.yaml` sets neither `DB_PATH` nor `FRONTEND_URL`; with `NODE_ENV=production` the server exits without `DB_PATH`.
-14. `server/db.test.js` fails on Windows (path passed to `import()`).
 
 ## 10. How to work here
 
@@ -255,7 +254,7 @@ Check each still exists before relying on it. Do not fix them unasked, but do no
 
 - [ ] `git status -sb` showed the branch was up to date before I started; only files I meant to change are modified.
 - [ ] `npm run build` passes.
-- [ ] `npm test` passes, or fails only with the known 15 `server/db.test.js` Windows failures. No new failures.
+- [ ] `npm test` passes.
 - [ ] I started the app, walked the changed flow myself, and the browser console and server log show no new errors.
 - [ ] Reloaded the page mid-flow: state is still there.
 - [ ] Checked at phone width (375px) and with the keyboard open if there is an input.
