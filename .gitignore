@@ -10,3 +10,6 @@ server/.env
 *.db
 *.db-shm
 *.db-wal
+
+# Lokale Dev-Server-Logs – nie committen.
+dev.log
