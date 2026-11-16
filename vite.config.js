@@ -6,9 +6,11 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      // 'autoUpdate' lädt neuen SW sofort, ohne Nutzer zu blockieren.
-      // ADHS-freundlich: keine "Update available"-Dialoge die ablenken.
-      registerType: 'autoUpdate',
+      // 'prompt': ein neuer Service Worker wartet, bis der Nutzer in der
+      // UpdatePrompt-Leiste "Neu laden" tippt. Mit 'autoUpdate' sahen
+      // Bestandsnutzer neue Versionen erst beim zweiten Öffnen (F011).
+      // Die Leiste ist nicht blockierend (kein Dialog) – siehe UpdatePrompt.jsx.
+      registerType: 'prompt',
 
       // Manifest aus public/manifest.json übernehmen
       manifest: false,

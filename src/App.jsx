@@ -14,6 +14,7 @@ import { loadServerState, scheduleSyncToServer, mergeStates, syncStreak } from '
 import { clearAllNotes } from './utils/notesStorage.js';
 import { startKeepAlive } from './utils/keepAlive.js';
 import StorageWarningBanner from './components/StorageWarningBanner.jsx';
+import UpdatePrompt from './components/UpdatePrompt.jsx';
 // P-FE-11: Code Splitting — Screens in zwei Kategorien:
 //
 // EAGER (im Haupt-Bundle):
@@ -478,6 +479,7 @@ export default function App() {
       {!showLegal && (
         <Suspense fallback={<LazyFallback />}>
         <>
+      <UpdatePrompt />
       {!isOnline && <OfflineBanner />}
       {storageLayer === 'localStorage' && <StorageWarningBanner />}
       {syncError && (

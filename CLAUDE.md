@@ -104,7 +104,8 @@ node --test tests/input-validation.test.js    # run one test file
 - Required Node version is **22** (`engines`, `.node-version`).
 - `.env` needs `ANTHROPIC_API_KEY`. See `.env.example` for the rest.
 - In dev the backend port comes from `LUMO_API_PORT`, **not** `PORT`. Preview tools set `PORT` to the frontend port, which is why the code ignores it in dev.
-- In Claude's desktop app, start the app with the `lumo` entry in `.claude/launch.json`. Never start a second dev server while one runs (`strictPort` makes it fail).
+- In Claude's desktop app, start the app with the `lumo` entry in `.claude/launch.json`. The `lumo-dist` entry serves the built `dist/` on port 4173 (no API), which is the only way to test the service worker locally.
+- The service worker uses `registerType: 'prompt'`: a new version waits until the user taps "Neu laden" in `UpdatePrompt.jsx`. To test it, build, open `lumo-dist`, change something, build again, reload. Never start a second dev server while one runs (`strictPort` makes it fail).
 
 ### On the owner's Windows machine (checked 2026-11-13)
 
