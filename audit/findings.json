@@ -361,5 +361,17 @@
     "konfidenz": "hoch",
     "status": "FIXED",
     "fix_nachweis": "tests/error-behaviour.test.js (4 Fälle); Browser 2026-11-16 mit gestubbtem fetch: 429-Banner mit Countdown, danach Retry lädt Karten ohne Reload."
+  },
+  {
+    "id": "F033",
+    "bereich": "11 Betrieb und Release",
+    "schwere": "S2",
+    "befund": "render.yaml nannte weder DB_PATH noch FRONTEND_URL, obwohl der Server in Production ohne DB_PATH abbricht und ohne FRONTEND_URL alle Browser-Anfragen an CORS scheitern. Zusätzlich: auf Render Free ist das Dateisystem flüchtig – mit DB_PATH=/tmp gehen bei jedem Deploy alle Server-Stände verloren.",
+    "beleg": "render.yaml auf df3139f; server/db.js initDB() (process.exit(1) ohne DB_PATH); server/index.js ALLOWED_ORIGINS.",
+    "reproduktion": "NODE_ENV=production node server/index.js ohne DB_PATH.",
+    "fix": "Beide Variablen in render.yaml (sync: false) und README-Abschnitt Deployment (Render). Die Persistenz selbst ist NICHT gelöst – Entscheidung des Eigentümers.",
+    "konfidenz": "hoch",
+    "status": "CONFIRMED",
+    "fix_nachweis": "Dokumentation ergänzt am 2026-11-16; Datenverlust bei Deploy bleibt bis zur Persistenz-Entscheidung bestehen."
   }
 ]

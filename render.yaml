@@ -9,3 +9,15 @@ services:
         value: production
       - key: ANTHROPIC_API_KEY
         sync: false
+      # Pflicht in Production – ohne diese beiden startet bzw. funktioniert Lumo nicht.
+      # sync: false = der Wert wird im Render-Dashboard gesetzt, nicht hier.
+      # FRONTEND_URL: öffentliche URL der App (CORS-Whitelist), z. B.
+      #   https://lumo-app-pbgc.onrender.com
+      - key: FRONTEND_URL
+        sync: false
+      # DB_PATH: Verzeichnis für lumo.db. Der Server bricht in Production ohne
+      # DB_PATH ab. ACHTUNG: /tmp überlebt keinen Deploy – alle Server-Stände
+      # gehen dann verloren. Für den Launch: Persistent Disk mounten (z. B. /data)
+      # oder externe Datenbank. Siehe README, Abschnitt "Deployment (Render)".
+      - key: DB_PATH
+        sync: false
