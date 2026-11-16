@@ -118,7 +118,8 @@
     "reproduktion": "Neue Version deployen während ein Nutzer eine Session hat → SW übernimmt ggf. sofort → Reload der Seite.",
     "fix": "Für ADHS-Nutzer empfohlen: autoUpdate beibehalten (kein Dialog-Popup), aber im SW auf 'controllerchange' event einen Toast zeigen: 'Lumo wurde aktualisiert — dein Fortschritt ist gesichert.' Oder: 'prompt'-Strategie mit einem minimal-invasiven Banner nutzen.",
     "konfidenz": "hoch",
-    "status": "CONFIRMED"
+    "status": "FIXED",
+    "fix_nachweis": "registerType prompt + UpdatePrompt.jsx. Browser 2026-11-16 gegen vite preview: drei Builds nacheinander; bei gesteuerter Seite wartet der neue Service Worker, die Leiste erscheint, Neu laden lädt das neue Bundle."
   },
   {
     "id": "F012",
