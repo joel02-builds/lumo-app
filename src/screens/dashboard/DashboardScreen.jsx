@@ -1,11 +1,10 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import LumoMascot from '../../components/LumoMascot.jsx';
 import Button from '../../components/Button.jsx';
 import Icon from '../../components/Icon.jsx';
 import { getRecommendedBlock } from '../../utils/blockProgress.js';
 import { getBlockColor, SUBJECT_COLORS } from '../../utils/subjectColors.js';
 import { getRemainingFreeBlocks, isFreeLimitReached, isApproachingLimit } from '../../utils/planLimits.js';
-import { lumoApi } from '../../api/lumo.js';
 import { getDueCards } from '../../utils/fsrs.js';
 
 function getDaysUntilExam(goalDate) {
@@ -113,17 +112,10 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
   const totalMasteredConcepts = allCompletedBlocks.reduce((sum, b) => sum + (b.cards?.length || 0), 0);
   const totalSessions = blocksAnalyzedTotal || 0;
 
-  // Lädt die Karten des nächsten Blocks schon im Hintergrund, damit der
-  // Request/Cache beim tatsächlichen Klick bereits warm ist.
-  useEffect(() => {
-    if (!next) return;
-    lumoApi.generateCards({
-      blockTitle: next.title,
-      blockContent: next.content,
-      difficulty: next.difficulty,
-      goalType,
-    }).catch(() => {});
-  }, [next?.id]);
+  // Bewusst KEIN KI-Aufruf im Dashboard: früher wurde hier generateCards zum
+  // "Vorwärmen" gefeuert. Es gibt aber keinen Cache – das Ergebnis wurde
+  // verworfen und jeder Dashboard-Besuch kostete einen bezahlten API-Call.
+  // Abgesichert durch tests/dashboard-no-ai.test.js.
 
   if (safeBlocks.length === 0) {
     return (
