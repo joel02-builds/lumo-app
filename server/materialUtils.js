@@ -165,6 +165,23 @@ export function normalizeMisconceptions(data) {
 }
 
 /**
+ * F024 (Karten-Ebene): evaluate-card-answer liefert "misconception" als String
+ * ("" = keine Fehlvorstellung). Fehlt das Feld oder ist es kein String, wird
+ * daraus "" – die UI zeigt dann nichts. Zu lange Texte werden gekürzt.
+ *
+ * @param {unknown} data — geparste evaluate-card-answer-Antwort
+ * @returns {unknown} dasselbe Objekt, mit normalisiertem Feld
+ */
+export const MAX_CARD_MISCONCEPTION_CHARS = 300;
+export function normalizeCardMisconception(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return data;
+  data.misconception = typeof data.misconception === 'string'
+    ? data.misconception.trim().slice(0, MAX_CARD_MISCONCEPTION_CHARS)
+    : '';
+  return data;
+}
+
+/**
  * Verarbeitet die Claude-Antwort nach stream.finalMessage():
  * - Prüft stop_reason (max_tokens → unvollständige JSON-Antwort)
  * - Extrahiert den Text-Block
