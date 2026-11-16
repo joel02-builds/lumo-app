@@ -386,7 +386,8 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
     .ob-ftab.green .ob-dot { background: #40B870; }
     .ob-ftab.ghost {
       background: rgba(240,234,224,0.05); border-color: rgba(240,234,224,0.12);
-      color: rgba(240,234,224,0.38); font-style: italic; font-size: 11px;
+      /* F020: 0.38 ergab 3,2:1 – 0.62 ergibt 6,5:1 und bleibt trotzdem leiser als die farbigen Zettel */
+      color: rgba(240,234,224,0.62); font-style: italic; font-size: 11px;
     }
 
     .ob-ftab.t1 { top: 8%;  left: 3%;  transform: rotate(-3deg);   animation: obF1 5.5s ease-in-out infinite; }
