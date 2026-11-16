@@ -405,5 +405,17 @@
     "fix": "keiner nötig",
     "konfidenz": "mittel – die Schlüsselsuche ist ein Muster-Grep, kein vollwertiger gitleaks-Lauf",
     "status": "PLAUSIBLE"
+  },
+  {
+    "id": "F036",
+    "bereich": "9 Barrierefreiheit und ADHS-Design",
+    "schwere": "S2",
+    "befund": "Onboarding verstieß gegen die Kein-Rot-Regel (Zettel \"Kapitel 7 – noch nicht\" und \"Kapitel 3–6 offen\" in Rot, rote Icon-Kachel und rosa-roter Text bei \"Anti-Ablenkungsplan\", rosa-roter Fehlertext), und der fixierte Cookie-Banner verdeckte auf dem Startbildschirm den Start-Button.",
+    "beleg": "Browser 2026-11-16 (375 px und Desktop): Banner 842–965 px, Start-Button darunter verdeckt; OnboardingScreen1.jsx .ob-ftab.red, .ob-dc-cap-icon.anti, .ob-error.",
+    "reproduktion": "Frisches Profil öffnen, 2 s warten.",
+    "fix": "Rot durch warmes Sand/Amber ersetzt; Banner meldet seine Höhe als --cookie-banner-h, Onboarding endet darüber, Feedback-Lasche hebt sich darüber.",
+    "konfidenz": "hoch",
+    "status": "FIXED",
+    "fix_nachweis": "Browser 2026-11-16: Start-Button endet bei 592 px, Banner beginnt bei 641 px (375 px Breite), Desktop 793 vs 842; tests/onboarding-design.test.js."
   }
 ]

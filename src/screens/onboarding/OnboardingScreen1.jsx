@@ -9,6 +9,7 @@
  */
 
 import { useRef, useState, useEffect, useCallback } from 'react';
+import Icon from '../../components/Icon.jsx';
 import LumoMascot from '../../components/LumoMascot.jsx';
 import { readFileAsBase64, readFileAsText } from '../../utils/fileReader.js';
 
@@ -315,6 +316,9 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
     /* ── Screen base ── */
     .ob-screen {
       position: absolute; inset: 0; z-index: 10;
+      /* Cookie-Banner (CookieConsent setzt die Höhe): Inhalt endet darüber, der
+         Start-Button wird nicht mehr verdeckt. */
+      bottom: var(--cookie-banner-h, 0px);
       opacity: 0; pointer-events: none;
       transform: translateX(28px);
       transition: opacity .26s cubic-bezier(0.23,1,0.32,1),
@@ -376,8 +380,9 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
     .ob-ftab .ob-dot {
       width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
     }
-    .ob-ftab.red   { background: rgba(220,60,60,0.16); border-color: rgba(220,60,60,0.30); color: #F5A0A0; }
-    .ob-ftab.red .ob-dot { background: #E05050; }
+    /* Kein-Rot-Regel: "offen / noch nicht" ist kein Alarm. Warmes Sand statt Rot. */
+    .ob-ftab.sand  { background: rgba(240,234,224,0.09); border-color: rgba(240,234,224,0.22); color: rgba(240,234,224,0.82); }
+    .ob-ftab.sand .ob-dot { background: #B8A98C; }
     .ob-ftab.amber { background: rgba(212,146,74,0.16); border-color: rgba(212,146,74,0.28); color: #E5B87A; }
     .ob-ftab.amber .ob-dot { background: #D4924A; }
     .ob-ftab.blue  { background: rgba(80,140,220,0.14); border-color: rgba(80,140,220,0.26); color: #90B8E8; }
@@ -471,7 +476,7 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
       width: 28px; height: 28px; border-radius: 7px;
       display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px;
     }
-    .ob-dc-cap-icon.anti  { background: rgba(220,60,60,0.15);  border: 1px solid rgba(220,60,60,0.25); }
+    .ob-dc-cap-icon.anti  { background: rgba(240,234,224,0.09); border: 1px solid rgba(240,234,224,0.2); }
     .ob-dc-cap-icon.focus { background: rgba(212,146,74,0.14); border: 1px solid rgba(212,146,74,0.22); }
     .ob-dc-cap-icon.know  { background: rgba(80,180,120,0.12); border: 1px solid rgba(80,180,120,0.20); }
     .ob-dc-cap-label { font-size: 12px; line-height: 1.35; }
@@ -672,7 +677,7 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
       font-size: 18px; cursor: pointer; padding: 0 2px; line-height: 1;
       flex-shrink: 0; transition: color 150ms;
     }
-    .ob-file-remove:hover { color: #F5A0A0; }
+    .ob-file-remove:hover { color: #FFE8A0; }
     .ob-textarea {
       width: 100%; background: rgba(240,234,224,0.06);
       border: 1px solid rgba(240,234,224,0.14); border-radius: 10px;
@@ -682,7 +687,7 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
     }
     .ob-textarea:focus { border-color: rgba(212,146,74,0.5); }
     .ob-textarea::placeholder { color: rgba(240,234,224,0.30); }
-    .ob-error { font-size: 13px; color: #F5A0A0; }
+    .ob-error { font-size: 13px; color: var(--amber, #C47A2B); }
     .ob-demo-link {
       background: none; border: none; color: rgba(240,234,224,0.45);
       font-size: 13px; font-family: inherit; cursor: pointer;
@@ -746,11 +751,11 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
       <div id="ob-s0" className={`ob-screen ${isActive('s0')}`}>
         <div className="ob-chaos-canvas">
           {/* Floating Tags */}
-          <div className="ob-ftab red t1"><span className="ob-dot" />Kapitel 7 – noch nicht</div>
+          <div className="ob-ftab sand t1"><span className="ob-dot" />Kapitel 7 – noch nicht</div>
           <div className="ob-ftab amber t2"><span className="ob-dot" />Klausur: 4 Tage</div>
           <div className="ob-ftab blue t3"><span className="ob-dot" />Lerngruppe – 18 Uhr</div>
           <div className="ob-ftab ghost t4">Zusammenfassung?</div>
-          <div className="ob-ftab red t5"><span className="ob-dot" />Kapitel 3–6 offen</div>
+          <div className="ob-ftab sand t5"><span className="ob-dot" />Kapitel 3–6 offen</div>
           <div className="ob-ftab green t6"><span className="ob-dot" />Bio ✓</div>
           <div className="ob-ftab amber t7"><span className="ob-dot" />Karteikarten?</div>
           <div className="ob-ftab blue t8"><span className="ob-dot" />Wiederholung</div>
@@ -800,21 +805,21 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
             </div>
             <div className="ob-dc-caps">
               <div className="ob-dc-cap">
-                <div className="ob-dc-cap-icon anti">🚫</div>
+                <div className="ob-dc-cap-icon anti"><Icon name="ban" size={18} /></div>
                 <div className="ob-dc-cap-label">
-                  <strong style={{ color: '#F5A0A0' }}>Anti-Ablenkungsplan</strong>
+                  <strong>Anti-Ablenkungsplan</strong>
                   <span>Klausurreihenfolge nach Lücken</span>
                 </div>
               </div>
               <div className="ob-dc-cap">
-                <div className="ob-dc-cap-icon focus">⚡</div>
+                <div className="ob-dc-cap-icon focus"><Icon name="bolt" size={18} /></div>
                 <div className="ob-dc-cap-label">
                   <strong>Fokus-Blöcke</strong>
                   <span>25-min-Einheiten für deinen Stil</span>
                 </div>
               </div>
               <div className="ob-dc-cap">
-                <div className="ob-dc-cap-icon know">🧠</div>
+                <div className="ob-dc-cap-icon know"><Icon name="brain" size={18} /></div>
                 <div className="ob-dc-cap-label">
                   <strong>Wissens-Check</strong>
                   <span>Sofort sehen, was sitzt</span>
@@ -979,7 +984,7 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
             <div className="ob-file-list">
               {files.map(f => (
                 <div key={f.name} className="ob-file-item">
-                  <span className="ob-file-icon">📄</span>
+                  <span className="ob-file-icon"><Icon name="file" size={16} /></span>
                   <span className="ob-file-name">{f.name}</span>
                   <button
                     className="ob-file-remove"
@@ -999,7 +1004,7 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
           >
-            <div className="ob-drop-icon">📂</div>
+            <div className="ob-drop-icon"><Icon name="folder" size={28} /></div>
             {hasFiles ? (
               <>
                 <div className="ob-drop-main">Weitere Datei hinzufügen</div>
@@ -1050,7 +1055,7 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
             Nutzer kann bewusst fortfahren oder abbrechen. */}
         {materialText.length > BACKEND_LIMIT && (
           <div className="ob-trunc-warn">
-            <span className="ob-trunc-icon">⚠️</span>
+            <span className="ob-trunc-icon"><Icon name="warning" size={16} /></span>
             <div>
               <div className="ob-trunc-title">
                 Nur {Math.round(BACKEND_LIMIT / Math.max(originalMaterialLength, materialText.length) * 100)}% deines Materials wird analysiert

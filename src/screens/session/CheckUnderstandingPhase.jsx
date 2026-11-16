@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import Icon from '../../components/Icon.jsx';
 import LumoMascot from '../../components/LumoMascot.jsx';
 import Button from '../../components/Button.jsx';
 import ErrorBanner from '../../components/ErrorBanner.jsx';
@@ -318,7 +319,7 @@ export default function CheckUnderstandingPhase({ block, onDone, onExit }) {
                 animation: isListening ? 'lumo-pulse 1.2s ease-in-out infinite' : 'none',
               }}
             >
-              🎤
+              <Icon name="mic" size={20} />
             </button>
           )}
         </div>

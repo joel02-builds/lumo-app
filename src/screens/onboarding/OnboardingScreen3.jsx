@@ -20,6 +20,7 @@
  */
 
 import { useState } from 'react';
+import Icon from '../../components/Icon.jsx';
 import LumoMascot from '../../components/LumoMascot.jsx';
 
 function getDaysUntilDate(dateStr) {
@@ -78,13 +79,13 @@ export default function OnboardingScreen3({ onConfirm, onBack }) {
             gap: '10px',
           }}>
             {[
-              { icon: '⚡', text: 'Nur die prüfungsrelevantesten Themen zuerst' },
-              { icon: '⏱', text: 'Jeder Block max. 20 Minuten' },
-              { icon: '🎯', text: 'Direkt testen statt lang erklären' },
-              { icon: '🧠', text: 'Am Ende: deine 3 wichtigsten Punkte zum Wiederholen' },
+              { icon: 'bolt', text: 'Nur die prüfungsrelevantesten Themen zuerst' },
+              { icon: 'clock', text: 'Jeder Block max. 20 Minuten' },
+              { icon: 'target', text: 'Direkt testen statt lang erklären' },
+              { icon: 'brain', text: 'Am Ende: deine 3 wichtigsten Punkte zum Wiederholen' },
             ].map(({ icon, text }) => (
               <div key={text} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                <span style={{ fontSize: '16px', flexShrink: 0, marginTop: '1px' }}>{icon}</span>
+                <Icon name={icon} size={18} style={{ color: 'var(--gold)', marginTop: '1px' }} />
                 <span style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: '1.45' }}>{text}</span>
               </div>
             ))}

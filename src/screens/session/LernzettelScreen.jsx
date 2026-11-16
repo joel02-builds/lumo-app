@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import Icon from '../../components/Icon.jsx';
 import { SkeletonLernzettel } from '../../components/SkeletonLoader.jsx';
 import { lumoApi } from '../../api/lumo.js';
 
@@ -250,7 +251,7 @@ export default function LernzettelScreen({ block, cards, goalType, onDone, subje
                 cursor: 'pointer',
               }}
             >
-              ↗ Mit Kommilitonen teilen
+              <Icon name="share" size={16} style={{ marginRight: '8px', verticalAlign: '-3px' }} />Mit Kommilitonen teilen
             </button>
           )}
           <button
@@ -284,7 +285,7 @@ export default function LernzettelScreen({ block, cards, goalType, onDone, subje
                 cursor: 'pointer',
               }}
             >
-              🗺 Zusammenhänge visualisieren
+              <Icon name="map" size={16} style={{ marginRight: '8px', verticalAlign: '-3px' }} />Zusammenhänge visualisieren
             </button>
           )}
         </div>

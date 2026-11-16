@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import Icon from '../../components/Icon.jsx';
 import LumoMascot from '../../components/LumoMascot.jsx';
 import ErrorBanner from '../../components/ErrorBanner.jsx';
 import NotesPanel from '../../components/NotesPanel.jsx';
@@ -298,7 +299,7 @@ export default function ExplainChatPhase({ block, depth, onDone, onExit }) {
             gap: '12px',
           }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-              <span style={{ fontSize: '20px', flexShrink: 0, marginTop: '1px' }}>💡</span>
+              <Icon name="bulb" size={20} style={{ color: 'var(--gold)', marginTop: '1px' }} />
               <div>
                 <p style={{ margin: '0 0 4px', fontSize: '15px', fontWeight: '600', color: 'var(--gold)' }}>
                   Ich glaube, du hast das.
@@ -414,7 +415,7 @@ export default function ExplainChatPhase({ block, depth, onDone, onExit }) {
                 animation: isListening ? 'lumo-pulse 1.2s ease-in-out infinite' : 'none',
               }}
             >
-              🎤
+              <Icon name="mic" size={20} />
             </button>
           )}
 

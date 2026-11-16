@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import Icon from '../../components/Icon.jsx';
 import LumoMascot from '../../components/LumoMascot.jsx';
 import { getBlockColor } from '../../utils/subjectColors.js';
 
@@ -173,7 +174,7 @@ export default function SessionSummaryScreen({ block, evaluation, onContinue, on
             borderRadius: '12px',
             width: '100%',
           }}>
-            <span style={{ fontSize: '14px', opacity: 0.7 }}>🔁</span>
+            <Icon name="repeat" size={16} style={{ color: 'var(--text-secondary)' }} />
             <p style={{
               fontSize: '13px',
               color: 'var(--text-secondary)',
