@@ -152,6 +152,31 @@ const app = express();
 // Cloudflare + Render LB — kein Angreifer kann sich einschleichen.
 app.set('trust proxy', 2);
 
+// ─── TEMPORÄR: Messung für das schwankende Rate-Limit ─────────────────────────
+// Live schwankt der RateLimit-Zähler (195, 188, 194, 187) – vermutlich sieht
+// der Limiter mehr als einen Schlüssel pro Nutzer. Für die ersten 10 Requests
+// nach dem Start loggen wir, was Express als Client-IP ableitet. Nur Logs,
+// keine Antwort, kein Verhalten geändert.
+// ACHTUNG: IP-Adressen sind personenbezogen. Dieser Block muss nach der Messung
+// wieder entfernt werden (eigener PR, nicht mit anderen Änderungen mischen).
+let _debugProxyLogged = 0;
+const DEBUG_PROXY_MAX_LOGS = 10;
+app.use((req, _res, next) => {
+  if (_debugProxyLogged < DEBUG_PROXY_MAX_LOGS) {
+    _debugProxyLogged++;
+    console.log('[debug trust-proxy]', JSON.stringify({
+      n: _debugProxyLogged,
+      path: req.path,
+      ip: req.ip,
+      ips: req.ips,
+      xff: req.headers['x-forwarded-for'] ?? null,
+      socket: req.socket?.remoteAddress ?? null,
+    }));
+  }
+  next();
+});
+// ─── Ende TEMPORÄR ────────────────────────────────────────────────────────────
+
 // S-02: HTTP Security Headers via Helmet
 // Helmet setzt eine sichere Basis für HTTP-Headers. Die CSP wird nach den
 // tatsächlich benötigten Quellen kalibriert (kein Wildcard, kein unsafe-eval
