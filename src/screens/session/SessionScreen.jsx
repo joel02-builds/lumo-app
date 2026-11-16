@@ -13,6 +13,7 @@ import ElaborationPhase from './ElaborationPhase.jsx';
 import SessionTimer from '../../components/SessionTimer.jsx';
 import BreakSuggestionToast from '../../components/BreakSuggestionToast.jsx';
 import { getBlockColor } from '../../utils/subjectColors.js';
+import { toSessionMood } from '../../utils/sessionMood.js';
 
 const PHASES = {
   FOCUS_RITUAL: 'focus-ritual',
@@ -164,7 +165,7 @@ export default function SessionScreen({ block, blocks, flashcards, goalType, spr
         onDone={() => setPhase(PHASES.ELABORATION)}
         block={block}
         allBlocks={blocks}
-        onMoodSet={setSessionMood}
+        onMoodSet={(ritualMood) => setSessionMood(toSessionMood(ritualMood))}
         sprintMode={sprintMode}
         onBack={onPause}
       />

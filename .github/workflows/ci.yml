@@ -26,7 +26,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests (219 tests, 9 suites)
+      - name: Run tests (224 tests, 10 suites)
         run: npm test
         # security-hardening.test.js ausgelassen — 4 vorbestehende
         # Audit-Findings (S-04–S-07) noch nicht gefixt; werden

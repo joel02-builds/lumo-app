@@ -45,17 +45,21 @@ export default function BetaFeedbackButton() {
         onClick={() => setOpen(true)}
         aria-label="Feedback geben"
         style={{
+          // Schmale Lasche am rechten Rand statt runder Blase über dem Inhalt:
+          // sie liegt im Seitenrand (mind. 32px auf dem Handy) und verdeckt
+          // dadurch keine Karten oder Buttons mehr.
           position: 'fixed',
-          bottom: '84px',
-          right: '20px',
+          bottom: '96px',
+          right: 0,
           zIndex: 900,
-          width: '44px',
-          height: '44px',
-          borderRadius: '50%',
+          width: '28px',
+          height: '48px',
+          borderRadius: '12px 0 0 12px',
           background: 'var(--bg-card)',
           border: '1px solid var(--border)',
+          borderRight: 'none',
           color: 'var(--text-secondary)',
-          fontSize: '18px',
+          padding: 0,
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
@@ -72,7 +76,14 @@ export default function BetaFeedbackButton() {
           e.currentTarget.style.color = 'var(--text-secondary)';
         }}
       >
-        💬
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M20 12c0 4-3.6 7-8 7-1.2 0-2.3-.2-3.3-.6L4 20l1.3-3.6C4.5 15.2 4 13.7 4 12c0-4 3.6-7 8-7s8 3 8 7Z"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinejoin="round"
+          />
+        </svg>
       </button>
 
       {/* Feedback Sheet */}

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import LumoMascot from '../../components/LumoMascot.jsx';
 import Button from '../../components/Button.jsx';
+import Icon from '../../components/Icon.jsx';
 import { getRecommendedBlock } from '../../utils/blockProgress.js';
 import { getBlockColor, SUBJECT_COLORS } from '../../utils/subjectColors.js';
 import { getRemainingFreeBlocks, isFreeLimitReached, isApproachingLimit } from '../../utils/planLimits.js';
@@ -149,12 +150,13 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
 
   return (
     <div className="screen" style={{ justifyContent: 'flex-start', paddingTop: 'clamp(20px, 8vw, 80px)' }}>
-      {/* Fachfarbe-Picker — kleiner Farbkreis oben-links */}
+      {/* Fachfarbe-Picker — kleiner Farbkreis oben rechts neben den Einstellungen.
+          Oben links lag er genau auf dem Lumo-Logo und verdeckte es. */}
       {onSetSubjectColor && (
         <div style={{
           position: 'fixed',
-          top: 'calc(16px + env(safe-area-inset-top, 0px))',
-          left: '16px',
+          top: 'calc(20px + env(safe-area-inset-top, 0px))',
+          right: '64px',
           zIndex: 40,
         }}>
           <button
@@ -162,11 +164,11 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
             aria-label="Fachfarbe ändern"
             title="Fachfarbe ändern"
             style={{
-              width: '36px',
-              height: '36px',
+              width: '28px',
+              height: '28px',
               borderRadius: '50%',
               background: projectColor,
-              border: '2.5px solid rgba(255,255,255,0.22)',
+              border: '2px solid rgba(255,255,255,0.22)',
               cursor: 'pointer',
               padding: 0,
               outline: 'none',
@@ -187,8 +189,8 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
               />
               <div style={{
                 position: 'absolute',
-                top: '44px',
-                left: '0',
+                top: '40px',
+                right: '0',
                 background: 'var(--bg-elevated)',
                 border: '1px solid var(--border)',
                 borderRadius: '14px',
@@ -315,7 +317,8 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
               color: 'var(--gold)',
               fontWeight: '700',
             }}>
-              🔥 {streak} {streak === 1 ? 'Tag' : 'Tage'} am Stück
+              <Icon name="flame" size={16} />
+              {streak} {streak === 1 ? 'Tag' : 'Tage'} am Stück
             </div>
           );
         })()}
@@ -540,7 +543,7 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
             alignItems: 'center',
             gap: '12px',
           }}>
-            <span style={{ fontSize: '20px', flexShrink: 0 }}>⚡</span>
+            <Icon name="bolt" size={20} style={{ color: 'var(--gold)' }} />
             <div>
               <p style={{ fontSize: '13px', fontWeight: '700', color: 'var(--gold)', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
                 Sprint-Modus aktiv
@@ -600,9 +603,28 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
                       {b.title}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                        {statusLabel(b)}
-                      </span>
+                      {/* „Jetzt" steht in der Meta-Zeile statt neben dem Titel:
+                          rechts neben dem Titel nahm das Badge ihm auf dem Handy
+                          so viel Breite, dass fast jeder Titel umbrach. */}
+                      {isNext ? (
+                        <span style={{
+                          fontSize: '10px',
+                          fontWeight: '700',
+                          color: color,
+                          background: `${color}22`,
+                          padding: '2px 8px',
+                          borderRadius: '999px',
+                          letterSpacing: '0.04em',
+                          textTransform: 'uppercase',
+                          whiteSpace: 'nowrap',
+                        }}>
+                          Jetzt
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                          {statusLabel(b)}
+                        </span>
+                      )}
                       {b.difficulty && (
                         <span style={{
                           fontSize: '10px',
@@ -623,29 +645,15 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
                       )}
                     </div>
                   </div>
-                  {isNext && (
-                    <span style={{
-                      fontSize: '11px',
-                      fontWeight: '700',
-                      color: color,
-                      background: `${color}22`,
-                      padding: '4px 10px',
-                      borderRadius: '20px',
-                      letterSpacing: '0.5px',
-                      whiteSpace: 'nowrap',
-                    }}>
-                      Jetzt
-                    </span>
-                  )}
-                  <span style={{
-                    color: 'var(--text-secondary)',
-                    fontSize: '12px',
-                    transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.2s ease',
-                    flexShrink: 0,
-                  }}>
-                    ▾
-                  </span>
+                  <Icon
+                    name="chevronDown"
+                    size={16}
+                    style={{
+                      color: 'var(--text-secondary)',
+                      transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 0.2s ease',
+                    }}
+                  />
                 </button>
 
                 {/* Ausgeklappter Inhalt — id für aria-controls */}
@@ -828,9 +836,6 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
           })}
         </div>
 
-        {/* Platzhalter damit Inhalt nicht vom Sticky-CTA verdeckt wird */}
-        {next && !allDone && <div style={{ height: '80px', flexShrink: 0 }} />}
-
         {allDone && (
           <p style={{
             color: 'var(--green)',
@@ -865,7 +870,7 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
               position: 'relative',
             }}
           >
-            <span style={{ fontSize: '24px' }}>🃏</span>
+            <Icon name="cards" size={22} style={{ color: 'var(--gold)' }} />
             <div style={{ flex: 1 }}>
               <p style={{ fontSize: '15px', fontWeight: '600', color: dueCount > 0 ? 'var(--gold)' : 'var(--text-primary)', margin: '0 0 2px' }}>
                 {dueCount > 0 ? `${dueCount} Karten heute fällig` : 'Karteikarten wiederholen'}
@@ -1014,6 +1019,11 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
           </div>
         )}
 
+        {/* Platzhalter damit Inhalt nicht vom Sticky-CTA verdeckt wird.
+            Steht bewusst ganz am Ende: mitten in der Liste riss er ein
+            80px-Loch zwischen Blöcken und Karteikarten. */}
+        {next && !allDone && <div style={{ height: '64px', flexShrink: 0 }} />}
+
       </div>
 
       {/* ── Sticky CTA (Fitts' Law) ──────────────────────────────────────────
@@ -1034,11 +1044,13 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
         }}>
           <Button
             onClick={() => onStartBlock(next.id)}
+            aria-label={`Weiter lernen: ${next.title}`}
             style={{ width: '100%', maxWidth: '560px', boxShadow: '0 4px 24px rgba(0,0,0,0.35)' }}
           >
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-              Weiter mit „{next.title}" →
-            </span>
+            {/* Der Blocktitel passte auf dem Handy nie in den Button und wurde
+                abgeschnitten. Welcher Block gemeint ist, zeigt das „Jetzt"-Badge
+                in der Liste; Screenreader bekommen den Titel per aria-label. */}
+            Weiter lernen →
           </Button>
         </div>
       )}

@@ -1,6 +1,7 @@
 import { exportProject, importProject, exportProgressReport } from '../utils/projectExport.js';
 import { deleteServerState } from '../utils/serverSync.js';
 import { useRef, useState } from 'react';
+import Icon from '../components/Icon.jsx';
 
 export default function SettingsScreen({ onBack, blocksAnalyzedTotal, onShowLegal, onResetOnboarding }) {
   const importRef = useRef(null);
@@ -67,25 +68,25 @@ export default function SettingsScreen({ onBack, blocksAnalyzedTotal, onShowLega
           setMessage(result.reason || 'Export fehlgeschlagen.');
         }
       },
-      icon: '↗',
+      icon: 'share',
     },
     {
       label: 'Backup exportieren',
       sub: 'Speichere alle Daten als Sicherungsdatei (JSON).',
       action: () => { exportProject(); setMessage('Backup gespeichert.'); },
-      icon: '↓',
+      icon: 'download',
     },
     {
       label: 'Backup importieren',
       sub: 'Lade einen gespeicherten Lernstand.',
       action: () => importRef.current?.click(),
-      icon: '↑',
+      icon: 'upload',
     },
     {
       label: 'Feedback geben',
       sub: 'Sag mir was du dir wünschst oder was nicht funktioniert.',
       action: () => window.open('mailto:feedback@lumo-app.de?subject=Lumo Feedback', '_blank'),
-      icon: '✉',
+      icon: 'mail',
     },
   ];
 
@@ -118,7 +119,7 @@ export default function SettingsScreen({ onBack, blocksAnalyzedTotal, onShowLega
                 textAlign: 'left',
               }}
             >
-              <span style={{ fontSize: '20px', color: 'var(--gold)', flexShrink: 0 }}>{item.icon}</span>
+              <Icon name={item.icon} size={20} style={{ color: 'var(--gold)' }} />
               <div>
                 <p style={{ fontSize: '15px', fontWeight: '600', color: 'var(--text-primary)', margin: '0 0 2px' }}>{item.label}</p>
                 <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0' }}>{item.sub}</p>

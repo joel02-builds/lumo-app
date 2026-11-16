@@ -713,7 +713,7 @@ export default function FlashcardScreen({ flashcards, onUpdateFlashcard, onRemov
   const subjectGroups = [...new Set(flashcards.map(c => c.subject).filter(Boolean))];
 
   return (
-    <div className="screen" style={{ justifyContent: 'flex-start', paddingTop: '16px' }}>
+    <div className="screen" style={{ justifyContent: 'flex-start', paddingTop: '64px' }}>
       <div className="screen-content" style={{ maxWidth: '520px', gap: '14px' }}>
 
         {/* Header */}
