@@ -97,7 +97,7 @@ npm ci                 # install exactly what package-lock.json says (needs Node
 npm run dev            # frontend http://localhost:5173 + backend http://localhost:3001
 npm run build          # production build into dist/
 npm start              # run the server only (production mode needs NODE_ENV, DB_PATH, FRONTEND_URL)
-npm test               # 224 tests in 10 files, no network, no API cost (Anthropic client is mocked)
+npm test               # 227 tests in 11 files, no network, no API cost (Anthropic client is mocked)
 node --test tests/input-validation.test.js    # run one test file
 ```
 
@@ -110,7 +110,7 @@ node --test tests/input-validation.test.js    # run one test file
 ### On the owner's Windows machine (checked 2026-11-13)
 
 - Installed Node is 24, not 22, and there are no C++ build tools. Plain `npm ci` fails while compiling `better-sqlite3` **and leaves `node_modules` empty**. Use `npm ci --ignore-scripts`. Build, dev server and SQLite worked after that.
-- `npm test` passes completely (224 tests) with `npm ci --ignore-scripts`.
+- `npm test` passes completely with `npm ci --ignore-scripts`.
 - Work is often done in cloud sessions and pushed to GitHub, so this folder can be far behind. **Run `git fetch` and `git status -sb` before reading or changing anything.** If it says "behind", say so and fast-forward first.
 
 ## 5. Coding rules
@@ -205,7 +205,7 @@ node --test tests/input-validation.test.js    # run one test file
 2. **Trusting `npm run build` as proof.** The build passed while the app crashed on load. → Always open the app and read the browser console.
 3. **Running plain `npm ci` on the Windows machine.** It wipes `node_modules` and fails. → `npm ci --ignore-scripts`; if an install fails, check that `node_modules` still exists.
 4. **Guessing field names.** `projectName` vs `topic`, `status === 'completed'` vs an invented `completed` flag, `subject_color` vs `subjectColor`. → Open `appReducer.js` and the schema before using a field.
-5. **Adding a prop on one side only.** → Follow the prop from `App.jsx` to the component (see known issues 1 and 2).
+5. **Adding a prop on one side only.** → Follow the prop from `App.jsx` to the component (`DashboardScreen` once read two props `App.jsx` never passed).
 6. **Using red, or a hard-coded gold.** → Section 6. Search your diff for `red`, `#D4A843`, `rgba(212`.
 7. **Declaring a derived `const` below a hook that reads it.** → Derived values first.
 8. **Passing an inline arrow function from `SessionScreen` into a phase effect.** → `useCallback`.
@@ -215,7 +215,7 @@ node --test tests/input-validation.test.js    # run one test file
 12. **Leaking technical errors or English text into the UI.** → German, warm, short.
 13. **Reaching for libraries** (router, Tailwind, Redux, zod, axios, icon packs, TypeScript). → Not without being asked; `validation.js` exists precisely to avoid a dependency.
 14. **Using `PORT` in dev, `100vh`, or `app.get('*')`** (Express 5 rejects it). → `LUMO_API_PORT`, `var(--dvh)`, path-less `app.use`.
-15. **Burning API money.** Every card, hint, grade and re-explanation is a paid call. → Tests use the mock client (`__setClientForTesting`). In the browser, test AI flows once, on purpose. Do not add background or "pre-warm" calls.
+15. **Burning API money.** Every card, hint, grade and re-explanation is a paid call. → Tests use the mock client (`__setClientForTesting`). In the browser, test AI flows once, on purpose. Do not add background or "pre-warm" calls; `tests/dashboard-no-ai.test.js` guards the dashboard.
 16. **Weakening security to make something work** (CSP, CORS, limits, cookie flags). → Find the specific allowance needed and name it.
 17. **Editing an old DB migration, or changing the meaning of saved data.** Real users have data. → New migration; tolerate old shapes.
 18. **Treating audit reports or code comments as current truth.** → Verify in code. Report scores are not facts about today.
@@ -228,19 +228,17 @@ node --test tests/input-validation.test.js    # run one test file
 
 Check each still exists before relying on it. Do not fix them unasked, but do not copy the pattern either.
 
-1. `DashboardScreen` reads `flashcards` and `projects` props that `App.jsx` never passes, so its due-card count is always 0 and cross-subject totals are incomplete.
-2. `exportProgressReport` in `utils/projectExport.js` reads `project.topic`, `b.completed`, `b.completionCount` and goal `'essay'`. None exist in saved data, so the report shows 0 %.
-3. `DashboardScreen` fires a `generateCards` call "to warm the cache", but there is no cache. It pays for a result that is thrown away.
-4. "Nochmal versuchen" and "Neu analysieren" call `runAnalysis` without `sprintMode`, which silently turns sprint mode off.
-5. The session middleware sets the `lumo_uid` cookie on every `/api/` request, including the `/api/health` keep-alive ping, before the user has answered the cookie banner.
-6. Streak logic exists in `App.jsx`, `WelcomeBackScreen`, `DashboardScreen`, `ProjectsScreen` and `server/db.js`. `WelcomeBackScreen` writes the streak on mount.
-7. Notes use two schemes (`lumo_notes` and `lumo_note_<block>_<concept>`). Export and "clear" each cover only one.
-8. `SAVE_CURRENT_PROJECT` / `LOAD_PROJECT` do not carry `goalDate`, `sprintMode`, `learningStyle`; switching subjects keeps the previous subject's values.
-9. The card prompt for mood `bad` says "set `pretest_question` to null", but the schema type is `string`.
-10. The sync-error bar in `App.jsx` is red (`#b91c1c`).
-11. The reducer writes to `localStorage` in `CONFIRM_MATERIAL` and `RESET_TO_ONBOARDING`.
-12. Unused: `components/LumoMascot.css`, `screens/onboarding/OnboardingScreen2.jsx`, `calculateNextReview` in `sm2.js`, `PRETEST_SYSTEM`, actions `GO_TO_STEP2` and `BACK_TO_STEP1`, prop `blockCount` of `AnalyzingScreen`, the `.png` mascot files.
-13. `render.yaml` sets neither `DB_PATH` nor `FRONTEND_URL`; with `NODE_ENV=production` the server exits without `DB_PATH`.
+1. `exportProgressReport` in `utils/projectExport.js` reads `project.topic`, `b.completed`, `b.completionCount` and goal `'essay'`. None exist in saved data, so the report shows 0 %.
+2. "Nochmal versuchen" and "Neu analysieren" call `runAnalysis` without `sprintMode`, which silently turns sprint mode off.
+3. The session middleware sets the `lumo_uid` cookie on every `/api/` request, including the `/api/health` keep-alive ping, before the user has answered the cookie banner.
+4. Streak logic exists in `App.jsx`, `WelcomeBackScreen`, `DashboardScreen`, `ProjectsScreen` and `server/db.js`. `WelcomeBackScreen` writes the streak on mount.
+5. Notes use two schemes (`lumo_notes` and `lumo_note_<block>_<concept>`). Export and "clear" each cover only one.
+6. `SAVE_CURRENT_PROJECT` / `LOAD_PROJECT` do not carry `goalDate`, `sprintMode`, `learningStyle`; switching subjects keeps the previous subject's values.
+7. The card prompt for mood `bad` says "set `pretest_question` to null", but the schema type is `string`.
+8. The sync-error bar in `App.jsx` is red (`#b91c1c`).
+9. The reducer writes to `localStorage` in `CONFIRM_MATERIAL` and `RESET_TO_ONBOARDING`.
+10. Unused: `components/LumoMascot.css`, `screens/onboarding/OnboardingScreen2.jsx`, `calculateNextReview` in `sm2.js`, `PRETEST_SYSTEM`, actions `GO_TO_STEP2` and `BACK_TO_STEP1`, prop `blockCount` of `AnalyzingScreen`, the `.png` mascot files.
+11. `render.yaml` sets neither `DB_PATH` nor `FRONTEND_URL`; with `NODE_ENV=production` the server exits without `DB_PATH`.
 
 ## 10. How to work here
 

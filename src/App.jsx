@@ -337,6 +337,11 @@ export default function App() {
     );
   }, [state.projects, state.blocks, state.activeProjectId]);
 
+  const otherProjects = useMemo(
+    () => state.projects.filter(p => p.id !== state.activeProjectId),
+    [state.projects, state.activeProjectId]
+  );
+
   const handleViewSettings = useCallback(() => {
     dispatch({ type: 'VIEW_SETTINGS' });
   }, []);
@@ -567,6 +572,10 @@ export default function App() {
           onSettings={handleViewSettings}
           blocksAnalyzedTotal={state.blocksAnalyzedTotal}
           flashcardsCount={state.flashcards.length}
+          flashcards={state.flashcards}
+          // Aktives Projekt ausnehmen: seine Blöcke kommen schon über `blocks`,
+          // sonst zählt das Dashboard sie in den Gesamtwerten doppelt.
+          projects={otherProjects}
           onViewFlashcards={handleViewFlashcards}
           subjectColor={state.subjectColor}
           onSetSubjectColor={(color) => dispatch({ type: 'SET_SUBJECT_COLOR', payload: color })}

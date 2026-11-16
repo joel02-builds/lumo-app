@@ -196,8 +196,7 @@
     "fix": "PNG-Dateien aus public/mascot/ entfernen, nur WebP behalten. Browser-Support für WebP: Chrome 32+, Firefox 65+, Safari 14+ — deckend für Zielgruppe. Fallback für ältere Safari-Versionen (<14) via <picture>-Element mit WebP + PNG-Fallback wenn nötig.",
     "konfidenz": "hoch",
     "status": "CONFIRMED"
-  }
-,
+  },
   {
     "id": "F019",
     "bereich": "5 Sicherheit",
@@ -301,5 +300,29 @@
     "stand": "beide",
     "konfidenz": "hoch",
     "status": "CONFIRMED"
+  },
+  {
+    "id": "F028",
+    "bereich": "7 Performance",
+    "schwere": "S2",
+    "befund": "DashboardScreen feuerte bei jedem Öffnen lumoApi.generateCards zum \"Vorwärmen\" eines Caches, den es nicht gibt. Das Ergebnis wurde verworfen; jeder Dashboard-Besuch kostete einen bezahlten Claude-Aufruf und belegte einen Slot im Concurrency-Gate (429 im Browser-Log beobachtet).",
+    "beleg": "src/screens/dashboard/DashboardScreen.jsx useEffect([next?.id]) vor dem Fix; Browser-Konsole 2026-11-16: 429 Too Many Requests beim Durchklicken.",
+    "reproduktion": "Dashboard mit einem offenen Block öffnen, Netzwerk-Tab: POST /api/generate-cards.",
+    "fix": "Aufruf entfernt; tests/dashboard-no-ai.test.js verhindert Wiedereinführung.",
+    "konfidenz": "hoch",
+    "status": "FIXED",
+    "fix_nachweis": "Browser 2026-11-16: Dashboard geöffnet, performance.getEntriesByType(resource) zeigt 0 Aufrufe an /api/generate|analyze|explain|evaluate."
+  },
+  {
+    "id": "F029",
+    "bereich": "2 QA und Funktion",
+    "schwere": "S3",
+    "befund": "DashboardScreen liest die Props flashcards und projects, App.jsx übergab sie nie. Der Fällig-Zähler stand immer auf 0, die Gesamtwerte ignorierten andere Fächer.",
+    "beleg": "src/App.jsx <DashboardScreen …> ohne flashcards/projects vor dem Fix.",
+    "reproduktion": "Fällige Karteikarten anlegen, Dashboard öffnen: Text \"Karteikarten wiederholen\" statt \"N Karten heute fällig\".",
+    "fix": "Props übergeben; aktives Projekt aus projects ausgenommen (sonst Doppelzählung).",
+    "konfidenz": "hoch",
+    "status": "FIXED",
+    "fix_nachweis": "Browser 2026-11-16: mit 3 neuen Karten zeigt das Dashboard \"3 Karten heute fällig\"."
   }
 ]
