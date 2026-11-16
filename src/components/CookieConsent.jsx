@@ -23,7 +23,7 @@
  * – Zwei klare Optionen — keine Dark Patterns
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const CONSENT_KEY = 'lumo_cookie_consent';
 
@@ -48,6 +48,24 @@ export function useCookieConsent() {
 
 export default function CookieConsent({ onAccept, onDecline }) {
   const [visible, setVisible] = useState(false);
+  const bannerRef = useRef(null);
+
+  // Der Banner liegt fixiert über dem Seitenende und verdeckte auf dem
+  // Onboarding-Startbildschirm den Start-Button. Er meldet deshalb seine Höhe
+  // als CSS-Variable --cookie-banner-h; das Onboarding endet darüber.
+  useEffect(() => {
+    const el = bannerRef.current;
+    if (!visible || !el) return undefined;
+    const root = document.documentElement;
+    const publish = () => root.style.setProperty('--cookie-banner-h', `${Math.ceil(el.getBoundingClientRect().height)}px`);
+    publish();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(publish) : null;
+    ro?.observe(el);
+    return () => {
+      ro?.disconnect();
+      root.style.removeProperty('--cookie-banner-h');
+    };
+  }, [visible]);
 
   useEffect(() => {
     // Verzögerung: erst nach 1.8s zeigen, damit Hook+Intro ungestört bleiben
@@ -57,6 +75,7 @@ export default function CookieConsent({ onAccept, onDecline }) {
 
   return (
     <div
+      ref={bannerRef}
       role="dialog"
       aria-label="Cookie-Einwilligung"
       aria-modal="false"

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import Icon from '../../components/Icon.jsx';
 import LumoMascot from '../../components/LumoMascot.jsx';
 
 // ─── Huberman Focus Protocol (in-session breath primer) ───────────────────
@@ -350,7 +351,7 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
                 margin: '0 0 4px',
                 lineHeight: '1.3',
               }}>
-                {mood === 'focused' && '⚡ Alright — heute gehen wir rein.'}
+                {mood === 'focused' && 'Alright — heute gehen wir rein.'}
                 {mood === 'tired' && 'Passt. Dann heute kurz und einfach.'}
                 {mood === 'stressed' && 'Verstanden. Ich halte es übersichtlich.'}
                 {mood === 'overwhelmed' && 'Kein Problem — Schritt für Schritt.'}
@@ -461,7 +462,7 @@ export default function FocusRitualPhase({ onDone, block, allBlocks, sessionStat
                   marginTop: '4px',
                   width: 'fit-content',
                 }}>
-                  <span style={{ fontSize: '12px' }}>⚡</span>
+                  <Icon name="bolt" size={14} style={{ color: 'var(--gold)' }} />
                   <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--gold)', letterSpacing: '0.5px' }}>
                     Sprint-Modus
                   </span>

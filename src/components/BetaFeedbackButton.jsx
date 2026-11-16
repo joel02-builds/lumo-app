@@ -49,10 +49,14 @@ export default function BetaFeedbackButton() {
           // sie liegt im Seitenrand (mind. 32px auf dem Handy) und verdeckt
           // dadurch keine Karten oder Buttons mehr.
           position: 'fixed',
-          bottom: '96px',
+          // Hebt sich über den Cookie-Banner (meldet seine Höhe als --cookie-banner-h),
+          // sonst überdeckt die Lasche dessen rechten Rand.
+          bottom: 'calc(96px + var(--cookie-banner-h, 0px))',
           right: 0,
           zIndex: 900,
-          width: '28px',
+          // 24 px = genau der Seitenrand (24 px) der Onboarding-Inhalte: die Lasche
+          // liegt im Rand und berührt keinen Button.
+          width: '24px',
           height: '48px',
           borderRadius: '12px 0 0 12px',
           background: 'var(--bg-card)',
@@ -76,7 +80,7 @@ export default function BetaFeedbackButton() {
           e.currentTarget.style.color = 'var(--text-secondary)';
         }}
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path
             d="M20 12c0 4-3.6 7-8 7-1.2 0-2.3-.2-3.3-.6L4 20l1.3-3.6C4.5 15.2 4 13.7 4 12c0-4 3.6-7 8-7s8 3 8 7Z"
             stroke="currentColor"

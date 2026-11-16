@@ -97,7 +97,7 @@ npm ci                 # install exactly what package-lock.json says (needs Node
 npm run dev            # frontend http://localhost:5173 + backend http://localhost:3001
 npm run build          # production build into dist/
 npm start              # run the server only (production mode needs NODE_ENV, DB_PATH, FRONTEND_URL)
-npm test               # 303 tests in 16 files, no network, no API cost (Anthropic client is mocked)
+npm test               # 306 tests in 17 files, no network, no API cost (Anthropic client is mocked)
 node --test tests/input-validation.test.js    # run one test file
 ```
 
@@ -185,7 +185,8 @@ node --test tests/input-validation.test.js    # run one test file
 - Motion is subtle and short. `prefers-reduced-motion` is handled globally; do not bypass it with JS-driven animation.
 - Accessibility: real `<button>`s, `aria-label` on icon-only buttons, keep the gold `:focus-visible` outline.
 - Mascot: `<LumoMascot state size />`, `.webp` files only.
-- Icons: use `<Icon name size />` from `src/components/Icon.jsx` (inline SVG, inherits text colour). Do not add new emoji as icons; they look different on every platform. Many old emoji icons remain and are replaced step by step.
+- Icons: use `<Icon name size />` from `src/components/Icon.jsx` (inline SVG, inherits text colour). Do not add new emoji as icons; they look different on every platform. Functional icons in the session and onboarding are replaced. Emoji that stay on purpose, because they are content and not UI: the four mood faces in `FocusRitualPhase`, the quiz chips in `OnboardingScreen1`, celebrations (✨ 🎉 🏆), the exam grades and the feedback categories. Dashboard, Fächer, Lernstand and Einstellungen use `Icon`; the flashcard screen and a few banners still use emoji.
+- The cookie banner publishes its height as `--cookie-banner-h` on `<html>`; `.ob-screen` and the feedback tab keep clear of it. Use the variable for any new bottom-aligned element that must not sit under the banner.
 - The fixed wordmark has a fade strip behind it (`LumoWordmark.jsx`). A screen whose content starts at the top needs about 64px top padding so its header does not sit under the logo.
 
 **Misconceptions.** `/api/evaluate-understanding` returns `misconceptions` (array of strings, usually empty; a gap is not a misconception). The server normalises it (`normalizeMisconceptions`), the UI shows it in amber above "Das fehlte noch". The card-level feedback (`evaluate-card-answer`) does not name misconceptions yet.

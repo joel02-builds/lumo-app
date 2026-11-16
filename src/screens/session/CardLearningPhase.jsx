@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import Icon from '../../components/Icon.jsx';
 import LumoMascot from '../../components/LumoMascot.jsx';
 import ErrorBanner from '../../components/ErrorBanner.jsx';
 import CardVisual from '../../components/CardVisual.jsx';
@@ -1151,7 +1152,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                         gap: '10px',
                       }}
                     >
-                      <span>{speaking ? '⏹' : '🔊'}</span>
+                      <Icon name={speaking ? 'stop' : 'speaker'} size={18} />
                       {speaking ? 'Stoppen' : 'Vorlesen'}
                     </button>
                   )}
@@ -1174,7 +1175,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                       gap: '10px',
                     }}
                   >
-                    <span>📝</span>
+                    <Icon name="note" size={18} />
                     {noteText ? 'Notiz bearbeiten' : 'Notiz hinzufügen'}
                   </button>
                   <button
@@ -1196,7 +1197,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                       gap: '10px',
                     }}
                   >
-                    <span>▶</span>
+                    <Icon name="play" size={18} />
                     Video-Erklärung
                   </button>
                 </div>
@@ -1620,7 +1621,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                   lineHeight: '1.5',
                   marginBottom: '12px',
                 }}>
-                  💡 {hint}
+                  <Icon name="bulb" size={16} style={{ marginRight: '6px', verticalAlign: '-3px' }} />{hint}
                 </div>
               )}
 
@@ -1642,7 +1643,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
                     transition: 'opacity 0.15s ease',
                   }}
                 >
-                  {hintLoading ? 'Lumo denkt …' : '💡 Ich brauche einen Hinweis'}
+                  {hintLoading ? 'Lumo denkt …' : (<><Icon name="bulb" size={14} style={{ marginRight: '6px', verticalAlign: '-2px' }} />Ich brauche einen Hinweis</>)}
                 </button>
               )}
 

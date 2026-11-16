@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import Icon from '../../components/Icon.jsx';
 import confetti from 'canvas-confetti';
 import Button from '../../components/Button.jsx';
 import LernzettelInline from '../../components/LernzettelInline.jsx';
@@ -322,7 +323,7 @@ export default function BlockCompletePhase({ block, result, cards, onContinue, o
             color: 'var(--gold)',
             margin: '0 0 14px',
           }}>
-            ⚡ Sprint abgeschlossen
+            <Icon name="bolt" size={13} style={{ marginRight: '6px', verticalAlign: '-2px' }} />Sprint abgeschlossen
           </p>
           <p style={{
             fontSize: '15px',
