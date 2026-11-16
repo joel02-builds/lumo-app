@@ -32,17 +32,26 @@
 import { it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash, randomUUID } from 'crypto';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 // ─── Konstanten ───────────────────────────────────────────────────────────────
 const SESSION_TOKEN_RE = /^[0-9a-f]{64}$/;   // 64-char hex = 32-byte Token
 const LEGACY_UUID_RE   = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 // ─── Server-Handles ───────────────────────────────────────────────────────────
-let server, port, db;
+let server, port, db, testDbDir;
 
 before(async () => {
   // Env vor dem Import setzen: server/index.js prüft ANTHROPIC_API_KEY beim Start
   process.env.ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || 'test-key-sec-001';
+
+  // Eigene Test-DB im Temp-Ordner. Vorher teilte sich dieser Test server/lumo.db mit
+  // dem Dev-Server und den anderen Testdateien (parallel) – Test 7 und 14 waren
+  // dadurch gelegentlich rot. DB_PATH muss VOR dem Import von server/index.js stehen.
+  testDbDir = mkdtempSync(join(tmpdir(), 'lumo-sec-'));
+  process.env.DB_PATH = testDbDir;
 
   // App importieren — initialisiert DB als Nebeneffekt (ES-Modul-Singleton)
   const { app } = await import('../server/index.js');
@@ -50,6 +59,7 @@ before(async () => {
   // DB-Instanz holen — selbe Singleton-Instanz die initDB() angelegt hat
   const dbMod = await import('../server/db.js');
   db = dbMod.db;
+  assert.ok(String(db.name).startsWith(testDbDir), 'Test muss auf der Temp-DB laufen, nicht auf server/lumo.db');
 
   // Express auf zufälligem Port starten (kein Konflikt mit api-integration.test)
   server = await new Promise(r => {
@@ -60,6 +70,8 @@ before(async () => {
 
 after(async () => {
   await new Promise(r => server?.close(r));
+  try { db?.close(); } catch { /* schon zu */ }
+  try { rmSync(testDbDir, { recursive: true, force: true }); } catch { /* Temp räumt das System */ }
 });
 
 // ─── HTTP-Helfer ──────────────────────────────────────────────────────────────
