@@ -133,7 +133,8 @@
     "reproduktion": "Session durchlaufen, in Check-Phase eine schwache Antwort eingeben → Ergebnis 'unsicher' → Button zeigt 'Verstanden, weiter'.",
     "fix": "Button-Text ändern: bei 'unsicher' → 'Weiter, ich übe nach.' oder 'Notiert, weiter →'. Status-Badge ('◐ Fast da') ist bereits korrekt — nur Button-Text ist missverständlich.",
     "konfidenz": "hoch",
-    "status": "CONFIRMED"
+    "status": "FIXED",
+    "fix_nachweis": "Buttons heißen bei Lücken jetzt \"Notiert, weiter →\" (BlockCompletePhase, CheckUnderstandingPhase). Browser 2026-11-16 gesehen; tests/session-ux.test.js SU-03."
   },
   {
     "id": "F013",
@@ -144,7 +145,8 @@
     "reproduktion": "Session durchlaufen — zwischen Check-Ergebnis und Block-Abschluss erscheint keine Sicher/Unsicher-Abfrage an den Nutzer.",
     "fix": "Nach dem AI-Feedback eine kurze Selbsteinschätzung einbauen ('Wie sicher bist du dir jetzt: Sehr sicher / Eher unsicher'). Das kombinierte Rating (AI + Selbst) verbessert Metacognitive Calibration. Alternativ: Confidence als optionalen visuellen Schieberegler.",
     "konfidenz": "hoch",
-    "status": "CONFIRMED"
+    "status": "FIXED",
+    "fix_nachweis": "Optionale Selbsteinschätzung nach dem Feedback gebaut (3 Chips, selfRating additiv im Block, ändert confidence nicht). Browser: selfRating=sicher gespeichert, confidence blieb unsicher. OFFEN als Entscheidung: soll die Selbsteinschätzung den Status beeinflussen?"
   },
   {
     "id": "F014",
@@ -281,7 +283,8 @@
     "fix": "Nach 'nicht bestanden': (1) Musterlösung einblenden ('Hier die Antwort:', collapsible), (2) 'Session beenden'-Button sichtbar machen (Escape-Hatch), (3) 'Wiederholen' als explizite Wahl anbieten. Alternativ: Beim zweiten Fehlversuch in Folge automatisch Musterlösung zeigen (Desirable Difficulty Prinzip).",
     "stand": "beide",
     "konfidenz": "hoch",
-    "status": "CONFIRMED"
+    "status": "FIXED",
+    "fix_nachweis": "Wiederholungsrunde: Pause-Knopf, Lösung (\"Hier die Antwort\") nach Fehlversuch, \"Nochmal versuchen\" als Wahl. Browser 2026-11-16 bei 375 px mit gestubbter Bewertung durchgespielt. NICHT gelöst: die identisch wiederkehrende Frage nach ~1 Minute (Variation = Phase 3.5)."
   },
   {
     "id": "F026",
@@ -293,7 +296,8 @@
     "fix": "Loading-State in SessionScreen.jsx implementieren: Sobald generate-cards-Request abgeht, Spinner + Text zeigen ('Lumo bereitet deine Karten vor…'). Für analyze: Progressiver Status ('Analysiert Thema… Erstellt Verbindungen… Fast fertig…'). Optional: Skeleton-Cards als Placeholder. Latenz selbst ist akzeptabel für einmalige Vorbereitung — die fehlende Anzeige ist das Problem.",
     "stand": "beide",
     "konfidenz": "hoch",
-    "status": "CONFIRMED"
+    "status": "FIXED",
+    "fix_nachweis": "Skeleton-Karte (existierte schon) zeigt jetzt Statuszeile \"Lumo bereitet deine Karten vor …\" und nach 8 s eine Zusatzzeile. Browser: beides gesehen. analyze-Route hat bereits wechselnde Statustexte (AnalyzingScreen). Latenz selbst unverändert (Phase 3.6)."
   },
   {
     "id": "F027",
@@ -305,7 +309,8 @@
     "fix": "Session-Screen-Header: z-index und Position von Zurück-Button und Logo klären (kein absolutes Positioning mit überlappenden Koordinaten). Mobil: Feedback-Button in separate Zeile auslagern oder fixen; Sticky-Button bottom-Offset um safe-area-inset-bottom erweitern.",
     "stand": "beide",
     "konfidenz": "hoch",
-    "status": "CONFIRMED"
+    "status": "FIXED",
+    "fix_nachweis": "Ursache: FocusRitual und Elaboration haben eigenen Zurück-Knopf an der Stelle der Wordmark. Wordmark dort ausgeblendet. Per getBoundingClientRect-Schnitt aller interaktiven Elemente gemessen bei 971 px und 375 px (Dashboard, FocusRitual, Atem, Bereit, Elaboration, Karten, Antwort): 0 Überlappungen; vorher 1 (lumo x Zurück, 66x31). Nicht bei 1280 px gemessen (Fensterbreite war 971)."
   },
   {
     "id": "F028",

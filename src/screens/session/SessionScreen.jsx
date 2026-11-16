@@ -112,7 +112,16 @@ export default function SessionScreen({ block, blocks, flashcards, goalType, spr
   // sowie CheckUnderstandingPhase kollidieren mit der global fixed positionierten
   // LumoWordmark aus App.jsx – da SessionScreen sie selbst nicht rendert, muss
   // die Sichtbarkeits-Entscheidung an den Elternteil zurückgemeldet werden.
-  const hasOwnHeader = phase === PHASES.CARDS || phase === PHASES.EXPLAIN || phase === PHASES.CHECK;
+  // F027: FocusRitual und Elaboration haben einen eigenen fixierten "Zurück"-Knopf
+  // oben links – genau dort, wo die Wordmark sitzt. Beide überlappten (gemessen bei 971 px Breite:
+  // 66x31 px). Während dieser Phasen übernimmt der Zurück-Knopf
+  // die Rolle der Wordmark, sie wird ausgeblendet.
+  const hasOwnHeader =
+    phase === PHASES.FOCUS_RITUAL ||
+    phase === PHASES.ELABORATION ||
+    phase === PHASES.CARDS ||
+    phase === PHASES.EXPLAIN ||
+    phase === PHASES.CHECK;
   useEffect(() => {
     onHeaderVisibilityChange?.(hasOwnHeader);
   }, [hasOwnHeader, onHeaderVisibilityChange]);

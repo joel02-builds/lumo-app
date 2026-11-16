@@ -262,6 +262,10 @@ export function appReducer(state, action) {
                 confidence: action.status,
                 goodPoints: action.goodPoints || [],
                 uncertainPoints: action.uncertainPoints || [],
+                // F013: Selbsteinschätzung des Nutzers ('sicher' | 'unsicher' | 'noch_nicht'),
+                // rein additiv und optional. Sie ändert `confidence` NICHT – ob sie
+                // den Status beeinflussen soll, ist eine offene Produktentscheidung.
+                selfRating: action.selfRating || null,
                 completedAt: new Date().toISOString(),
               }
             : b
