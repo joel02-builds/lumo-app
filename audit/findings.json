@@ -394,7 +394,8 @@
     "reproduktion": "npx -y knip --no-progress",
     "fix": "Dateien und Exporte entfernen (eigener PR, Phase 3.9).",
     "konfidenz": "hoch",
-    "status": "CONFIRMED"
+    "status": "CONFIRMED",
+    "teilfix": "2026-11-21 (PR F034): belegt toter Code entfernt – OnboardingScreen2.jsx, apiCostEstimate.js, LumoMascot.css, PRETEST_SYSTEM/pretestSchema, Reducer-Aktionen GO_TO_STEP2/BACK_TO_STEP1. Bewusst NICHT entfernt (FSRS, Sync, Datenbank): SM-2-Funktionen in sm2.js, getUpcomingCards, getLastSyncedAt, getOrCreateUser. Status bleibt CONFIRMED, bis diese Reste entschieden sind."
   },
   {
     "id": "F035",

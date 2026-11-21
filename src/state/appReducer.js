@@ -142,12 +142,6 @@ export function appReducer(state, action) {
       };
     }
 
-    case 'GO_TO_STEP2':
-      return { ...state, onboardingStep: 2 };
-
-    case 'BACK_TO_STEP1':
-      return { ...state, onboardingStep: 1 };
-
     case 'SET_MATERIAL':
       return {
         ...state,
