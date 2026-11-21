@@ -196,8 +196,10 @@ export default function App() {
     let cancelled = false;
 
     async function initStorage() {
-      // Persist-Anfrage (nur einmal pro Gerät, intern gecacht)
-      await requestPersistentStorage();
+      // Persist-Anfrage (siehe storage.js). NICHT awaiten: Browser mit eigenem Dialog (z. B. Firefox)
+      // lassen das Promise offen, bis der Nutzer antwortet – IDB-Hydration und Server-Abgleich
+      // dürfen darauf nicht warten.
+      requestPersistentStorage().catch(() => {});
 
       // IDB-Hydration: Wenn IDB Daten enthält die neuer/vollständiger sind,
       // State übernehmen. Da useReducer mit loadProject() (sync localStorage)

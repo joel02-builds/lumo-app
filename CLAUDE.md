@@ -245,7 +245,7 @@ Check each still exists before relying on it. Do not fix them unasked, but do no
 8. Removed as proven dead (F034): `LumoMascot.css`, `OnboardingScreen2.jsx`, `apiCostEstimate.js`, `PRETEST_SYSTEM`/`pretestSchema`, reducer actions `GO_TO_STEP2`/`BACK_TO_STEP1`, the `.png` mascot files. Still unused but kept on purpose (FSRS, sync, database): the SM-2 `calculateNextReview`/`isDueForReview`/`getDueCards` in `sm2.js`, `getUpcomingCards` in `fsrs.js`, `getLastSyncedAt` in `serverSync.js`, `getOrCreateUser` in `server/db.js`. Prop `blockCount` of `AnalyzingScreen` is never passed (its result branch is unreachable).
 9. Users who chose "Nur lokal" have no server identity, so the server-side free-block limit (S-07) cannot apply to them; only the IP rate limit does. Owner decision pending.
 10. `syncStreak()` returns an object, but `App.jsx` checks `typeof serverStreak === 'number'`, so the server streak is never written back.
-11. On Render Free the filesystem is ephemeral: with `DB_PATH=/tmp` every deploy wipes all server-side state. Owner decision pending (persistent disk or external database). See README "Deployment (Render)".
+11. On Render Free the filesystem is ephemeral: with `DB_PATH=/tmp` every deploy wipes all server-side state. The server now logs a warning at production start if `DB_PATH` is volatile (`server/dbPath.js`), `render.yaml` holds a commented disk template, and `docs/RENDER-PERSISTENCE.md` has the switch steps and what happens after a wipe (clients re-upload their state; the free-limit counter and server streak restart). Owner decision pending (persistent disk or external database). See README "Deployment (Render)".
 
 ## 10. How to work here
 

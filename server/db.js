@@ -24,6 +24,7 @@ import Database from 'better-sqlite3';
 import { accessSync, constants } from 'node:fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { isVolatileDbDir, VOLATILE_DB_WARNING } from './dbPath.js';
 import { randomUUID, randomBytes, createHash } from 'crypto';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -213,6 +214,14 @@ export function initDB() {
       console.error('[DB] Beispiel: DB_PATH=/data');
     }
     process.exit(1);
+  }
+
+  // ── 2b. Warnung: DB_PATH im flüchtigen Temp-Bereich (F033) ────────────────
+  // Der Server startet mit DB_PATH=/tmp (nötig, damit er in Produktion überhaupt läuft), verliert
+  // dort aber bei jedem Deploy/Neustart alle Server-Stände. Nur eine Warnzeile – kein Abbruch,
+  // keine Änderung an Daten.
+  if (IS_PRODUCTION && isVolatileDbDir(dbDir)) {
+    console.warn(VOLATILE_DB_WARNING);
   }
 
   // ── 3. Verzeichnis-Prüfung: existiert und ist beschreibbar? ───────────────

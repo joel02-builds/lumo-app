@@ -84,25 +84,47 @@ async function idbDelete(key) {
 
 // ─── Storage-Persist-Request ──────────────────────────────────────────────
 
+const LS_PERSIST_ASKED_AT = 'lumo_persist_asked_at';
+const PERSIST_RETRY_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
+
+function lsGet(key) { try { return localStorage.getItem(key); } catch { return null; } }
+function lsSet(key, value) { try { localStorage.setItem(key, value); } catch { /* ignore */ } }
+
 /**
- * Fragt einmal den Browser um persistenten Speicher. Bei Erlaubnis werden
- * Daten nicht mehr automatisch evicted. Safari iOS benötigt PWA-Installation.
+ * Bittet den Browser um persistenten Speicher (Schutz vor Eviction). Safari iOS gewährt das
+ * praktisch nur installierten Web-Apps.
  *
- * Wird nur einmal pro Gerät aufgerufen (Flag in localStorage).
+ * Regeln (F033):
+ * – Ist der Speicher schon persistent (navigator.storage.persisted()), wird NICHT erneut angefragt.
+ * – Wurde kürzlich (7 Tage) gefragt und abgelehnt, wird nicht erneut gefragt. Manche Browser
+ *   (z. B. Firefox) zeigen bei persist() ihren EIGENEN Dialog; wir wiederholen ihn nicht bei jedem Start.
+ *   Den Zeitpunkt merken wir VOR dem Aufruf: Schließt jemand den Tab mit offenem Dialog, kommt er
+ *   nicht beim nächsten Laden wieder.
+ * – Wir zeigen keinen eigenen Dialog. Jeder Fehler wird abgefangen (Ergebnis dann false).
+ * – Der Aufrufer darf nicht darauf warten (siehe App.jsx): Das Promise kann offen bleiben,
+ *   solange ein Browser-Dialog nicht beantwortet ist.
+ *
+ * @returns {Promise<boolean>} true = Speicher ist persistent
  */
 export async function requestPersistentStorage() {
-  if (!navigator.storage?.persist) return false;
-  if (typeof localStorage !== 'undefined') {
-    try {
-      if (localStorage.getItem(LS_PERSIST_FLAG)) return true;
-    } catch { /* ignore */ }
-  }
   try {
-    const granted = await navigator.storage.persist();
-    if (granted) {
-      try { localStorage.setItem(LS_PERSIST_FLAG, '1'); } catch { /* ignore */ }
+    const st = typeof navigator !== 'undefined' ? navigator.storage : undefined;
+    if (!st?.persist) return false;
+
+    if (typeof st.persisted === 'function' && (await st.persisted())) {
+      lsSet(LS_PERSIST_FLAG, '1');
+      return true;
     }
-    return granted;
+    // Ältere Browser ohne persisted(): das Flag einer früheren Zusage gilt weiter.
+    if (typeof st.persisted !== 'function' && lsGet(LS_PERSIST_FLAG)) return true;
+
+    const askedAt = Number(lsGet(LS_PERSIST_ASKED_AT));
+    if (Number.isFinite(askedAt) && askedAt > 0 && Date.now() - askedAt < PERSIST_RETRY_AFTER_MS) return false;
+    lsSet(LS_PERSIST_ASKED_AT, String(Date.now()));
+
+    const granted = await st.persist();
+    if (granted) lsSet(LS_PERSIST_FLAG, '1');
+    return Boolean(granted);
   } catch {
     return false;
   }

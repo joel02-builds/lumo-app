@@ -40,6 +40,8 @@ Der Live-Stand läuft auf Render (Auto-Deploy von `main`). Im Render-Dashboard u
 | `DB_PATH` | beschreibbares Verzeichnis | Ablageort der SQLite-Datei `lumo.db` – fehlt sie, bricht der Server beim Start ab |
 | `YOUTUBE_API_KEY` | optional | eingebettete Video-Vorschläge |
 
+Umschalt-Schritte auf eine Persistent Disk: `docs/RENDER-PERSISTENCE.md`.
+
 **Achtung Datenverlust:** Auf Render Free ist das Dateisystem flüchtig. Mit `DB_PATH=/tmp` gehen bei **jedem Deploy und Neustart** alle serverseitig gespeicherten Lernstände, Sessions und Free-Limit-Zähler verloren. Die Daten im Browser der Nutzer (IndexedDB/localStorage) bleiben erhalten. Vor einem öffentlichen Launch braucht es eine Persistent Disk (kostenpflichtig, dann z. B. `DB_PATH=/data`) oder eine externe Datenbank.
 
 ## Deployment (Railway.app)
