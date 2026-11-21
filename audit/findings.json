@@ -270,8 +270,9 @@
     "fix": "Prompt für evaluate-card-answer erweitern: 'Wenn die Antwort einen konkreten Denkfehler enthält, benenne ihn explizit (z.B. \"Du hast Elektronen mit Neurotransmittern verwechselt\") und erkläre, warum die korrekte Antwort stimmt.' UI-Erweiterung: Neben der Musterantwort eine separate Zeile 'Wo dein Fehler lag: ...' einfügen.",
     "stand": "beide",
     "konfidenz": "hoch",
-    "status": "CONFIRMED",
-    "teilfix": "2026-11-16 (PR 2.1): evaluate-understanding liefert jetzt misconceptions, UI-Block „Fehlvorstellung erkannt“ in CheckUnderstandingPhase. 2026-11-16 (PR 3.1): auch evaluate-card-answer liefert jetzt `misconception` (Prompt-Regel Lücke ≠ Fehlvorstellung, Pflicht-String, UI-Block in Karten-Feedback und Wiederholungsrunde). Technik per gemockten Tests belegt; die Wirkung des Modells ist erst mit dem Golden Set (3.2) mit echten Aufrufen belegt – deshalb noch nicht FIXED."
+    "status": "FIXED",
+    "teilfix": "2026-11-16 (PR 2.1): evaluate-understanding liefert jetzt misconceptions, UI-Block „Fehlvorstellung erkannt“ in CheckUnderstandingPhase. 2026-11-16 (PR 3.1): auch evaluate-card-answer liefert jetzt `misconception` (Prompt-Regel Lücke ≠ Fehlvorstellung, Pflicht-String, UI-Block in Karten-Feedback und Wiederholungsrunde). Technik per gemockten Tests belegt; die Wirkung des Modells ist mit dem Golden Set (3.2) mit echten Aufrufen belegt (siehe fix_nachweis).",
+    "fix_nachweis": "Block + Karten (PR 2.1, 3.1). Synthetisches Golden Set (20 Fälle, 2026-11-16): 9/9 Fehlvorstellungen erkannt, 0/11 False Positives; echte Nutzerdaten fehlen."
   },
   {
     "id": "F025",
