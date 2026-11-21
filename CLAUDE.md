@@ -141,6 +141,7 @@ node scripts/golden-set-eval.mjs --quick --yes   # 10 REAL Claude calls (~5 cent
 - JSON schemas: every object has `additionalProperties: false` and a `required` list. Put count limits ("3–5 cards") in the prompt text, not in the schema. Optional fields are simply left out of `required`.
 - User material goes inside `<lernmaterial>` tags after `escapeLernmaterialTags()`. Keep that.
 - Never return `userId`, never log secrets, keys or users' learning content.
+- AI errors: `server/aiErrors.js` maps every failure to a class (`input_too_long`, `output_too_long`, `overloaded`, `config`, `timeout`, `parse`, `other`) and a German message; `config` (401/403/404) is only spelled out in development. Every `askLumo` call passes its `route` and writes ONE `[AI]` log line (route, stop_reason, tokens, ms, class, status) – never content, file names, IP, cookies or API error text.
 - Client errors: `POST /api/client-error` (`server/clientError.js`, `src/utils/errorReport.js`) writes ONE log line with type, screen name and a scrubbed, ≤200-char message. Never add stack traces, user content, IP, user agent or cookies to it; keep client and server scrub rules identical.
 - `blocksAnalyzedTotal` is owned by the server. The client value is display only.
 - Database changes: append a new function to `MIGRATIONS` and raise `SCHEMA_VERSION`. Never edit an existing migration.
