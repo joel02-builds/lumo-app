@@ -31,7 +31,6 @@ import UpdatePrompt from './components/UpdatePrompt.jsx';
 
 // ── Eager ──────────────────────────────────────────────────────────────────
 import DashboardScreen from './screens/dashboard/DashboardScreen.jsx';
-import SessionScreen from './screens/session/SessionScreen.jsx';
 import WelcomeBackScreen from './screens/WelcomeBackScreen.jsx';
 
 // ── Lazy ───────────────────────────────────────────────────────────────────
@@ -46,13 +45,33 @@ const ExamResultScreen           = lazy(() => import('./screens/ExamResultScreen
 const SettingsScreen             = lazy(() => import('./screens/SettingsScreen.jsx'));
 const FlashcardScreen            = lazy(() => import('./screens/FlashcardScreen.jsx'));
 const LegalScreen                = lazy(() => import('./screens/LegalScreen.jsx'));
+// F021: Die Lern-Session (SessionScreen + alle Phasen, ~190 kB Quelltext) lag im Hauptbündel,
+// obwohl Erstbesucher sie erst nach Onboarding und Analyse brauchen. Jetzt eigener Chunk.
+// loadSessionScreen wird zusätzlich im Leerlauf vorgeladen (siehe Effekt unten), damit der
+// Start eines Blocks nicht auf das Netz wartet.
+const loadSessionScreen = () => import('./screens/session/SessionScreen.jsx');
+const SessionScreen = lazy(loadSessionScreen);
 
 import ErrorBanner from './components/ErrorBanner.jsx';
+import { SkeletonCard } from './components/SkeletonLoader.jsx';
 import LumoWordmark from './components/LumoWordmark.jsx';
 import OfflineBanner from './components/OfflineBanner.jsx';
 import InstallBanner from './components/InstallBanner.jsx';
 import BetaFeedbackButton from './components/BetaFeedbackButton.jsx';
 import CookieConsent, { useCookieConsent } from './components/CookieConsent.jsx';
+
+// F021: Fallback für die Session, solange ihr Chunk lädt. Gleiche Hülle wie jeder Screen
+// (.screen/.screen-content: gleiche Mindesthöhe, gleicher Hintergrund, gleiche Breite) und
+// eine Skeleton-Karte statt leerer Fläche – kein Layout-Sprung beim Einblenden der Session.
+function SessionFallback() {
+  return (
+    <div className="screen" aria-busy="true">
+      <div className="screen-content">
+        <SkeletonCard />
+      </div>
+    </div>
+  );
+}
 
 // Minimaler Suspense-Fallback: transparenter dunkler Hintergrund —
 // kein weißer Flash, kein Spinner der ablenkt (ADHS-safe).
@@ -64,6 +83,7 @@ import { calculateNextReview } from './utils/fsrs.js';
 import { useChronoBias } from './hooks/useChronoBias.js';
 
 const OFFLINE_CONFIRM_DELAY_MS = 2000;
+const PREFETCH_SESSION_TIMEOUT_MS = 2000; // spätestens nach 2 s vorladen, auch wenn der Browser nie „leer“ ist
 // F017: <main> verhält sich im Layout wie vorher #root direkt über den Screens
 // (Höhe 100 %, kein eigener Rahmen). outline: none, weil nur der Skip-Link darauf fokussiert.
 const LANDMARK_MAIN_STYLE = { height: '100%', outline: 'none' };
@@ -77,6 +97,19 @@ export default function App() {
 
   // F016: Screen-Name für Fehlermeldungen merken (nur der Name, nie Inhalte).
   useEffect(() => { setReportScreen(state.screen); }, [state.screen]);
+
+  // F021: Session-Chunk im Leerlauf vorladen, sobald der Nutzer auf Dashboard/Willkommen ist
+  // (dort startet er den nächsten Block). Reines Laden einer statischen Datei, kein API-Aufruf.
+  useEffect(() => {
+    if (state.screen !== SCREENS.DASHBOARD && state.screen !== SCREENS.WELCOME_BACK) return undefined;
+    const run = () => { loadSessionScreen().catch(() => {}); };
+    if (typeof window.requestIdleCallback === 'function') {
+      const id = window.requestIdleCallback(run, { timeout: PREFETCH_SESSION_TIMEOUT_MS });
+      return () => window.cancelIdleCallback?.(id);
+    }
+    const t = setTimeout(run, PREFETCH_SESSION_TIMEOUT_MS);
+    return () => clearTimeout(t);
+  }, [state.screen]);
 
   // Wird von SessionScreen gemeldet: true während einer Phase mit eigenem
   // Header (CardLearningPhase, ExplainChatPhase, CheckUnderstandingPhase), die
@@ -665,6 +698,7 @@ export default function App() {
       )}
 
       {state.screen === SCREENS.SESSION && currentBlock && (
+        <Suspense fallback={<SessionFallback />}>
         <SessionScreen
           key={currentBlock.id}
           block={currentBlock}
@@ -681,6 +715,7 @@ export default function App() {
           onPause={() => dispatch({ type: 'RETURN_TO_DASHBOARD' })}
           onHeaderVisibilityChange={setSessionHasOwnHeader}
         />
+        </Suspense>
       )}
       </main>
         </>
