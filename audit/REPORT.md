@@ -165,7 +165,7 @@ Der Gesamtschnitt wird über die **10 bewerteten Bereiche** berechnet. Bereiche 
 | F021 | 7 Performance | S2 | beide | CONFIRMED | FCP 3,6 s mobil; 213 KiB ungenutztes JS |
 | F022 | 7 Performance | S3 | beide | CONFIRMED | Kein meta-description; robots.txt gibt HTML zurück |
 | **F023** | **5 Sicherheit** | **S1** | **Live-Stand** | **CONFIRMED** | **Alle Security-Header fehlen; Render auf Nov-2-Commit** |
-| **F024** | **8 Lernwirksamkeit** | **S2** | **beide** | **CONFIRMED** | **Feedback benennt Fehlvorstellung nicht** |
+| **F024** | **8 Lernwirksamkeit** | **S2** | **beide** | **FIXED** | **Feedback benennt Fehlvorstellung nicht** – Block + Karten, synthetisches Golden Set 9/9, 0/11 FP; echte Nutzerdaten fehlen |
 | **F025** | **3 UX** | **S2** | **beide** | **CONFIRMED** | **Wiederholung ohne Lösung/Ausweg** |
 | **F026** | **3 UX** | **S2** | **beide** | **CONFIRMED** | **Sessionstart 15–30 s ohne Statusanzeige** |
 | **F027** | **3 UX** | **S2** | **beide** | **CONFIRMED** | **UI-Überlappung bei 1280 px und mobil** |

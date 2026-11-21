@@ -238,8 +238,6 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
 
   // ── CSS ────────────────────────────────────────────────────────────────────
   const styles = `
-    @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap');
-
     .ob-root {
       position: fixed; inset: 0;
       background: #0E0C09; color: #F0EAE0;
