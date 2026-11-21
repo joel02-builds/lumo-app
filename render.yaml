@@ -4,6 +4,17 @@ services:
     runtime: node
     buildCommand: npm run build
     startCommand: node server/index.js
+    # ── Persistente Server-Daten (F033) – VORLAGE, bewusst auskommentiert ─────────────
+    # Ohne Disk liegt lumo.db im flüchtigen Dateisystem: Jeder Deploy/Neustart löscht alle
+    # Server-Stände. Zum Umschalten die Zeilen unten einkommentieren UND DB_PATH auf /data setzen.
+    # Schritte, Prüfung und Rückfall: docs/RENDER-PERSISTENCE.md.
+    # Eine Disk gilt nur für EINE Instanz; welcher Instanztyp sie erlaubt und was sie kostet,
+    # bitte in der Render-Dokumentation bzw. im Dashboard nachsehen.
+    # plan: starter
+    # disk:
+    #   name: lumo-data
+    #   mountPath: /data
+    #   sizeGB: 1
     envVars:
       - key: NODE_ENV
         value: production
