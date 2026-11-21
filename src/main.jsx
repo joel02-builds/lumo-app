@@ -4,6 +4,10 @@ import App from './App.jsx';
 import './styles/fonts.css'; // F005: selbst gehostete Schriften, keine Verbindung zu Google
 import './styles/index.css';
 import './styles/app.css';
+import { reportClientError, installGlobalErrorHandlers } from './utils/errorReport.js';
+
+// F016: Laufzeitfehler (window.onerror, unhandledrejection) ins Server-Log melden.
+installGlobalErrorHandlers();
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -16,6 +20,8 @@ class ErrorBoundary extends Component {
   componentDidCatch(error, info) {
     // Immer in die Console loggen — auch in Production
     console.error('[Lumo Error Boundary]', error, info?.componentStack);
+    // F016: nur Typ, Screen-Name und gekürzte Meldung – kein Stack, keine Inhalte.
+    reportClientError('boundary', error);
   }
   render() {
     if (this.state.hasError) {

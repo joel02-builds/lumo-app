@@ -59,6 +59,7 @@ import CookieConsent, { useCookieConsent } from './components/CookieConsent.jsx'
 function LazyFallback() {
   return <div style={{ position: 'fixed', inset: 0, background: '#0E0C09' }} />;
 }
+import { setReportScreen } from './utils/errorReport.js';
 import { calculateNextReview } from './utils/fsrs.js';
 import { useChronoBias } from './hooks/useChronoBias.js';
 
@@ -73,6 +74,9 @@ export default function App() {
   // Chronobiology-basierter Dusk-Modus: ab 20:00 Uhr → Amber-Palette
   // Basis: Bijlenga et al. 2019 — DSPS bei 73% der ADHS-Erwachsenen
   useChronoBias();
+
+  // F016: Screen-Name für Fehlermeldungen merken (nur der Name, nie Inhalte).
+  useEffect(() => { setReportScreen(state.screen); }, [state.screen]);
 
   // Wird von SessionScreen gemeldet: true während einer Phase mit eigenem
   // Header (CardLearningPhase, ExplainChatPhase, CheckUnderstandingPhase), die
