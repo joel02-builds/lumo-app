@@ -8,7 +8,8 @@
  * FRONTEND_URL in Produktion fehlt, bekam eine leere Seite.
  * Jetzt: CORS gilt nur für /api. Die API bleibt streng.
  *
- * Echter Produktions-Start im Kindprozess (NODE_ENV=production), Anthropic nicht beteiligt.
+ * Echter Produktions-Start im Kindprozess (NODE_ENV=production) mit eigenem Temp-dist
+ * (tests/helpers/prodServer.js), Anthropic nicht beteiligt.
  *
  *   CS-01  FRONTEND_URL gesetzt, fremde Origin: Seite, SPA-Fallback, Manifest, Icon, robots, JS, CSS → 200
  *   CS-02  dieselbe fremde Origin an der API → wie vorher abgelehnt (500, kein Allow-Origin-Header)
@@ -18,66 +19,20 @@
  */
 import { it, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync, mkdirSync, writeFileSync, rmSync, existsSync, mkdtempSync } from 'node:fs';
-import { execFile } from 'node:child_process';
-import { tmpdir } from 'node:os';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { makeDist, runProd, ROOT } from './helpers/prodServer.js';
 
-const ROOT = new URL('../', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
-const DIST = join(ROOT, 'dist');
-let createdDist = false;
-let staticPaths;
-
+let dist, staticPaths;
 before(() => {
-  // CI führt die Tests VOR dem Build aus: ohne dist/ eine kleine Attrappe anlegen (und danach wieder entfernen).
-  if (!existsSync(join(DIST, 'index.html'))) {
-    createdDist = true;
-    mkdirSync(join(DIST, 'assets'), { recursive: true });
-    writeFileSync(join(DIST, 'index.html'), '<!doctype html><title>t</title>');
-    writeFileSync(join(DIST, 'manifest.json'), '{"name":"t"}');
-    writeFileSync(join(DIST, 'robots.txt'), 'User-agent: *\n');
-    writeFileSync(join(DIST, 'icon-192.png'), Buffer.from([137, 80, 78, 71]));
-    writeFileSync(join(DIST, 'assets', 'index-abc12345.js'), '//x');
-    writeFileSync(join(DIST, 'assets', 'index-abc12345.css'), 'a{}');
-  }
-  const assets = readdirSync(join(DIST, 'assets'));
-  const js = assets.find((f) => /^index-.*\.js$/.test(f));
-  const css = assets.find((f) => /^index-.*\.css$/.test(f));
-  assert.ok(js && css, 'dist/assets ohne index-*.js/css');
-  staticPaths = ['/', '/index.html', '/irgendeine-seite', '/manifest.json', '/icon-192.png', '/robots.txt', `/assets/${js}`, `/assets/${css}`];
+  dist = makeDist();
+  staticPaths = ['/', '/index.html', '/irgendeine-seite', '/manifest.json', '/icon-192.png', '/robots.txt', '/assets/index-AbCd1234.js', '/assets/index-AbCd1234.css'];
 });
-after(() => { if (createdDist) { try { rmSync(DIST, { recursive: true, force: true }); } catch { /* ignore */ } } });
-
-/** Startet den echten Server in Produktion und führt alle Proben darin aus. */
-function run(frontendUrl, probes) {
-  const dir = mkdtempSync(join(tmpdir(), 'lumo-cors-'));
-  const script = `
-    const { app } = await import('./server/index.js');
-    const srv = await new Promise((r) => { const s = app.listen(0, '127.0.0.1', () => r(s)); });
-    const base = 'http://127.0.0.1:' + srv.address().port;
-    const out = [];
-    for (const p of ${JSON.stringify(probes)}) {
-      const res = await fetch(base + p.path, { method: p.method || 'GET', headers: { Origin: p.origin, 'Content-Type': 'application/json' }, body: p.body });
-      out.push({ ...p, status: res.status, acao: res.headers.get('access-control-allow-origin'), acac: res.headers.get('access-control-allow-credentials'), ct: res.headers.get('content-type') });
-    }
-    console.log('RESULT:' + JSON.stringify(out));
-    process.exit(0);
-  `;
-  return new Promise((resolve, reject) => {
-    execFile(process.execPath, ['--input-type=module', '-e', script], {
-      cwd: ROOT,
-      env: { ...process.env, NODE_ENV: 'production', ANTHROPIC_API_KEY: 'test-key', DB_PATH: dir, FRONTEND_URL: frontendUrl },
-    }, (_e, so) => {
-      try { rmSync(dir, { recursive: true, force: true }); } catch { /* Temp räumt das System */ }
-      const line = String(so).split('\n').find((l) => l.startsWith('RESULT:'));
-      if (!line) return reject(new Error('Produktions-Start ohne Ergebnis:\n' + so));
-      resolve(JSON.parse(line.slice(7)));
-    });
-  });
-}
+after(() => dist.cleanup());
 
 const FOREIGN = 'https://fremd.example';
 const ALLOWED = 'https://erlaubt.example';
+const run = (frontendUrl, probes) => runProd({ frontendUrl, distDir: dist.dir }, probes);
 
 describe('CORS gilt nur für die API', () => {
   it('CS-01 fremde Origin: statische Dateien und Seite → 200', async () => {
