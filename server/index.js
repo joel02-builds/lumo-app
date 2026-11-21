@@ -62,6 +62,7 @@ import {
   YOUTUBE_SEARCH_SYSTEM,
   youtubeSearchSchema,
 } from './prompts.js';
+import { sanitizeClientError } from './clientError.js';
 import {
   validate,
   ANALYZE_REQ,
@@ -70,6 +71,7 @@ import {
   EVALUATE_UNDERSTANDING_REQ,
   GENERATE_CARDS_REQ,
   EVALUATE_CARD_ANSWER_REQ,
+  CLIENT_ERROR_REQ,
   GENERATE_LERNZETTEL_REQ,
   REEXPLAIN_REQ,
   EXPLAIN_TERM_REQ,
@@ -937,6 +939,27 @@ app.post('/api/generate-flashcards', async (req, res) => {
   } catch (err) {
     sendFriendlyError(res, err);
   }
+});
+
+// F016: Eigenes Fehler-Log für Client-Fehler (ErrorBoundary, window.onerror). Kein Drittanbieter,
+// keine neue Abhängigkeit. Gespeichert wird nichts – es entsteht eine Zeile im Server-Log:
+// nur Typ, Screen-Name und gekürzte, bereinigte Meldung (siehe server/clientError.js).
+// Kein Cookie, keine IP, keine Nutzer-Kennung im Log. Eigenes Limit, auch lokal aktiv.
+const clientErrorLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Zu viele Meldungen.' },
+});
+app.post('/api/client-error', clientErrorLimiter, (req, res) => {
+  const check = validate(CLIENT_ERROR_REQ, req.body);
+  if (!check.ok) return res.status(400).json({ error: check.error });
+  const entry = sanitizeClientError(req.body);
+  if (!entry) return res.status(400).json({ error: 'Ungültige Meldung.' });
+  // JSON.stringify maskiert Anführungszeichen und Zeilenumbrüche: immer genau eine Zeile.
+  console.error('[ClientError]', JSON.stringify(entry));
+  res.status(204).end();
 });
 
 app.post('/api/youtube-videos', async (req, res) => {
