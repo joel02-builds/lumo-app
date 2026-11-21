@@ -81,6 +81,7 @@ function LazyFallback() {
 import { setReportScreen } from './utils/errorReport.js';
 import { calculateNextReview } from './utils/fsrs.js';
 import { useChronoBias } from './hooks/useChronoBias.js';
+import { createTabSync } from './utils/tabSync.js';
 
 const OFFLINE_CONFIRM_DELAY_MS = 2000;
 const PREFETCH_SESSION_TIMEOUT_MS = 2000; // spätestens nach 2 s vorladen, auch wenn der Browser nie „leer“ ist
@@ -88,8 +89,38 @@ const PREFETCH_SESSION_TIMEOUT_MS = 2000; // spätestens nach 2 s vorladen, auch
 // (Höhe 100 %, kein eigener Rahmen). outline: none, weil nur der Skip-Link darauf fokussiert.
 const LANDMARK_MAIN_STYLE = { height: '100%', outline: 'none' };
 
+// Gespeicherter Projektstand (Format unverändert, siehe SAVE-Effekt und tabSync.js).
+function buildSnapshot(state) {
+  return {
+    projectName: state.topic,
+    materialName: state.fileName,
+    goalType: state.goalType,
+    goalDate: state.goalDate,
+    sprintMode: state.sprintMode,
+    blocks: state.blocks,
+    recommendedOrder: state.recommendedOrder,
+    subjectColor: state.subjectColor,
+    learningStyle: state.learningStyle,
+    subjectHistory: state.subjectHistory,
+    projects: state.projects,
+    activeProjectId: state.activeProjectId,
+    examResult: state.examResult,
+    examResultAskedAt: state.examResultAskedAt,
+    blocksAnalyzedTotal: state.blocksAnalyzedTotal,
+    sessionsTotal: state.sessionsTotal,
+    flashcards: state.flashcards,
+  };
+}
+
 export default function App() {
   const [state, dispatch] = useReducer(appReducer, null, () => createInitialState(loadProject()));
+
+  // F009: Abgleich mit anderen Tabs/der PWA. Wird direkt nach dem Laden des Stands angelegt,
+  // merkt sich damit die zu diesem Stand passende Revision.
+  const tabSyncRef = useRef(null);
+  if (tabSyncRef.current === null) tabSyncRef.current = createTabSync();
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   // Chronobiology-basierter Dusk-Modus: ab 20:00 Uhr → Amber-Palette
   // Basis: Bijlenga et al. 2019 — DSPS bei 73% der ADHS-Erwachsenen
@@ -243,32 +274,46 @@ export default function App() {
     };
   }, []);
 
+  // F009: Wird ein anderer Tab aktiv bzw. ändert er den Stand, Stand sofort übernehmen –
+  // außer mitten in einer Session (dort greift der Schutz beim nächsten Speichern, damit sich
+  // unter dem Nutzer nichts verschiebt).
+  useEffect(() => {
+    function checkOtherTabs() {
+      const s = stateRef.current;
+      if (s.screen === SCREENS.SESSION) return;
+      const res = tabSyncRef.current.checkIncoming(buildSnapshot(s));
+      if (res.adopt) dispatch({ type: 'ADOPT_SNAPSHOT', payload: res.snapshot });
+    }
+    function onStorage(e) {
+      if (e.key === 'lumo_project_rev') checkOtherTabs();
+    }
+    function onVisible() {
+      if (document.visibilityState === 'visible') checkOtherTabs();
+    }
+    window.addEventListener('storage', onStorage);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, []);
+
   useEffect(() => {
     // Immer persistieren, auch wenn blocks/projects gerade leer sind (z. B.
     // nach dem Löschen des letzten Projekts) – loadProject() entscheidet beim
     // nächsten Start anhand des Inhalts, ob der gespeicherte Stand gültig ist.
-    const snapshot = {
-      projectName: state.topic,
-      materialName: state.fileName,
-      goalType: state.goalType,
-      goalDate: state.goalDate,
-      sprintMode: state.sprintMode,
-      blocks: state.blocks,
-      recommendedOrder: state.recommendedOrder,
-      subjectColor: state.subjectColor,
-      learningStyle: state.learningStyle,
-      subjectHistory: state.subjectHistory,
-      projects: state.projects,
-      activeProjectId: state.activeProjectId,
-      examResult: state.examResult,
-      examResultAskedAt: state.examResultAskedAt,
-      blocksAnalyzedTotal: state.blocksAnalyzedTotal,
-      sessionsTotal: state.sessionsTotal,
-      flashcards: state.flashcards,
-    };
+    const snapshot = buildSnapshot(state);
+
+    // F009: Hat ein anderer Tab seit unserem letzten Stand geschrieben, NICHT blind
+    // überschreiben: neueren Stand übernehmen (oder den eigenen behalten, falls er mehr
+    // Fortschritt hat). Bei 'skip' wird weder lokal noch zum Server geschrieben.
+    const guard = tabSyncRef.current.beforeSave(snapshot);
+    if (guard.adopt) dispatch({ type: 'ADOPT_SNAPSHOT', payload: guard.snapshot });
+    if (guard.action !== 'write') return;
 
     // Sync: sofortiger localStorage-Write (Sicherheitsnetz, kein IDB-Overhead)
     saveProject(snapshot);
+    tabSyncRef.current.afterSave();
 
     // Async: IDB-Write debounced — P-FE-01: bei schnellen State-Updates (z. B.
     // Karteikarten-Flipping) wird nur der letzte Stand innerhalb von 300 ms
