@@ -712,6 +712,12 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
 
   // ── Render ─────────────────────────────────────────────────────────────────
   const isActive = (p) => phase === p ? 'active' : outPhase === p ? 'out' : '';
+  // 5.1: Nicht aktive Screens bleiben im DOM (die Slide-Animation braucht sie), sind aber
+  // unsichtbar-und-trotzdem-bedienbar gewesen: ihre Buttons waren per Tab erreichbar und für
+  // Screenreader lesbar. inert nimmt sie aus Tab-Reihenfolge und Zugänglichkeitsbaum,
+  // aria-hidden deckt Browser ohne inert-Unterstützung für Screenreader ab. React 18 kennt
+  // inert nicht als boolean – daher der leere String als Attributwert.
+  const hiddenProps = (p) => (phase === p ? {} : { 'aria-hidden': true, inert: '' });
 
   return (
     <div className="ob-root">
@@ -748,7 +754,7 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
       )}
 
       {/* ── S0: CHAOS ──────────────────────────────────────────────────────── */}
-      <div id="ob-s0" className={`ob-screen ${isActive('s0')}`}>
+      <div id="ob-s0" className={`ob-screen ${isActive('s0')}`} {...hiddenProps('s0')}>
         <div className="ob-chaos-canvas">
           {/* Floating Tags */}
           <div className="ob-ftab sand t1"><span className="ob-dot" />Kapitel 7 – noch nicht</div>
@@ -784,7 +790,7 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
       </div>
 
       {/* ── S1: DEMO CARD ──────────────────────────────────────────────────── */}
-      <div id="ob-s1" className={`ob-screen ${isActive('s1')}`}>
+      <div id="ob-s1" className={`ob-screen ${isActive('s1')}`} {...hiddenProps('s1')}>
         <div className="ob-s1-canvas">
           <div className="ob-demo-card">
             <div className="ob-dc-header">
@@ -846,7 +852,7 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
       </div>
 
       {/* ── S2: QUIZ ───────────────────────────────────────────────────────── */}
-      <div id="ob-s2" className={`ob-screen ${isActive('s2')}`}>
+      <div id="ob-s2" className={`ob-screen ${isActive('s2')}`} {...hiddenProps('s2')}>
         <div className="ob-q-mascot-row">
           <div className="ob-q-mascot">
             <LumoMascot state="wave" size={36} />
@@ -919,7 +925,7 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
       </div>
 
       {/* ── S3: READY ──────────────────────────────────────────────────────── */}
-      <div id="ob-s3" className={`ob-screen ${isActive('s3')}`}>
+      <div id="ob-s3" className={`ob-screen ${isActive('s3')}`} {...hiddenProps('s3')}>
         <div className="ob-r-mascot-row">
           <div className="ob-r-mascot">
             <LumoMascot state="cheer" size={72} />
@@ -960,7 +966,7 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
       </div>
 
       {/* ── FORM: MATERIAL UPLOAD ───────────────────────────────────────────── */}
-      <div id="ob-form" className={`ob-screen ${isActive('form')}`}>
+      <div id="ob-form" className={`ob-screen ${isActive('form')}`} {...hiddenProps('form')}>
         <div>
           <div className="ob-form-head">Dein Material.<br />Los geht's.</div>
           <div className="ob-form-sub">Lade dein Skript oder deine Notizen hoch — Lumo macht den Rest.</div>
