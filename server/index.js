@@ -108,7 +108,8 @@ console.log('NODE_ENV:', process.env.NODE_ENV);
 // Diagnose: Railway-Erkennung über dokumentierte Plattformvariablen
 console.log('RAILWAY_ENVIRONMENT_ID:', process.env.RAILWAY_ENVIRONMENT_ID);
 console.log('RAILWAY_ENVIRONMENT_NAME:', process.env.RAILWAY_ENVIRONMENT_NAME);
-console.log('API KEY vorhanden:', Boolean(process.env.ANTHROPIC_API_KEY)); // R-01: Länge entfernt (unnötig, kein Mehrwert)
+// F008: Kein Log über die Existenz des API-Keys mehr (stand in jedem Produktions-Log).
+// Fehlt der Key, warnt der Start-Block unten – das reicht fürs Deployen.
 // Nur die Namen, keine Werte – ausschließlich in Entwicklung, da die vollständige
 // ENV-Key-Liste in Production nicht benötigt wird und unnötige Offenlegung birgt.
 // isProd ist bereits in Zeile 74 definiert (NODE_ENV === 'production' || IS_RAILWAY).
@@ -1229,7 +1230,8 @@ if (isMain) {
         ? 'Prüfe im Dashboard deiner Hosting-Plattform (z. B. Render → "Environment", Railway → "Variables"), ob ANTHROPIC_API_KEY dort wirklich gesetzt ist (Name exakt, kein Leerzeichen, Wert nicht leer) und ob seitdem neu deployed wurde.'
         : 'Bitte .env Datei anlegen (siehe .env.example).';
       console.warn(`WARNUNG: ANTHROPIC_API_KEY ist nicht gesetzt. ${hint}`);
-    } else {
+    } else if (!isProd) {
+      // F008: in Produktion nicht loggen, dass ein Geheimnis existiert.
       console.log('ANTHROPIC_API_KEY geladen.');
     }
   });
