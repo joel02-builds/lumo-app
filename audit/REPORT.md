@@ -155,7 +155,7 @@ Der Gesamtschnitt wird über die **10 bewerteten Bereiche** berechnet. Bereiche 
 | F011 | 1 Engineering | S3 | beide | CONFIRMED | autoUpdate SW übernimmt mid-session |
 | F012 | 3 UX | S3 | beide | CONFIRMED | „Verstanden, weiter →" bei Lücken missverständlich |
 | F013 | 8 Lernwirksamkeit | S3 | beide | CONFIRMED | Keine Selbsteinschätzung (Metacognitive Accuracy) |
-| F014 | 5 Sicherheit | S3 | beide | CONFIRMED | 4 moderate CVEs in esbuild (dev) |
+| F014 | 5 Sicherheit | S3 | beide | ACCEPTED | 4 moderate Meldungen, nur Build-Werkzeuge (dev-only, akzeptiert): esbuild nicht mehr vorhanden; heute glob/minimatch/workbox-build/vite-plugin-pwa; `npm audit --omit=dev` = 0; Fix nur per Major-Sprung |
 | F015 | 11 Betrieb | S2 | beide | PLAUSIBLE | Kein Staging/Preview-Environment |
 | F016 | 11 Betrieb | S2 | beide | CONFIRMED | Kein Fehler-Tracking (Sentry o.ä.) |
 | F017 | 9 Barrierefreiheit | S3 | beide | CONFIRMED | Keine Landmark-Elemente (<main>, <nav>) |
