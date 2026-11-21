@@ -64,6 +64,7 @@ import {
 } from './prompts.js';
 import { sanitizeClientError } from './clientError.js';
 import { classifyAiError, userMessageFor, FRIENDLY_ERROR, TIMEOUT_ERROR } from './aiErrors.js';
+import { cacheControlFor, REVALIDATE_CACHE } from './cachePolicy.js';
 import {
   validate,
   ANALYZE_REQ,
@@ -1238,13 +1239,25 @@ if (isProd) {
   // fertigen Frontend-Build direkt aus (kein CORS-Problem, da alles vom selben
   // Origin kommt). Muss NACH den /api-Routen stehen, damit die nicht vom
   // Catch-all verschluckt werden.
-  const distPath = path.join(__dirname, '..', 'dist');
-  app.use(express.static(distPath));
+  // LUMO_DIST_PATH nur für Tests (eigenes Temp-dist); in Produktion nie gesetzt.
+  const distPath = process.env.LUMO_DIST_PATH || path.join(__dirname, '..', 'dist');
+  // Cache-Header (server/cachePolicy.js): Hash-Dateien unter /assets ein Jahr + immutable;
+  // index.html, sw.js, manifest.json: no-cache (per ETag prüfen), damit Updates ankommen.
+  app.use(express.static(distPath, {
+    setHeaders(res, filePath) {
+      const urlPath = '/' + path.relative(distPath, filePath).split(path.sep).join('/');
+      const value = cacheControlFor(urlPath);
+      if (value) res.setHeader('Cache-Control', value);
+    },
+  }));
   // Middleware statt app.get('*', ...): Express 5s path-to-regexp verlangt für
   // Wildcard-Routen einen benannten Parameter (z. B. '/*splat') und wirft sonst
   // beim Start. Ein pfadloses app.use greift ohnehin erst, wenn nichts vorher
   // gematcht hat, und ist dadurch unabhängig von der jeweiligen Express-Version.
   app.use((req, res) => {
+    // Auch fehlende Dateien landen hier (z. B. alter Chunk-Name nach einem Deploy). Die Antwort ist die
+    // Seite, nie "immutable": no-cache, damit sie nicht als JavaScript für ein Jahr hängen bleibt.
+    res.setHeader('Cache-Control', REVALIDATE_CACHE);
     res.sendFile(path.join(distPath, 'index.html'));
   });
 } else {
