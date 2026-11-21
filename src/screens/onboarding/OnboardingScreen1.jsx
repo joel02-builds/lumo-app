@@ -419,7 +419,9 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
     .ob-s0-head {
       font-family: 'Instrument Serif', Georgia, serif;
       font-style: italic; font-weight: 400;
-      font-size: clamp(34px, 9.5vw, 50px);
+      /* !important: Das Element ist ein echtes <h1> (Semantik). Unter 600 px erzwingt index.css
+         "h1 { font-size: 22px !important }" – ohne dieses !important würde die Headline schrumpfen. */
+      font-size: clamp(34px, 9.5vw, 50px) !important;
       line-height: 1.06; letter-spacing: -.026em;
       margin-bottom: 12px; text-wrap: balance;
     }
@@ -773,7 +775,7 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
 
         <div>
           <div className="ob-s0-bottom">
-            <div className="ob-s0-head">Kopf voll.<br />Überblick verloren.<br />Wo fängst du an?</div>
+            <h1 className="ob-s0-head">Kopf voll.<br />Überblick verloren.<br />Wo fängst du an?</h1>
             <div className="ob-s0-sub">Lumo entscheidet das für dich.</div>
           </div>
           <div className="ob-cta-area">
