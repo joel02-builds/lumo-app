@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { isIOS } from '../utils/platform.js';
 
 /**
  * InstallBanner — zeigt einen sichtbaren "App installieren" Button für Beta-Tester.
@@ -18,10 +19,6 @@ import { useEffect, useState } from 'react';
  * – Freundlicher goldener Banner, dezent positioniert
  * – Einmalige Dismissal dauerhaft (localStorage)
  */
-
-function isIOS() {
-  return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
-}
 
 function isInStandaloneMode() {
   return window.matchMedia('(display-mode: standalone)').matches
