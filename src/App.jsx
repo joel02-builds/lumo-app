@@ -63,6 +63,9 @@ import { calculateNextReview } from './utils/fsrs.js';
 import { useChronoBias } from './hooks/useChronoBias.js';
 
 const OFFLINE_CONFIRM_DELAY_MS = 2000;
+// F017: <main> verhält sich im Layout wie vorher #root direkt über den Screens
+// (Höhe 100 %, kein eigener Rahmen). outline: none, weil nur der Skip-Link darauf fokussiert.
+const LANDMARK_MAIN_STYLE = { height: '100%', outline: 'none' };
 
 export default function App() {
   const [state, dispatch] = useReducer(appReducer, null, () => createInitialState(loadProject()));
@@ -472,13 +475,17 @@ export default function App() {
       {/* LegalScreen überlagert alles — via showLegal aus jedem Screen erreichbar */}
       {showLegal && (
         <Suspense fallback={<LazyFallback />}>
-          <LegalScreen onBack={() => setShowLegal(false)} />
+          <main id="main-content" tabIndex={-1} style={LANDMARK_MAIN_STYLE}>
+            <LegalScreen onBack={() => setShowLegal(false)} />
+          </main>
         </Suspense>
       )}
 
       {!showLegal && (
         <Suspense fallback={<LazyFallback />}>
         <>
+      {/* F017: Skip-Link – nur bei Tastaturfokus sichtbar (siehe .skip-link in app.css) */}
+      <a href="#main-content" className="skip-link">Zum Inhalt springen</a>
       <UpdatePrompt />
       {!isOnline && <OfflineBanner />}
       {storageLayer === 'localStorage' && <StorageWarningBanner />}
@@ -506,12 +513,20 @@ export default function App() {
         />
       )}
 
+      {/* F017: Navigations-Landmark. Die Wordmark ist position: fixed, die nav selbst
+          nimmt keinen Platz ein; bei ausgeblendeter Wordmark ist auch die nav weg. */}
       {!isWelcomeScreen && (
-        <LumoWordmark
-          onClick={() => dispatch({ type: 'RETURN_TO_DASHBOARD' })}
-          hidden={state.screen === SCREENS.SESSION && sessionHasOwnHeader}
-        />
+        <nav aria-label="Lumo Startseite" hidden={state.screen === SCREENS.SESSION && sessionHasOwnHeader}>
+          <LumoWordmark
+            onClick={() => dispatch({ type: 'RETURN_TO_DASHBOARD' })}
+            hidden={state.screen === SCREENS.SESSION && sessionHasOwnHeader}
+          />
+        </nav>
       )}
+
+      {/* F017: Hauptbereich. height: 100% wie #root, damit Prozent-Höhen in den Screens
+          unverändert bleiben (kein Layout-Unterschied zu vorher). */}
+      <main id="main-content" tabIndex={-1} style={LANDMARK_MAIN_STYLE}>
 
       {state.screen === SCREENS.WELCOME_BACK && (
         <WelcomeBackScreen
@@ -663,6 +678,7 @@ export default function App() {
           onHeaderVisibilityChange={setSessionHasOwnHeader}
         />
       )}
+      </main>
         </>
         </Suspense>
       )}

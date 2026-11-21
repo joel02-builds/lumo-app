@@ -20,7 +20,7 @@
  *   S02-3  Content-Security-Policy vorhanden
  *   S02-4  CSP: default-src 'self'
  *   S02-5  CSP: frame-src erlaubt youtube.com
- *   S02-6  CSP: font-src erlaubt fonts.gstatic.com
+ *   S02-6  CSP: font-src nur 'self' (Schriften selbst gehostet, F005)
  *   S02-7  CSP: worker-src erlaubt blob:
  *   S03-1  Request ohne Origin wird abgelehnt (kein ACAO-Header)
  *   S03-2  Request mit erlaubter Origin wird akzeptiert
@@ -165,20 +165,37 @@ describe('S-02: HTTP-Security-Header (Helmet)', () => {
       `CSP ohne default-src 'self': ${csp}`);
   });
 
-  it('S02-5: CSP erlaubt frame-src für youtube.com', () => {
+  it('S02-5: CSP erlaubt frame-src nur für youtube-nocookie.com (F004)', () => {
     const csp = headers.get('content-security-policy') || '';
-    assert.ok(
-      csp.includes('frame-src') && csp.includes('youtube.com'),
-      `CSP erlaubt kein youtube.com als frame-src: ${csp}`
-    );
+    const frame = (csp.match(/frame-src ([^;]*)/) || [])[1] || '';
+    assert.ok(frame.includes('https://www.youtube-nocookie.com'), `frame-src ohne youtube-nocookie.com: ${csp}`);
+    assert.ok(!/youtube\.com/.test(frame), `frame-src erlaubt noch youtube.com: ${frame}`);
   });
 
-  it('S02-6: CSP erlaubt font-src für fonts.gstatic.com', () => {
+  it('S02-5b: YoutubePanel bettet nur youtube-nocookie.com ein (F004)', async () => {
+    const { readFileSync } = await import('node:fs');
+    const src = readFileSync(new URL('../src/components/YoutubePanel.jsx', import.meta.url), 'utf8');
+    assert.ok(src.includes('youtube-nocookie.com/embed/'));
+    assert.ok(!/youtube\.com\/embed/.test(src), 'Embed zeigt noch auf youtube.com');
+  });
+
+  it('S02-6: CSP font-src/style-src ohne Google Fonts (F005)', () => {
     const csp = headers.get('content-security-policy') || '';
-    assert.ok(
-      csp.includes('font-src') && csp.includes('fonts.gstatic.com'),
-      `CSP erlaubt kein fonts.gstatic.com als font-src: ${csp}`
-    );
+    assert.ok(csp.includes('font-src'), `CSP ohne font-src: ${csp}`);
+    assert.ok(!/fonts\.(googleapis|gstatic)\.com/.test(csp), `CSP erlaubt noch Google Fonts: ${csp}`);
+  });
+
+  it('S02-6b: keine Google-Fonts-Verbindung im Quelltext, Schriftdateien vorhanden (F005)', async () => {
+    const { readFileSync, existsSync } = await import('node:fs');
+    const rd = (p) => readFileSync(new URL(p, import.meta.url), 'utf8');
+    for (const f of ['../index.html', '../src/main.jsx', '../src/screens/onboarding/OnboardingScreen1.jsx', '../vite.config.js', '../src/styles/index.css', '../src/styles/app.css']) {
+      assert.ok(!/fonts\.(googleapis|gstatic)\.com/.test(rd(f)), f + ' verbindet noch zu Google Fonts');
+    }
+    const css = rd('../src/styles/fonts.css');
+    const files = [...css.matchAll(/url\('\/fonts\/([^']+)'\)/g)].map((m) => m[1]);
+    assert.equal(files.length, 8, 'erwartet: 8 @font-face-Einträge');
+    for (const f of files) assert.ok(existsSync(new URL('../public/fonts/' + f, import.meta.url)), f + ' fehlt in public/fonts');
+    assert.ok(rd('../src/main.jsx').includes("./styles/fonts.css"));
   });
 
   it("S02-7: CSP erlaubt worker-src blob:", () => {
