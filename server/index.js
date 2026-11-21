@@ -232,6 +232,19 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }));
 
+// F019: Permissions-Policy. Helmet 8.x hat dafür keine Option mehr (permissionsPolicy
+// wurde entfernt), deshalb ein eigener Header. Gesperrt wird nur, was Lumo nie braucht
+// (Kamera, Standort, Zahlung, USB); das Mikrofon bleibt für die Spracheingabe
+// (useSpeechInput / Web Speech API) auf der eigenen Origin erlaubt.
+// Bewusst NICHT eingeschränkt: autoplay, clipboard-write, encrypted-media, accelerometer,
+// gyroscope, fullscreen – das YouTube-Embed (youtube-nocookie.com) bekommt sie über sein
+// allow-Attribut; eine Sperre hier würde es still kaputtmachen.
+export const PERMISSIONS_POLICY = 'camera=(), microphone=(self), geolocation=(), payment=(), usb=()';
+app.use((_req, res, next) => {
+  res.setHeader('Permissions-Policy', PERMISSIONS_POLICY);
+  next();
+});
+
 // P0-SEC-01: CORS Whitelist statt origin:true (any-origin war ein Sicherheitsproblem)
 const ALLOWED_ORIGINS = [
   process.env.FRONTEND_URL,
