@@ -256,12 +256,19 @@ const ALLOWED_ORIGINS = [
   'http://localhost:4173',
 ].filter(Boolean);
 
+// CORS gilt NUR für die API (app.use('/api', …)), nie für die ausgelieferte Seite und ihre statischen
+// Dateien. Vorher lief die Whitelist über alle Pfade: Eine Origin außerhalb von FRONTEND_URL (www/Apex,
+// zweite Domain, onrender.com-Adresse) oder ein fehlendes FRONTEND_URL in Produktion ergab HTTP 500 für
+// index.html, JS, CSS, Manifest und Icons – eine leere Seite. Module-Skripte senden einen Origin-Header,
+// auch bei Aufruf von der eigenen Adresse. Statische Dateien sind öffentlich; die Whitelist schützt, wer die
+// API-Antworten im Browser lesen darf, und die bleibt streng.
+//
 // S-03: CORS Null-Origin absichern
 // Zuvor wurde jede Anfrage ohne Origin-Header stillschweigend durchgelassen.
 // Das ermöglichte direkten Server-Zugriff von curl, Postman, Server-zu-Server-
 // Calls und Sandboxed-iframes (null-origin). Nur /api/health darf ohne Origin
 // aufgerufen werden (Uptime-Monitoring, Load-Balancer-Checks).
-app.use(cors({
+app.use('/api', cors({
   origin: (origin, callback) => {
     // S-03-FIX: kein implizites Zulassen von Origin-losen Requests mehr.
     // Ohne Origin-Header: CORS-Header werden nicht gesetzt (kein Allow-Origin).
