@@ -65,7 +65,8 @@ export default function YoutubePanel({ concept, blockTitle, onClose, subjectColo
       {selectedVideo && (
         <div style={{ width: '100%', position: 'relative', paddingBottom: '56.25%', borderRadius: '12px', overflow: 'hidden' }}>
           <iframe
-            src={`https://www.youtube.com/embed/${selectedVideo}?autoplay=1`}
+            // F004: youtube-nocookie.com setzt keine Tracking-Cookies, bevor der Nutzer abspielt.
+            src={`https://www.youtube-nocookie.com/embed/${selectedVideo}?autoplay=1`}
             style={{
               position: 'absolute', top: 0, left: 0,
               width: '100%', height: '100%', border: 'none', borderRadius: '12px',

@@ -165,12 +165,18 @@ describe('S-02: HTTP-Security-Header (Helmet)', () => {
       `CSP ohne default-src 'self': ${csp}`);
   });
 
-  it('S02-5: CSP erlaubt frame-src für youtube.com', () => {
+  it('S02-5: CSP erlaubt frame-src nur für youtube-nocookie.com (F004)', () => {
     const csp = headers.get('content-security-policy') || '';
-    assert.ok(
-      csp.includes('frame-src') && csp.includes('youtube.com'),
-      `CSP erlaubt kein youtube.com als frame-src: ${csp}`
-    );
+    const frame = (csp.match(/frame-src ([^;]*)/) || [])[1] || '';
+    assert.ok(frame.includes('https://www.youtube-nocookie.com'), `frame-src ohne youtube-nocookie.com: ${csp}`);
+    assert.ok(!/youtube\.com/.test(frame), `frame-src erlaubt noch youtube.com: ${frame}`);
+  });
+
+  it('S02-5b: YoutubePanel bettet nur youtube-nocookie.com ein (F004)', async () => {
+    const { readFileSync } = await import('node:fs');
+    const src = readFileSync(new URL('../src/components/YoutubePanel.jsx', import.meta.url), 'utf8');
+    assert.ok(src.includes('youtube-nocookie.com/embed/'));
+    assert.ok(!/youtube\.com\/embed/.test(src), 'Embed zeigt noch auf youtube.com');
   });
 
   it('S02-6: CSP erlaubt font-src für fonts.gstatic.com', () => {
