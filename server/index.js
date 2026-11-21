@@ -200,8 +200,9 @@ app.use(helmet({
         ? ["'self'"]
         // Dev: Vite-HMR und React-Devtools brauchen 'unsafe-eval' + 'unsafe-inline'
         : ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-      styleSrc:    ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc:     ["'self'", "https://fonts.gstatic.com"],
+      // F005: Schriften sind selbst gehostet (public/fonts) – kein Google mehr in style-src/font-src.
+      styleSrc:    ["'self'", "'unsafe-inline'"],
+      fontSrc:     ["'self'"],
       imgSrc:      ["'self'", "data:", "blob:", "https:"],
       // YouTube-Embeds aus YoutubePanel.jsx
       frameSrc:    ["https://www.youtube.com", "https://youtube.com"],
