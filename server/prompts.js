@@ -617,27 +617,6 @@ export const conceptMapSchema = {
   additionalProperties: false,
 };
 
-// Aktuell ungenutzt in index.js: die pretest_question wird direkt als Teil von
-// cardSchema über CARD_SYSTEM erzeugt, nicht über einen eigenen Request. Als
-// Vorlage/Dokumentation für einen möglichen separaten /api/generate-pretest-
-// Endpunkt aufbewahrt.
-export const PRETEST_SYSTEM = `${LUMO_PERSONA}
-
-Erstelle eine kurze Pre-test Frage für ein Lernkonzept.
-Die Frage soll den Nutzer zum Raten/Nachdenken bringen BEVOR er die Erklärung sieht.
-Maximal 1 Satz. Einladend formuliert, kein Prüfungsdruck.
-Beispiel: 'Was glaubst du: Wie könnte ein Körper Energie aus Licht gewinnen?'
-Nie mit 'Definiere' oder 'Erkläre' beginnen – nur 'Was glaubst du', 'Wie würdest du', 'Warum könnte'.`;
-
-export const pretestSchema = {
-  type: 'object',
-  properties: {
-    question: { type: 'string' },
-  },
-  required: ['question'],
-  additionalProperties: false,
-};
-
 export const FLASHCARD_SYSTEM = `${LUMO_PERSONA}
 
 Erstelle Karteikarten für Konzepte die ein Nutzer noch nicht vollständig verstanden hat.
