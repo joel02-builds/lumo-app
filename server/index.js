@@ -186,7 +186,7 @@ app.use((req, _res, next) => {
 //
 // CSP-Quellen analysiert aus:
 //   - Google Fonts: fonts.googleapis.com (Stylesheets) + fonts.gstatic.com (Schriften)
-//   - YouTube-Embeds: youtube.com/embed/* (YoutubePanel.jsx:67, frame-src)
+//   - YouTube-Embeds: youtube-nocookie.com/embed/* (YoutubePanel.jsx, frame-src; F004)
 //   - Service Worker (PWA, Production): worker-src 'self'
 //   - Vite-HMR (Development): benötigt eval für ESM-Hot-Module-Replacement
 //   - API: 'self' (gleicher Origin in Production; proxy in Dev via Vite)
@@ -204,7 +204,7 @@ app.use(helmet({
       fontSrc:     ["'self'", "https://fonts.gstatic.com"],
       imgSrc:      ["'self'", "data:", "blob:", "https:"],
       // YouTube-Embeds aus YoutubePanel.jsx
-      frameSrc:    ["https://www.youtube.com", "https://youtube.com"],
+      frameSrc:    ["https://www.youtube-nocookie.com"],
       // API-Calls: gleicher Origin (Production) bzw. localhost-proxy (Dev)
       connectSrc:  isProd
         ? ["'self'"]
