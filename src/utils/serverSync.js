@@ -23,6 +23,8 @@
  * • DSGVO-konform: kein personenbezogenes Datum
  */
 
+import { countProgress } from './progress.js';
+
 const SYNC_DEBOUNCE_MS = 2000; // 2s debounce — nicht bei jedem Keystroke speichern
 const BASE_URL = import.meta.env.VITE_API_URL || '';
 
@@ -144,27 +146,7 @@ export function mergeStates(localState, serverState) {
   };
 }
 
-function countProgress(state) {
-  if (!state) return 0;
-  let count = 0;
-  // Aktiver Block-Fortschritt
-  if (Array.isArray(state.blocks)) {
-    count += state.blocks.filter(b => b.status === 'completed').length * 10;
-    count += state.blocks.filter(b => b.confidence === 'sicher').length * 5;
-  }
-  // Alle Projekte
-  if (Array.isArray(state.projects)) {
-    state.projects.forEach(p => {
-      if (Array.isArray(p.blocks)) {
-        count += p.blocks.filter(b => b.status === 'completed').length * 10;
-      }
-    });
-  }
-  // Gesamtzähler
-  count += (state.blocksAnalyzedTotal || 0) * 3;
-  count += (state.sessionsTotal || 0) * 2;
-  return count;
-}
+// countProgress liegt seit F009 in progress.js (gemeinsam mit dem Tab-Abgleich genutzt).
 
 function mergeStreak(localStreak, serverStreak) {
   if (!localStreak && !serverStreak) return undefined;

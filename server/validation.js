@@ -102,6 +102,13 @@ export const GENERATE_CARDS_REQ = {
   learningStyle: { type: 'string', maxLength: 100 },
 };
 
+/** POST /api/client-error (F016) – nur Typ, Screen-Name und gekürzte Meldung; Rest ignoriert der Server. */
+export const CLIENT_ERROR_REQ = {
+  type:    { type: 'string', required: true, nonEmpty: true, maxLength: 40 },
+  screen:  { type: 'string', maxLength: 40 },
+  message: { type: 'string', required: true, nonEmpty: true, maxLength: 2000 },
+};
+
 /** POST /api/evaluate-card-answer */
 export const EVALUATE_CARD_ANSWER_REQ = {
   concept:     { type: 'string', required: true, nonEmpty: true, maxLength: 500 },

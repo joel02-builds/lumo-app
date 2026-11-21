@@ -111,6 +111,37 @@ export function appReducer(state, action) {
       };
     }
 
+    // F009: Ein anderer Tab (oder die PWA) hat einen neueren Stand gespeichert → Daten
+    // übernehmen. Anders als HYDRATE_FROM_STORAGE ohne Blockanzahl-Bedingung (ein
+    // abgeschlossener Block ändert die Anzahl nicht) und ohne Screen-Wechsel – der Nutzer
+    // bleibt, wo er ist. Nur Datenfelder, nie screen/currentBlockId/onboardingStep.
+    // Idempotent: zweimal ausgeführt ergibt dasselbe.
+    case 'ADOPT_SNAPSHOT': {
+      const p = action.payload;
+      if (!p || typeof p !== 'object') return state;
+      const pick = (v, fallback) => (v !== undefined ? v : fallback);
+      return {
+        ...state,
+        topic: pick(p.projectName, state.topic),
+        fileName: pick(p.materialName, state.fileName),
+        goalType: pick(p.goalType, state.goalType),
+        goalDate: pick(p.goalDate, state.goalDate),
+        sprintMode: pick(p.sprintMode, state.sprintMode),
+        blocks: pick(p.blocks, state.blocks),
+        recommendedOrder: pick(p.recommendedOrder, state.recommendedOrder),
+        subjectColor: pick(p.subjectColor, state.subjectColor),
+        learningStyle: pick(p.learningStyle, state.learningStyle),
+        subjectHistory: pick(p.subjectHistory, state.subjectHistory),
+        projects: pick(p.projects, state.projects),
+        activeProjectId: pick(p.activeProjectId, state.activeProjectId),
+        examResult: pick(p.examResult, state.examResult),
+        examResultAskedAt: pick(p.examResultAskedAt, state.examResultAskedAt),
+        blocksAnalyzedTotal: pick(p.blocksAnalyzedTotal, state.blocksAnalyzedTotal),
+        sessionsTotal: pick(p.sessionsTotal, state.sessionsTotal),
+        flashcards: pick(p.flashcards, state.flashcards),
+      };
+    }
+
     case 'GO_TO_STEP2':
       return { ...state, onboardingStep: 2 };
 

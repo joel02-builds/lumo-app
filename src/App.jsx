@@ -31,7 +31,6 @@ import UpdatePrompt from './components/UpdatePrompt.jsx';
 
 // ── Eager ──────────────────────────────────────────────────────────────────
 import DashboardScreen from './screens/dashboard/DashboardScreen.jsx';
-import SessionScreen from './screens/session/SessionScreen.jsx';
 import WelcomeBackScreen from './screens/WelcomeBackScreen.jsx';
 
 // ── Lazy ───────────────────────────────────────────────────────────────────
@@ -46,33 +45,102 @@ const ExamResultScreen           = lazy(() => import('./screens/ExamResultScreen
 const SettingsScreen             = lazy(() => import('./screens/SettingsScreen.jsx'));
 const FlashcardScreen            = lazy(() => import('./screens/FlashcardScreen.jsx'));
 const LegalScreen                = lazy(() => import('./screens/LegalScreen.jsx'));
+// F021: Die Lern-Session (SessionScreen + alle Phasen, ~190 kB Quelltext) lag im Hauptbündel,
+// obwohl Erstbesucher sie erst nach Onboarding und Analyse brauchen. Jetzt eigener Chunk.
+// loadSessionScreen wird zusätzlich im Leerlauf vorgeladen (siehe Effekt unten), damit der
+// Start eines Blocks nicht auf das Netz wartet.
+const loadSessionScreen = () => import('./screens/session/SessionScreen.jsx');
+const SessionScreen = lazy(loadSessionScreen);
 
 import ErrorBanner from './components/ErrorBanner.jsx';
+import { SkeletonCard } from './components/SkeletonLoader.jsx';
 import LumoWordmark from './components/LumoWordmark.jsx';
 import OfflineBanner from './components/OfflineBanner.jsx';
 import InstallBanner from './components/InstallBanner.jsx';
 import BetaFeedbackButton from './components/BetaFeedbackButton.jsx';
 import CookieConsent, { useCookieConsent } from './components/CookieConsent.jsx';
 
+// F021: Fallback für die Session, solange ihr Chunk lädt. Gleiche Hülle wie jeder Screen
+// (.screen/.screen-content: gleiche Mindesthöhe, gleicher Hintergrund, gleiche Breite) und
+// eine Skeleton-Karte statt leerer Fläche – kein Layout-Sprung beim Einblenden der Session.
+function SessionFallback() {
+  return (
+    <div className="screen" aria-busy="true">
+      <div className="screen-content">
+        <SkeletonCard />
+      </div>
+    </div>
+  );
+}
+
 // Minimaler Suspense-Fallback: transparenter dunkler Hintergrund —
 // kein weißer Flash, kein Spinner der ablenkt (ADHS-safe).
 function LazyFallback() {
   return <div style={{ position: 'fixed', inset: 0, background: '#0E0C09' }} />;
 }
+import { setReportScreen } from './utils/errorReport.js';
 import { calculateNextReview } from './utils/fsrs.js';
 import { useChronoBias } from './hooks/useChronoBias.js';
+import { createTabSync } from './utils/tabSync.js';
 
 const OFFLINE_CONFIRM_DELAY_MS = 2000;
+const PREFETCH_SESSION_TIMEOUT_MS = 2000; // spätestens nach 2 s vorladen, auch wenn der Browser nie „leer“ ist
 // F017: <main> verhält sich im Layout wie vorher #root direkt über den Screens
 // (Höhe 100 %, kein eigener Rahmen). outline: none, weil nur der Skip-Link darauf fokussiert.
 const LANDMARK_MAIN_STYLE = { height: '100%', outline: 'none' };
 
+// Gespeicherter Projektstand (Format unverändert, siehe SAVE-Effekt und tabSync.js).
+function buildSnapshot(state) {
+  return {
+    projectName: state.topic,
+    materialName: state.fileName,
+    goalType: state.goalType,
+    goalDate: state.goalDate,
+    sprintMode: state.sprintMode,
+    blocks: state.blocks,
+    recommendedOrder: state.recommendedOrder,
+    subjectColor: state.subjectColor,
+    learningStyle: state.learningStyle,
+    subjectHistory: state.subjectHistory,
+    projects: state.projects,
+    activeProjectId: state.activeProjectId,
+    examResult: state.examResult,
+    examResultAskedAt: state.examResultAskedAt,
+    blocksAnalyzedTotal: state.blocksAnalyzedTotal,
+    sessionsTotal: state.sessionsTotal,
+    flashcards: state.flashcards,
+  };
+}
+
 export default function App() {
   const [state, dispatch] = useReducer(appReducer, null, () => createInitialState(loadProject()));
+
+  // F009: Abgleich mit anderen Tabs/der PWA. Wird direkt nach dem Laden des Stands angelegt,
+  // merkt sich damit die zu diesem Stand passende Revision.
+  const tabSyncRef = useRef(null);
+  if (tabSyncRef.current === null) tabSyncRef.current = createTabSync();
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   // Chronobiology-basierter Dusk-Modus: ab 20:00 Uhr → Amber-Palette
   // Basis: Bijlenga et al. 2019 — DSPS bei 73% der ADHS-Erwachsenen
   useChronoBias();
+
+  // F016: Screen-Name für Fehlermeldungen merken (nur der Name, nie Inhalte).
+  useEffect(() => { setReportScreen(state.screen); }, [state.screen]);
+
+  // F021: Session-Chunk im Leerlauf vorladen, sobald der Nutzer auf Dashboard/Willkommen ist
+  // (dort startet er den nächsten Block). Reines Laden einer statischen Datei, kein API-Aufruf.
+  useEffect(() => {
+    if (state.screen !== SCREENS.DASHBOARD && state.screen !== SCREENS.WELCOME_BACK) return undefined;
+    const run = () => { loadSessionScreen().catch(() => {}); };
+    if (typeof window.requestIdleCallback === 'function') {
+      const id = window.requestIdleCallback(run, { timeout: PREFETCH_SESSION_TIMEOUT_MS });
+      return () => window.cancelIdleCallback?.(id);
+    }
+    const t = setTimeout(run, PREFETCH_SESSION_TIMEOUT_MS);
+    return () => clearTimeout(t);
+  }, [state.screen]);
 
   // Wird von SessionScreen gemeldet: true während einer Phase mit eigenem
   // Header (CardLearningPhase, ExplainChatPhase, CheckUnderstandingPhase), die
@@ -206,32 +274,46 @@ export default function App() {
     };
   }, []);
 
+  // F009: Wird ein anderer Tab aktiv bzw. ändert er den Stand, Stand sofort übernehmen –
+  // außer mitten in einer Session (dort greift der Schutz beim nächsten Speichern, damit sich
+  // unter dem Nutzer nichts verschiebt).
+  useEffect(() => {
+    function checkOtherTabs() {
+      const s = stateRef.current;
+      if (s.screen === SCREENS.SESSION) return;
+      const res = tabSyncRef.current.checkIncoming(buildSnapshot(s));
+      if (res.adopt) dispatch({ type: 'ADOPT_SNAPSHOT', payload: res.snapshot });
+    }
+    function onStorage(e) {
+      if (e.key === 'lumo_project_rev') checkOtherTabs();
+    }
+    function onVisible() {
+      if (document.visibilityState === 'visible') checkOtherTabs();
+    }
+    window.addEventListener('storage', onStorage);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, []);
+
   useEffect(() => {
     // Immer persistieren, auch wenn blocks/projects gerade leer sind (z. B.
     // nach dem Löschen des letzten Projekts) – loadProject() entscheidet beim
     // nächsten Start anhand des Inhalts, ob der gespeicherte Stand gültig ist.
-    const snapshot = {
-      projectName: state.topic,
-      materialName: state.fileName,
-      goalType: state.goalType,
-      goalDate: state.goalDate,
-      sprintMode: state.sprintMode,
-      blocks: state.blocks,
-      recommendedOrder: state.recommendedOrder,
-      subjectColor: state.subjectColor,
-      learningStyle: state.learningStyle,
-      subjectHistory: state.subjectHistory,
-      projects: state.projects,
-      activeProjectId: state.activeProjectId,
-      examResult: state.examResult,
-      examResultAskedAt: state.examResultAskedAt,
-      blocksAnalyzedTotal: state.blocksAnalyzedTotal,
-      sessionsTotal: state.sessionsTotal,
-      flashcards: state.flashcards,
-    };
+    const snapshot = buildSnapshot(state);
+
+    // F009: Hat ein anderer Tab seit unserem letzten Stand geschrieben, NICHT blind
+    // überschreiben: neueren Stand übernehmen (oder den eigenen behalten, falls er mehr
+    // Fortschritt hat). Bei 'skip' wird weder lokal noch zum Server geschrieben.
+    const guard = tabSyncRef.current.beforeSave(snapshot);
+    if (guard.adopt) dispatch({ type: 'ADOPT_SNAPSHOT', payload: guard.snapshot });
+    if (guard.action !== 'write') return;
 
     // Sync: sofortiger localStorage-Write (Sicherheitsnetz, kein IDB-Overhead)
     saveProject(snapshot);
+    tabSyncRef.current.afterSave();
 
     // Async: IDB-Write debounced — P-FE-01: bei schnellen State-Updates (z. B.
     // Karteikarten-Flipping) wird nur der letzte Stand innerhalb von 300 ms
@@ -661,6 +743,7 @@ export default function App() {
       )}
 
       {state.screen === SCREENS.SESSION && currentBlock && (
+        <Suspense fallback={<SessionFallback />}>
         <SessionScreen
           key={currentBlock.id}
           block={currentBlock}
@@ -677,6 +760,7 @@ export default function App() {
           onPause={() => dispatch({ type: 'RETURN_TO_DASHBOARD' })}
           onHeaderVisibilityChange={setSessionHasOwnHeader}
         />
+        </Suspense>
       )}
       </main>
         </>

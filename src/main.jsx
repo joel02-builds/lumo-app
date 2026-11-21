@@ -5,6 +5,10 @@ import { isChunkLoadError, shouldAutoReload } from './utils/chunkError.js';
 import './styles/fonts.css'; // F005: selbst gehostete Schriften, keine Verbindung zu Google
 import './styles/index.css';
 import './styles/app.css';
+import { reportClientError, installGlobalErrorHandlers } from './utils/errorReport.js';
+
+// F016: Laufzeitfehler (window.onerror, unhandledrejection) ins Server-Log melden.
+installGlobalErrorHandlers();
 
 // Nur im Fehlerfall "Neue Version": lädt den Tab EINMAL selbst neu (siehe chunkError.js).
 // Eigene kleine Komponente, damit der Seiteneffekt nicht im Render des Boundaries steckt.
@@ -26,6 +30,8 @@ class ErrorBoundary extends Component {
   componentDidCatch(error, info) {
     // Immer in die Console loggen — auch in Production
     console.error('[Lumo Error Boundary]', error, info?.componentStack);
+    // F016: nur Typ, Screen-Name und gekürzte Meldung – kein Stack, keine Inhalte.
+    reportClientError('boundary', error);
   }
   render() {
     if (this.state.hasError) {
