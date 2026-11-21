@@ -46,26 +46,6 @@ export default defineConfig({
               },
             },
           },
-          {
-            // Google Fonts (falls eingebunden): StaleWhileRevalidate
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'google-fonts-stylesheets',
-            },
-          },
-          {
-            // Font-Dateien selbst: CacheFirst
-            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts-webfonts',
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 365 * 24 * 60 * 60, // 1 Jahr
-              },
-            },
-          },
         ],
 
         // Entwicklungs-Logs unterdrücken
