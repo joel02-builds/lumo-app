@@ -28,14 +28,22 @@ it('MA-02 keine lumo-*.png in public/mascot', () => {
 });
 
 it('MA-03 kein Maskottchen-PNG im Quelltext referenziert', () => {
+  // Tolerant gegen Dateien, die parallel laufende Tests kurzzeitig anlegen und löschen
+  // (server/db.test.js legt server/_lumo-mig-test-*.mjs an): sonst ENOENT → sporadisch rot.
   function walk(dir, out = []) {
     for (const n of readdirSync(dir)) {
-      const u = new URL(n + (statSync(new URL(n, dir)).isDirectory() ? '/' : ''), dir);
-      if (statSync(u).isDirectory()) walk(u, out); else if (/\.(jsx?|mjs|html|css|json)$/.test(n)) out.push(u);
+      if (n.startsWith('_lumo-')) continue;
+      let u, isDir;
+      try {
+        isDir = statSync(new URL(n, dir)).isDirectory();
+        u = new URL(n + (isDir ? '/' : ''), dir);
+      } catch { continue; } // verschwunden
+      if (isDir) walk(u, out); else if (/\.(jsx?|mjs|html|css|json)$/.test(n)) out.push(u);
     }
     return out;
   }
+  const safeRead = (f) => { try { return readFileSync(f, 'utf8'); } catch { return ''; } };
   const files = [...walk(new URL('src/', root)), ...walk(new URL('server/', root)), new URL('index.html', root), new URL('public/manifest.json', root)];
-  const hits = files.filter((f) => /mascot\/[^'"\s]*\.png/i.test(readFileSync(f, 'utf8')));
+  const hits = files.filter((f) => /mascot\/[^'"\s]*\.png/i.test(safeRead(f)));
   assert.deepEqual(hits.map(String), []);
 });

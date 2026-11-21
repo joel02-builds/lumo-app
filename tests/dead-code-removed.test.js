@@ -17,13 +17,21 @@ const root = new URL('../', import.meta.url);
 const rel = (p) => new URL(p, root);
 const read = (p) => readFileSync(rel(p), 'utf8');
 
+// Tolerant gegen Dateien, die parallel laufende Tests kurzzeitig anlegen und löschen
+// (server/db.test.js legt server/_lumo-mig-test-*.mjs an): sonst ENOENT → sporadisch rot.
 function walk(dir, out = []) {
   for (const n of readdirSync(dir)) {
-    const u = new URL(n + (statSync(new URL(n, dir)).isDirectory() ? '/' : ''), dir);
-    if (statSync(u).isDirectory()) walk(u, out); else if (/\.(jsx?|css|html)$/.test(n)) out.push(u);
+    if (n.startsWith('_lumo-')) continue;
+    let u, isDir;
+    try {
+      isDir = statSync(new URL(n, dir)).isDirectory();
+      u = new URL(n + (isDir ? '/' : ''), dir);
+    } catch { continue; } // verschwunden
+    if (isDir) walk(u, out); else if (/\.(jsx?|css|html)$/.test(n)) out.push(u);
   }
   return out;
 }
+const safeRead = (f) => { try { return readFileSync(f, 'utf8'); } catch { return ''; } };
 
 it('DC-01 entfernte Dateien sind weg', () => {
   for (const f of ['src/screens/onboarding/OnboardingScreen2.jsx', 'src/utils/apiCostEstimate.js', 'src/components/LumoMascot.css']) {
@@ -38,7 +46,7 @@ it('DC-02 keine Verweise auf Entferntes', () => {
   files.push(rel('index.html'), rel('vite.config.js'), rel('package.json'));
   const hits = [];
   for (const f of files) {
-    const s = readFileSync(f, 'utf8');
+    const s = safeRead(f);
     for (const n of needles) if (s.includes(n)) hits.push(`${f.pathname.split('/lumo-app/')[1]}: ${n}`);
   }
   assert.deepEqual(hits, []);
