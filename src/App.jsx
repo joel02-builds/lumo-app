@@ -78,6 +78,7 @@ function SessionFallback() {
 function LazyFallback() {
   return <div style={{ position: 'fixed', inset: 0, background: '#0E0C09' }} />;
 }
+import { setReportScreen } from './utils/errorReport.js';
 import { calculateNextReview } from './utils/fsrs.js';
 import { useChronoBias } from './hooks/useChronoBias.js';
 
@@ -93,6 +94,9 @@ export default function App() {
   // Chronobiology-basierter Dusk-Modus: ab 20:00 Uhr → Amber-Palette
   // Basis: Bijlenga et al. 2019 — DSPS bei 73% der ADHS-Erwachsenen
   useChronoBias();
+
+  // F016: Screen-Name für Fehlermeldungen merken (nur der Name, nie Inhalte).
+  useEffect(() => { setReportScreen(state.screen); }, [state.screen]);
 
   // F021: Session-Chunk im Leerlauf vorladen, sobald der Nutzer auf Dashboard/Willkommen ist
   // (dort startet er den nächsten Block). Reines Laden einer statischen Datei, kein API-Aufruf.
