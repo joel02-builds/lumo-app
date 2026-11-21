@@ -28,7 +28,9 @@ import assert from 'node:assert/strict';
 // ─── Konstanten (dupliziert für Assertions) ──────────────────────────────────
 const TIMEOUT_ERROR  = 'Lumo braucht einen Moment länger. Warte kurz oder versuch es nochmal.';
 const FRIENDLY_ERROR = 'Lumo hat gerade ein kleines Problem. Versuch es gleich nochmal.';
-const MAX_TOKENS_ERR = 'Das Material ist für eine einzelne Analyse zu umfangreich. Bitte teile es in kleinere Abschnitte auf.';
+// Seit der Fehlerklassen-Änderung neutral formuliert: max_tokens ist kein Fehler des Nutzers
+// ("zu umfangreich" gibt es nur noch bei zu großer Eingabe, siehe tests/ai-errors.test.js).
+const MAX_TOKENS_ERR = 'Lumo hat zu viel auf einmal geschrieben. Versuch es noch einmal.';
 
 // Knapp über dem PDF-Limit, aber unter dem 10-MB-Body-Limit von /api/analyze:
 // floor(9786712 * 0.75) = 7340034 > 7340032 = MAX_PDF_BYTES_RAW (7 MB)

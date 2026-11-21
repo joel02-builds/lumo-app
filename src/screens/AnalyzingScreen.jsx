@@ -2,6 +2,11 @@ import { useEffect, useState } from 'react';
 import LumoMascot from '../components/LumoMascot.jsx';
 import { SkeletonBlockList } from '../components/SkeletonLoader.jsx';
 
+// Die Analyse dauert normal etwa 20 s (die Antwort wird in einem Stück erzeugt, es gibt keinen
+// Zwischenstand). Nach 15 s sagen wir ehrlich, dass Lumo noch arbeitet – dasselbe Muster wie
+// beim Karten-Skeleton (F026), damit niemand aus Ungeduld neu lädt.
+const SLOW_HINT_AFTER_MS = 15000;
+
 const MESSAGES = [
   'Ich schaue mir dein Material an …',
   'Ich erkenne die Struktur …',
@@ -25,6 +30,12 @@ const MESSAGES = [
 export default function AnalyzingScreen({ blockCount }) {
   const [msgIndex, setMsgIndex] = useState(0);
   const [showResult, setShowResult] = useState(false);
+  const [slow, setSlow] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setSlow(true), SLOW_HINT_AFTER_MS);
+    return () => clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     const msgInterval = setInterval(() => {
@@ -85,6 +96,25 @@ export default function AnalyzingScreen({ blockCount }) {
               minHeight: '24px',
             }}>
               {MESSAGES[msgIndex]}
+            </p>
+          )}
+          {/* Platz ist von Anfang an reserviert (minHeight) → der Hinweis lässt nichts springen. */}
+          {!showResult && (
+            <p
+              role="status"
+              style={{
+                fontSize: '13px',
+                color: 'var(--text-secondary)',
+                margin: '8px 0 0',
+                lineHeight: '1.5',
+                minHeight: '20px',
+              }}
+            >
+              {slow && (
+                <span style={{ animation: 'fadeIn 0.4s ease' }}>
+                  Lumo arbeitet noch, das dauert manchmal 20–30 Sekunden.
+                </span>
+              )}
             </p>
           )}
         </div>

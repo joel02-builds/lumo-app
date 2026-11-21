@@ -63,6 +63,7 @@ import {
   youtubeSearchSchema,
 } from './prompts.js';
 import { sanitizeClientError } from './clientError.js';
+import { classifyAiError, userMessageFor, FRIENDLY_ERROR, TIMEOUT_ERROR } from './aiErrors.js';
 import {
   validate,
   ANALYZE_REQ,
@@ -126,8 +127,7 @@ if (!isProd) {
 // Portkollision führt – deshalb dort bewusst LUMO_API_PORT statt PORT.
 const PORT = isProd ? process.env.PORT || 3001 : process.env.LUMO_API_PORT || 3001;
 
-const FRIENDLY_ERROR = 'Lumo hat gerade ein kleines Problem. Versuch es gleich nochmal.';
-const TIMEOUT_ERROR = 'Lumo braucht einen Moment länger. Warte kurz oder versuch es nochmal.';
+// FRIENDLY_ERROR / TIMEOUT_ERROR und die übrigen Meldungen je Fehlerklasse: server/aiErrors.js
 const CLAUDE_TIMEOUT_MS = 55000; // knapp unter dem 60s-Timeout des Frontends (H-02)
 
 // DB initialisieren — non-blocking, App läuft auch ohne DB
@@ -404,7 +404,23 @@ export function __setClientForTesting(c) { _client = c; }
 // In Production niemals aufrufen.
 export function __getActiveAnalyzeCountForTesting() { return _activeAnalyzeCount; }
 
-async function askLumo({ system, userContent, schema, maxTokens = 2048, signal: externalSignal } = {}) {
+// Eine Logzeile je KI-Antwort – NUR technische Felder (Route, stop_reason, Tokens, Dauer,
+// Fehlerklasse). Nie Inhalte, Dateinamen, IP, Cookie oder Nutzer-Kennung, auch keinen
+// Fehlertext der API. Dient dazu, bei "es war so langsam / Fehler" zu sehen, was passiert ist.
+function logAiCall({ route, startedAt, response = null, err = null }) {
+  const entry = {
+    route: route || null,
+    stop_reason: response?.stop_reason ?? null,
+    input_tokens: response?.usage?.input_tokens ?? null,
+    output_tokens: response?.usage?.output_tokens ?? null,
+    ms: Date.now() - startedAt,
+    klass: err ? classifyAiError(err) : null,
+    status: Number.isInteger(err?.status) ? err.status : null,
+  };
+  console.log('[AI]', JSON.stringify(entry));
+}
+
+async function askLumo({ route, system, userContent, schema, maxTokens = 2048, signal: externalSignal } = {}) {
   // P-BE-07: Globales Concurrency-Gate — wirft AiCapacityError wenn MAX_CONCURRENT_AI erreicht.
   if (_activeAiCalls >= MAX_CONCURRENT_AI) {
     const e = new Error('ai_at_capacity');
@@ -436,6 +452,8 @@ async function askLumo({ system, userContent, schema, maxTokens = 2048, signal: 
     externalSignal.addEventListener('abort', () => abortController.abort(), { once: true });
   }
 
+  const startedAt = Date.now();
+  let response = null;
   try {
     // SDK-Dokumentation v0.117.1: RequestOptions.signal?: AbortSignal wird
     // als zweites Argument an stream() übergeben und in MessageStream.ts
@@ -447,11 +465,15 @@ async function askLumo({ system, userContent, schema, maxTokens = 2048, signal: 
       messages: [{ role: 'user', content: userContent }],
       output_config: { format: { type: 'json_schema', schema } },
     }, { signal: abortController.signal });
-    const response = await stream.finalMessage();
+    response = await stream.finalMessage();
     clearTimeout(timeoutId);
-    return processLumoResponse(response);
+    const data = processLumoResponse(response);
+    logAiCall({ route, startedAt, response });
+    return data;
   } catch (err) {
     clearTimeout(timeoutId);
+    // Fehler (auch max_tokens aus processLumoResponse) mit Klasse loggen; bei Timeout: unsere Klasse
+    logAiCall({ route, startedAt, response, err: timedOut ? new Error('request_timeout') : err });
     // Nur wenn unser eigener Timer den Abbruch ausgelöst hat, einen
     // Timeout-Fehler werfen — nicht bei Client-Abbruch oder API-Fehlern.
     if (timedOut) {
@@ -476,10 +498,6 @@ function describeAnthropicError(err) {
   };
 }
 
-function isTimeoutError(err) {
-  return /timeout|timed out/i.test(err?.name || '') || /timeout|timed out/i.test(err?.message || '');
-}
-
 function sendFriendlyError(res, err) {
   // P-BE-07: KI-Kapazität erschöpft → 429 statt 500 (kein Logging nötig, kein API-Fehler)
   if (err?.name === 'AiCapacityError' || err?.message === 'ai_at_capacity') {
@@ -493,15 +511,10 @@ function sendFriendlyError(res, err) {
   const details = describeAnthropicError(err);
   console.error('Lumo API-Fehler:', details);
 
-  let errorMessage = FRIENDLY_ERROR;
-  if (isTimeoutError(err)) {
-    errorMessage = TIMEOUT_ERROR;
-  } else if (err?.message === 'max_tokens_exceeded') {
-    // H-02: Claude hat die Antwort wegen max_tokens abgebrochen — JSON unvollständig.
-    errorMessage = 'Das Material ist für eine einzelne Analyse zu umfangreich. Bitte teile es in kleinere Abschnitte auf.';
-  } else if (err?.message === 'json_parse_error') {
-    errorMessage = FRIENDLY_ERROR;
-  }
+  // Meldung je Fehlerklasse (server/aiErrors.js). max_tokens (H-02) heißt nicht mehr
+  // "Material zu umfangreich": Die Ausgabe hängt nicht von der Eingabegröße ab, es ist kein
+  // Fehler des Nutzers. "Zu umfangreich" gibt es nur noch bei wirklich zu großer Eingabe (400/413).
+  const errorMessage = userMessageFor(classifyAiError(err), err, { isProd });
 
   const payload = { error: errorMessage };
   if (!isProd) {
@@ -681,7 +694,7 @@ app.post('/api/analyze',
     }
     userContent.push({ type: 'text', text: textPrompt });
 
-    const data = await askLumo({
+    const data = await askLumo({ route: '/api/analyze',
       system: getAnalyzeSystem(goalType, Boolean(sprintMode)),
       userContent,
       schema: analyzeSchema,
@@ -770,7 +783,7 @@ app.post('/api/explain-chat', async (req, res) => {
       ? `${contextBlock}\n\nBisheriger Chat-Verlauf:\n${transcript}\n\nGib jetzt deine Antwort auf die letzte Nutzer-Nachricht.`
       : `${contextBlock}\n\nGib jetzt deine Eröffnungserklärung.`;
 
-    const data = await askLumo({ system, userContent, schema: explainChatSchema, maxTokens: 768 });
+    const data = await askLumo({ route: '/api/explain-chat', system, userContent, schema: explainChatSchema, maxTokens: 768 });
     res.json({ data });
   } catch (err) {
     sendFriendlyError(res, err);
@@ -784,7 +797,7 @@ app.post('/api/understanding-hint', async (req, res) => {
 
     const { blockTitle, blockContent } = req.body || {};
     const userContent = `Block-Titel: ${blockTitle}\nInhalt:\n${blockContent}`;
-    const data = await askLumo({
+    const data = await askLumo({ route: '/api/understanding-hint',
       system: UNDERSTANDING_HINT_SYSTEM,
       userContent,
       schema: understandingHintSchema,
@@ -803,7 +816,7 @@ app.post('/api/evaluate-understanding', async (req, res) => {
 
     const { blockTitle, blockContent, userExplanation } = req.body || {};
     const userContent = `Block-Titel: ${blockTitle}\nInhalt des Blocks:\n${blockContent}\n\nErklärung des Nutzers in eigenen Worten:\n"${userExplanation}"`;
-    const data = await askLumo({
+    const data = await askLumo({ route: '/api/evaluate-understanding',
       system: EVALUATE_UNDERSTANDING_SYSTEM,
       userContent,
       schema: evaluateUnderstandingSchema,
@@ -821,7 +834,7 @@ app.post('/api/generate-cards', async (req, res) => {
     if (!_gcCheck.ok) return res.status(400).json({ error: _gcCheck.error });
 
     const { blockTitle, blockContent, difficulty, goalType, mood, learningStyle } = req.body || {};
-    const data = await askLumo({
+    const data = await askLumo({ route: '/api/generate-cards',
       system: getCardSystem(goalType, mood, learningStyle),
       userContent: `Block: ${blockTitle}\nSchwierigkeit: ${difficulty}\nInhalt: ${blockContent}`,
       schema: cardSchema,
@@ -839,7 +852,7 @@ app.post('/api/evaluate-card-answer', async (req, res) => {
     if (!_ecaCheck.ok) return res.status(400).json({ error: _ecaCheck.error });
 
     const { concept, explanation, question, userAnswer } = req.body || {};
-    const data = await askLumo({
+    const data = await askLumo({ route: '/api/evaluate-card-answer',
       system: EVALUATE_CARD_ANSWER_SYSTEM,
       userContent: `Konzept: ${concept}\nErklärung: ${concept} bedeutet: ${explanation}\nFrage: ${question}\nAntwort des Nutzers: ${userAnswer}`,
       schema: evaluateCardAnswerSchema,
@@ -857,7 +870,7 @@ app.post('/api/generate-lernzettel', async (req, res) => {
     if (!_glCheck.ok) return res.status(400).json({ error: _glCheck.error });
 
     const { blockTitle, blockContent, cards, goalType } = req.body || {};
-    const data = await askLumo({
+    const data = await askLumo({ route: '/api/generate-lernzettel',
       system: getLernzettelSystem(goalType),
       userContent: `Block: ${blockTitle}\nInhalt: ${blockContent}\nGelernte Konzepte: ${cards?.map((c) => c.concept + ': ' + c.explanation).join('\n') || ''}`,
       schema: lernzettelSchema,
@@ -875,7 +888,7 @@ app.post('/api/reexplain', async (req, res) => {
     if (!_reCheck.ok) return res.status(400).json({ error: _reCheck.error });
 
     const { concept, originalExplanation, blockTitle } = req.body || {};
-    const data = await askLumo({
+    const data = await askLumo({ route: '/api/reexplain',
       system: REEXPLAIN_SYSTEM,
       userContent: `Block: ${blockTitle}\nKonzept: ${concept}\nUrsprüngliche Erklärung: ${originalExplanation}`,
       schema: reexplainSchema,
@@ -893,7 +906,7 @@ app.post('/api/explain-term', async (req, res) => {
     if (!_etCheck.ok) return res.status(400).json({ error: _etCheck.error });
 
     const { term, blockTitle, blockContext } = req.body || {};
-    const data = await askLumo({
+    const data = await askLumo({ route: '/api/explain-term',
       system: TERM_EXPLAIN_SYSTEM,
       userContent: `Block: ${blockTitle}\nKontext: ${blockContext}\nBegriff: ${term}`,
       schema: termExplainSchema,
@@ -911,7 +924,7 @@ app.post('/api/generate-concept-map', async (req, res) => {
     if (!_cmCheck.ok) return res.status(400).json({ error: _cmCheck.error });
 
     const { blockTitle, blockContent, cards } = req.body || {};
-    const data = await askLumo({
+    const data = await askLumo({ route: '/api/generate-concept-map',
       system: CONCEPT_MAP_SYSTEM,
       userContent: `Block: ${blockTitle}\nKernkonzepte: ${cards?.map((c) => c.concept).join(', ') || ''}\nInhalt: ${blockContent}`,
       schema: conceptMapSchema,
@@ -929,7 +942,7 @@ app.post('/api/generate-flashcards', async (req, res) => {
     if (!_gfCheck.ok) return res.status(400).json({ error: _gfCheck.error });
 
     const { blockTitle, uncertainConcepts, blockContent } = req.body || {};
-    const data = await askLumo({
+    const data = await askLumo({ route: '/api/generate-flashcards',
       system: FLASHCARD_SYSTEM,
       userContent: `Block: ${blockTitle}\nNoch unsichere Konzepte:\n${(uncertainConcepts || []).map((c, i) => `${i + 1}. ${c}`).join('\n')}\nKontext: ${blockContent?.slice(0, 1000) || ''}`,
       schema: flashcardSchema,
@@ -985,7 +998,7 @@ app.post('/api/youtube-videos', async (req, res) => {
     // Zuerst Lumo nach optimaler Suchanfrage fragen
     let searchQuery = `${concept} einfach erklärt`;
     try {
-      const queryData = await askLumo({
+      const queryData = await askLumo({ route: '/api/youtube-videos',
         system: YOUTUBE_SEARCH_SYSTEM,
         userContent: `Konzept: ${concept}\nBlock: ${blockTitle}`,
         schema: youtubeSearchSchema,
