@@ -290,19 +290,10 @@ export default function LegalScreen({ onBack }) {
               Nur der Lerninhalt, den du explizit eingibst, wird übertragen.
             </p>
 
-            <h4 style={subHeadingStyle}>5. Google Fonts</h4>
+            <h4 style={subHeadingStyle}>5. Schriftarten</h4>
             <p style={textStyle}>
-              Lumo lädt Schriftarten über Google Fonts (fonts.googleapis.com). Dabei wird deine IP-Adresse
-              an Google (USA) übertragen. Die Übertragung basiert auf dem berechtigten Interesse (Art. 6 Abs. 1 lit. f DSGVO)
-              an einer einheitlichen Darstellung. Datenschutzrichtlinie von Google:{' '}
-              <a
-                href="https://policies.google.com/privacy"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: 'var(--gold)', textDecoration: 'none' }}
-              >
-                policies.google.com/privacy
-              </a>
+              Die Schriftarten von Lumo werden von unserem eigenen Server ausgeliefert. Beim Laden der Seite
+              wird dafür keine Verbindung zu Google oder anderen Schriftanbietern aufgebaut.
             </p>
 
             <h4 style={subHeadingStyle}>6. Server-Logs</h4>

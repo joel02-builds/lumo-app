@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
+import './styles/fonts.css'; // F005: selbst gehostete Schriften, keine Verbindung zu Google
 import './styles/index.css';
 import './styles/app.css';
 
