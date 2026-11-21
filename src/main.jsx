@@ -1,9 +1,19 @@
-import React, { Component } from 'react';
+import React, { Component, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
+import { isChunkLoadError, shouldAutoReload } from './utils/chunkError.js';
 import './styles/fonts.css'; // F005: selbst gehostete Schriften, keine Verbindung zu Google
 import './styles/index.css';
 import './styles/app.css';
+
+// Nur im Fehlerfall "Neue Version": lädt den Tab EINMAL selbst neu (siehe chunkError.js).
+// Eigene kleine Komponente, damit der Seiteneffekt nicht im Render des Boundaries steckt.
+function ReloadOnceOnNewVersion() {
+  useEffect(() => {
+    if (shouldAutoReload()) window.location.reload();
+  }, []);
+  return null;
+}
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -19,6 +29,9 @@ class ErrorBoundary extends Component {
   }
   render() {
     if (this.state.hasError) {
+      // Nach einem Deploy fehlt der Code-Chunk eines Screens: kein App-Fehler, sondern eine
+      // neue Version. Freundlicher Hinweis statt "Etwas ist schiefgelaufen".
+      const newVersion = isChunkLoadError(this.state.error);
       return (
         <div style={{
           minHeight: 'var(--dvh, 100dvh)',
@@ -31,12 +44,13 @@ class ErrorBoundary extends Component {
           gap: '20px',
           textAlign: 'center',
         }}>
+          {newVersion && <ReloadOnceOnNewVersion />}
           <img src="/mascot/lumo-idle.webp" alt="Lumo" width={100} height={100} style={{ objectFit: 'contain' }} />
           <h1 style={{ fontSize: '24px', color: '#F0EDE8', margin: '0' }}>
-            Etwas ist schiefgelaufen.
+            {newVersion ? 'Es gibt eine neue Version von Lumo.' : 'Etwas ist schiefgelaufen.'}
           </h1>
           <p style={{ fontSize: '15px', color: '#8A9BAE', margin: '0', lineHeight: '1.5' }}>
-            Ich entschuldige mich. Lade die Seite neu –<br />
+            {newVersion ? 'Lade die Seite neu, dann geht es weiter –' : 'Ich entschuldige mich. Lade die Seite neu –'}<br />
             dein Fortschritt ist gespeichert.
           </p>
           <button
