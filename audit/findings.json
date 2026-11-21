@@ -157,7 +157,8 @@
     "reproduktion": "cd /home/claude/lumo-app && npm audit",
     "fix": "vite auf neueste Version updaten (prüfen ob esbuild-Fix enthalten), oder npm audit fix --force ausführen und Build testen.",
     "konfidenz": "hoch",
-    "status": "CONFIRMED"
+    "status": "ACCEPTED",
+    "akzeptiert": "dev-only, akzeptiert (2026-11-21). Stand heute: esbuild ist nicht mehr vorhanden (Vite 8 nutzt es nicht, `npm ls esbuild` leer). Die vier moderaten Meldungen betreffen glob, minimatch, workbox-build und vite-plugin-pwa – nur Build-Werkzeuge (Service-Worker-Generierung). `npm audit --omit=dev` = 0 Schwachstellen. Behebung nur mit Major-Sprüngen (glob >=14.0.2, minimatch >=11.0.1, per overrides gegen die Bereiche von workbox-build 7.4.1) bzw. einem Downgrade auf vite-plugin-pwa 1.1.0; vite-plugin-pwa 2.0.0 und workbox-build 7.4.1 sind die neuesten Versionen. Wiedervorlage: bei neuer workbox-build-Version mit glob >=14.0.2 oder wenn die Meldungen auf eine Produktionsabhängigkeit übergreifen."
   },
   {
     "id": "F015",
