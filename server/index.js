@@ -108,7 +108,8 @@ console.log('NODE_ENV:', process.env.NODE_ENV);
 // Diagnose: Railway-Erkennung über dokumentierte Plattformvariablen
 console.log('RAILWAY_ENVIRONMENT_ID:', process.env.RAILWAY_ENVIRONMENT_ID);
 console.log('RAILWAY_ENVIRONMENT_NAME:', process.env.RAILWAY_ENVIRONMENT_NAME);
-console.log('API KEY vorhanden:', Boolean(process.env.ANTHROPIC_API_KEY)); // R-01: Länge entfernt (unnötig, kein Mehrwert)
+// F008: Kein Log über die Existenz des API-Keys mehr (stand in jedem Produktions-Log).
+// Fehlt der Key, warnt der Start-Block unten – das reicht fürs Deployen.
 // Nur die Namen, keine Werte – ausschließlich in Entwicklung, da die vollständige
 // ENV-Key-Liste in Production nicht benötigt wird und unnötige Offenlegung birgt.
 // isProd ist bereits in Zeile 74 definiert (NODE_ENV === 'production' || IS_RAILWAY).
@@ -186,7 +187,7 @@ app.use((req, _res, next) => {
 //
 // CSP-Quellen analysiert aus:
 //   - Google Fonts: fonts.googleapis.com (Stylesheets) + fonts.gstatic.com (Schriften)
-//   - YouTube-Embeds: youtube.com/embed/* (YoutubePanel.jsx:67, frame-src)
+//   - YouTube-Embeds: youtube-nocookie.com/embed/* (YoutubePanel.jsx, frame-src; F004)
 //   - Service Worker (PWA, Production): worker-src 'self'
 //   - Vite-HMR (Development): benötigt eval für ESM-Hot-Module-Replacement
 //   - API: 'self' (gleicher Origin in Production; proxy in Dev via Vite)
@@ -200,11 +201,12 @@ app.use(helmet({
         ? ["'self'"]
         // Dev: Vite-HMR und React-Devtools brauchen 'unsafe-eval' + 'unsafe-inline'
         : ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-      styleSrc:    ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc:     ["'self'", "https://fonts.gstatic.com"],
+      // F005: Schriften sind selbst gehostet (public/fonts) – kein Google mehr in style-src/font-src.
+      styleSrc:    ["'self'", "'unsafe-inline'"],
+      fontSrc:     ["'self'"],
       imgSrc:      ["'self'", "data:", "blob:", "https:"],
       // YouTube-Embeds aus YoutubePanel.jsx
-      frameSrc:    ["https://www.youtube.com", "https://youtube.com"],
+      frameSrc:    ["https://www.youtube-nocookie.com"],
       // API-Calls: gleicher Origin (Production) bzw. localhost-proxy (Dev)
       connectSrc:  isProd
         ? ["'self'"]
@@ -1241,7 +1243,8 @@ if (isMain) {
         ? 'Prüfe im Dashboard deiner Hosting-Plattform (z. B. Render → "Environment", Railway → "Variables"), ob ANTHROPIC_API_KEY dort wirklich gesetzt ist (Name exakt, kein Leerzeichen, Wert nicht leer) und ob seitdem neu deployed wurde.'
         : 'Bitte .env Datei anlegen (siehe .env.example).';
       console.warn(`WARNUNG: ANTHROPIC_API_KEY ist nicht gesetzt. ${hint}`);
-    } else {
+    } else if (!isProd) {
+      // F008: in Produktion nicht loggen, dass ein Geheimnis existiert.
       console.log('ANTHROPIC_API_KEY geladen.');
     }
   });

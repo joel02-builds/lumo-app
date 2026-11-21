@@ -1,3 +1,24 @@
+/* ---------- Skip-Link (F017) ---------- */
+/* Außerhalb des Bildschirms, bis er per Tastatur (Tab) Fokus bekommt – dann gold, Text #1a1206. */
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 2100;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: var(--gold);
+  color: #1a1206;
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+.skip-link:focus,
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
 /* ---------- Offline-Hinweis ---------- */
 .offline-banner {
   position: fixed;
