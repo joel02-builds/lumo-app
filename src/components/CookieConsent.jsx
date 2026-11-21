@@ -163,7 +163,9 @@ export default function CookieConsent({ onAccept, onDecline }) {
             // F020: Der Link war doppelt abgedunkelt (opacity 0.8 am Link mal 0.5 am
             // umgebenden <p>) und fiel auf ca. 2:1. Jetzt --gold-light ohne jede
             // opacity: 13,0:1 normal, 10,9:1 im Dusk-Modus (im Browser gemessen).
-            style={{ color: 'var(--gold-light)', textDecoration: 'underline', cursor: 'pointer' }}
+            // Klickziel ≥ 24×24 px (WCAG 2.2, 2.5.8): Padding vergrößert die Trefferfläche (14 px Zeile + 2×6 px = 26 px),
+            // der gleich große negative Margin hält die Zeilenhöhe – der Banner wird dadurch nicht höher.
+            style={{ color: 'var(--gold-light)', textDecoration: 'underline', cursor: 'pointer', display: 'inline-block', padding: '6px 8px', margin: '-6px -8px' }}
           >
             Datenschutzerklärung
           </span>
