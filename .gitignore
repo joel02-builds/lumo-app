@@ -13,3 +13,6 @@ server/.env
 
 # Lokale Dev-Server-Logs – nie committen.
 dev.log
+
+# Design-Rohdateien (Stickerbogen u. Ä.): bewusst nicht in public/, damit sie nicht in dist/ landen.
+design-src/
