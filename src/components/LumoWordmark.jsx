@@ -45,7 +45,7 @@ export default function LumoWordmark({ onClick, hidden = false }) {
     >
       <img
         src="/mascot/lumo-idle.webp"
-        alt="Lumo"
+        alt=""
         width={28}
         height={28}
         style={{ objectFit: 'contain' }}
