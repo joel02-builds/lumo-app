@@ -23,7 +23,7 @@
  * – Zwei klare Optionen — keine Dark Patterns
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 
 const CONSENT_KEY = 'lumo_cookie_consent';
 
@@ -53,9 +53,12 @@ export default function CookieConsent({ onAccept, onDecline }) {
   // Der Banner liegt fixiert über dem Seitenende und verdeckte auf dem
   // Onboarding-Startbildschirm den Start-Button. Er meldet deshalb seine Höhe
   // als CSS-Variable --cookie-banner-h; das Onboarding endet darüber.
-  useEffect(() => {
+  // CLS: Die Höhe wird schon vor dem ersten Paint gemeldet (der Banner steht ab Mount im DOM,
+  // nur noch nach unten weggeschoben), nicht erst beim Einblenden nach 1,8 s. Sonst rutscht der
+  // untere Onboarding-Inhalt dann um die Bannerhöhe nach oben (gemessen: CLS 0,19, Grenze 0,1).
+  useLayoutEffect(() => {
     const el = bannerRef.current;
-    if (!visible || !el) return undefined;
+    if (!el) return undefined;
     const root = document.documentElement;
     const publish = () => root.style.setProperty('--cookie-banner-h', `${Math.ceil(el.getBoundingClientRect().height)}px`);
     publish();
@@ -65,7 +68,7 @@ export default function CookieConsent({ onAccept, onDecline }) {
       ro?.disconnect();
       root.style.removeProperty('--cookie-banner-h');
     };
-  }, [visible]);
+  }, []);
 
   useEffect(() => {
     // Verzögerung: erst nach 1.8s zeigen, damit Hook+Intro ungestört bleiben
