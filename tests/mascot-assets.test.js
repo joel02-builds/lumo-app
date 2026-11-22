@@ -47,3 +47,9 @@ it('MA-03 kein Maskottchen-PNG im Quelltext referenziert', () => {
   const hits = files.filter((f) => /mascot\/[^'"\s]*\.png/i.test(safeRead(f)));
   assert.deepEqual(hits.map(String), []);
 });
+
+it('MA-04 public/mascot enthält nur WebP (Design-Rohdateien gehören nach design-src/)', () => {
+  const other = readdirSync(new URL('public/mascot/', root)).filter((n) => !n.endsWith('.webp'));
+  assert.deepEqual(other, []);
+  assert.match(read('.gitignore'), /^design-src\/$/m);
+});
