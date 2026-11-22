@@ -630,7 +630,7 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
                         </span>
                       )}
                       {b.estimatedMinutes && (
-                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)', opacity: 0.7 }}>
+                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
                           ~{b.estimatedMinutes} Min
                         </span>
                       )}

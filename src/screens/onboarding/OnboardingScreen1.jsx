@@ -656,7 +656,7 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
     .ob-drop-icon { font-size: 28px; margin-bottom: 8px; }
     .ob-drop-zone.compact .ob-drop-icon { font-size: 20px; margin-bottom: 4px; }
     .ob-drop-main { font-size: 14px; font-weight: 500; color: #F0EAE0; margin-bottom: 4px; }
-    .ob-drop-sub { font-size: 12px; color: rgba(240,234,224,0.45); }
+    .ob-drop-sub { font-size: 12px; color: rgba(240,234,224,0.55); }
 
     .ob-file-list {
       display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px;
@@ -673,7 +673,7 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .ob-file-remove {
-      background: none; border: none; color: rgba(240,234,224,0.45);
+      background: none; border: none; color: rgba(240,234,224,0.55);
       font-size: 18px; cursor: pointer; padding: 0 2px; line-height: 1;
       flex-shrink: 0; transition: color 150ms;
     }
@@ -689,7 +689,7 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
     .ob-textarea::placeholder { color: rgba(240,234,224,0.30); }
     .ob-error { font-size: 13px; color: var(--amber, #C47A2B); }
     .ob-demo-link {
-      background: none; border: none; color: rgba(240,234,224,0.45);
+      background: none; border: none; color: rgba(240,234,224,0.55);
       font-size: 13px; font-family: inherit; cursor: pointer;
       text-decoration: underline; text-underline-offset: 3px;
       padding: 4px 0;
@@ -1048,7 +1048,7 @@ export default function OnboardingScreen1({ onNext, skipIntro = false, onBack = 
               }}
               rows={5}
             />
-            <div style={{ fontSize: '12px', color: 'rgba(240,234,224,0.35)', marginTop: '4px', textAlign: 'right' }}>
+            <div style={{ fontSize: '12px', color: 'rgba(240,234,224,0.55)', marginTop: '4px', textAlign: 'right' }}>
               {countWords(materialText)} Wörter
             </div>
           </div>
