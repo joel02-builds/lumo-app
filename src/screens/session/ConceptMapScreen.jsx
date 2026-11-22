@@ -47,7 +47,7 @@ export default function ConceptMapScreen({ block, cards, onDone }) {
           }}>
             Zusammenhänge
           </div>
-          <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '4px' }}>
+          <h2 aria-level={1} style={{ fontSize: '20px', fontWeight: '700', marginBottom: '4px' }}>
             {block.title}
           </h2>
           <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: '0' }}>

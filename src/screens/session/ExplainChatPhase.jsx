@@ -169,7 +169,7 @@ export default function ExplainChatPhase({ block, depth, onDone, onExit }) {
           }}>
             {loading ? 'Lumo bereitet vor …' : sending ? 'Lumo denkt nach …' : 'Lumo erklärt'}
           </div>
-          <div style={{
+          <div role="heading" aria-level={1} style={{
             fontSize: '16px',
             fontWeight: '600',
             color: 'var(--text-primary)',
