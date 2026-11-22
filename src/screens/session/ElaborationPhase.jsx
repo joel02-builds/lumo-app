@@ -93,7 +93,7 @@ export default function ElaborationPhase({ block, onDone, onSkip, onBack }) {
         <div className="screen-content" style={{ gap: '20px', maxWidth: '400px' }}>
           <LumoMascot state="cheer" />
           <div style={{ textAlign: 'center', animation: 'fadeIn 0.4s ease' }}>
-            <h2 style={{ fontSize: '20px', marginBottom: '8px' }}>
+            <h2 aria-level={1} style={{ fontSize: '20px', marginBottom: '8px' }}>
               {hasEnoughText
                 ? 'Gut aktiviert.'
                 : 'Perfekt.'}
@@ -159,7 +159,7 @@ export default function ElaborationPhase({ block, onDone, onSkip, onBack }) {
           }}>
             Bevor wir anfangen
           </div>
-          <h2 style={{
+          <h2 aria-level={1} style={{
             fontSize: '20px',
             fontWeight: '700',
             lineHeight: '1.4',

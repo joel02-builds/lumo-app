@@ -121,6 +121,7 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
     return (
       <div className="screen">
         <div className="screen-content">
+          <h1 className="visually-hidden">Dein Lernplan</h1>
           <LumoMascot state="idle" />
           <p style={{ color: 'var(--text-secondary)' }}>Kein Projekt aktiv.</p>
           <button onClick={onNewProject} style={{ background: 'var(--gold)', color: '#1a1206', border: 'none', borderRadius: '12px', padding: '14px 28px', fontSize: '16px', fontWeight: '700', cursor: 'pointer' }}>
@@ -268,6 +269,8 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
       )}
       <div className="screen-content" style={{ maxWidth: '560px', gap: '20px' }}>
 
+        {/* Semantische Hauptüberschrift (WCAG 2.4.6 / axe page-has-heading-one); optisch bewusst ohne Titel. */}
+        <h1 className="visually-hidden">Dein Lernplan</h1>
         <LumoMascot state={allDone ? 'complete' : 'idle'} />
 
         {/* Gap 5 – "Heute X Blöcke — das ist genug"

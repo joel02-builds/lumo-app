@@ -399,7 +399,7 @@ function SubjectTransitionCard({ fromSubject, toSubject, subjectColor, onContinu
         Themenwechsel
       </p>
 
-      <h2 style={{ fontSize: '18px', margin: '0 0 6px', lineHeight: '1.3' }}>
+      <h2 aria-level={1} style={{ fontSize: '18px', margin: '0 0 6px', lineHeight: '1.3' }}>
         Weiter mit: {toSubject}
       </h2>
 
@@ -722,7 +722,7 @@ export default function FlashcardScreen({ flashcards, onUpdateFlashcard, onRemov
             background: 'none', border: 'none',
             color: 'var(--text-secondary)', fontSize: '14px', cursor: 'pointer',
           }}>←</button>
-          <h2 style={{ fontSize: '18px', fontWeight: '700', margin: '0', flex: 1 }}>
+          <h2 aria-level={1} style={{ fontSize: '18px', fontWeight: '700', margin: '0', flex: 1 }}>
             Karteikarten
           </h2>
           <button onClick={exportFlashcards} style={{

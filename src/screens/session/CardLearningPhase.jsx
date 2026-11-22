@@ -522,7 +522,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
       }}>
         <LumoMascot state="idle" />
         <div style={{ textAlign: 'center', maxWidth: '480px' }}>
-          <h2 style={{
+          <h2 aria-level={1} style={{
             fontFamily: "'Instrument Serif', Georgia, serif",
             fontStyle: 'italic',
             fontWeight: 400,
@@ -626,7 +626,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
           flexShrink: 0,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{
+            <div role="heading" aria-level={1} style={{
               fontSize: '11px',
               fontWeight: '700',
               letterSpacing: '1.2px',
@@ -882,7 +882,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
           }}>
             Gesamtblock
           </div>
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px' }}>
+          <h2 aria-level={1} style={{ fontSize: '24px', fontWeight: '700', marginBottom: '8px' }}>
             Erkläre den ganzen Block.
           </h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '15px', lineHeight: '1.5' }}>
@@ -1052,7 +1052,7 @@ export default function CardLearningPhase({ block, goalType, mood, learningStyle
           flexShrink: 0,
         }} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="card-header-title" style={{
+          <div className="card-header-title" role="heading" aria-level={1} style={{
             fontSize: '11px',
             fontWeight: '600',
             letterSpacing: '1.5px',

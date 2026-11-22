@@ -110,7 +110,7 @@ export default function LernzettelScreen({ block, cards, goalType, onDone, subje
           }}>
             Lernzettel
           </div>
-          <h2 style={{ fontSize: '22px', fontWeight: '700', marginBottom: '4px' }}>
+          <h2 aria-level={1} style={{ fontSize: '22px', fontWeight: '700', marginBottom: '4px' }}>
             {lernzettel?.title || block.title}
           </h2>
         </div>
