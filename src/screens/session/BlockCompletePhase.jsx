@@ -157,6 +157,9 @@ export default function BlockCompletePhase({ block, result, cards, onContinue, o
       }}>
         <img
           src={isGood ? '/mascot/lumo-complete.webp' : '/mascot/lumo-learning.webp'}
+          srcSet={isGood
+            ? '/mascot/lumo-complete.webp 1x, /mascot/lumo-complete@2x.webp 2x'
+            : '/mascot/lumo-learning.webp 1x, /mascot/lumo-learning@2x.webp 2x'}
           alt="Lumo"
           width={isGood ? 160 : 120}
           height={isGood ? 160 : 120}

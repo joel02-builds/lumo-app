@@ -187,6 +187,7 @@ export default function LumoMascot({
       {!imgError ? (
         <img
           src={currentSrc}
+          srcSet={`${currentSrc} 1x, ${currentSrc.replace(/\.webp$/, '@2x.webp')} 2x`}
           alt={label ? `Lumo – ${label}` : 'Lumo'}
           width={px}
           height={px}

@@ -45,6 +45,7 @@ export default function LumoWordmark({ onClick, hidden = false }) {
     >
       <img
         src="/mascot/lumo-idle.webp"
+        srcSet="/mascot/lumo-idle.webp 1x, /mascot/lumo-idle@2x.webp 2x"
         alt=""
         width={28}
         height={28}
