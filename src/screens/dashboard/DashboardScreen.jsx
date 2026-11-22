@@ -562,7 +562,6 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
                   onClick={() => setExpandedBlock(isExpanded ? null : b.id)}
                   aria-expanded={isExpanded}
                   aria-controls={`block-detail-${b.id}`}
-                  aria-label={`${b.title} – ${statusLabel(b)}${isNext ? ' – Nächster Block' : ''}`}
                   title={isNext ? 'Empfohlener nächster Block – klicken für Details' : 'Details anzeigen'}
                   style={{
                     width: '100%',
@@ -842,7 +841,6 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
         {flashcardsCount > 0 && (
           <button
             onClick={onViewFlashcards}
-            aria-label={dueCount > 0 ? `${dueCount} Karteikarten heute fällig – jetzt wiederholen` : `${flashcardsCount} Karteikarten wiederholen`}
             title={dueCount > 0 ? 'Fällige Karten mit Spaced Repetition wiederholen' : 'Alle Karteikarten verwalten'}
             style={{
               width: '100%',
@@ -893,7 +891,6 @@ export default function DashboardScreen({ blocks, recommendedOrder, goalType, go
         {onViewWeakSpots && (
           <button
             onClick={onViewWeakSpots}
-            aria-label={weakCount > 0 ? `${weakCount} Blöcke zum Wiederholen – Schwachstellen ansehen` : 'Lernstand ansehen'}
             title={weakCount > 0 ? 'Unsichere Themen gezielt wiederholen' : 'Vollständigen Lernstand anzeigen'}
             style={{
               width: '100%',
