@@ -51,7 +51,7 @@ class ErrorBoundary extends Component {
           textAlign: 'center',
         }}>
           {newVersion && <ReloadOnceOnNewVersion />}
-          <img src="/mascot/lumo-idle.webp" alt="Lumo" width={100} height={100} style={{ objectFit: 'contain' }} />
+          <img src="/mascot/lumo-idle.webp" srcSet="/mascot/lumo-idle.webp 1x, /mascot/lumo-idle@2x.webp 2x" alt="Lumo" width={100} height={100} style={{ objectFit: 'contain' }} />
           <h1 style={{ fontSize: '24px', color: '#F0EDE8', margin: '0' }}>
             {newVersion ? 'Es gibt eine neue Version von Lumo.' : 'Etwas ist schiefgelaufen.'}
           </h1>
