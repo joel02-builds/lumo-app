@@ -233,12 +233,27 @@ export default function LegalScreen({ onBack }) {
             </p>
             <p style={{ ...textStyle, marginTop: '10px' }}>
               <strong style={{ color: 'var(--text-primary)' }}>b) Auf unserem Server</strong> (wenn du dem zustimmst):
-              Um deinen Lernfortschritt geräteübergreifend zu synchronisieren, speichern wir
-              einen anonymisierten Lernstand auf unserem Server. Dazu wird ein anonymer Cookie
+              Um deinen Lernfortschritt geräteübergreifend zu synchronisieren, speichern wir deinen Lernstand
+              auf unserem Server. Dazu wird ein Cookie
               (<code style={{ background: 'var(--bg-card)', borderRadius: '4px', padding: '1px 5px', fontSize: '12px' }}>lumo_uid</code>)
               gesetzt, der einen zufällig generierten Code enthält — keine personenbezogenen Daten.
-              Wir speichern dabei <em>keine</em> deiner Lernmaterialien auf dem Server, nur
-              Fortschrittsdaten (abgeschlossene Blöcke, Karteikarten-Status, Streak).
+            </p>
+            <p style={{ ...textStyle, marginTop: '10px' }}>
+              Das ist mehr als ein Fortschrittszähler. Gespeichert werden: Projektname, Dateiname deines
+              Materials, Lernziel und Prüfungsdatum, Lernstil und Fachfarbe, bisherige Fächer und deine
+              Lernblöcke. Zu jedem Block gehören Titel, eine von der KI erstellte Kurzfassung des Stoffs,
+              Unterthemen, Schwierigkeit und Dauer, Status, die KI-Einschätzung samt den KI-Hinweisen zu
+              deiner Erklärung (was gut war, was noch fehlte), deine optionale Selbsteinschätzung und die
+              erzeugten Lernkarten. Dazu kommen deine Karteikarten (Frage und Antwort mit Wiederholungsstand),
+              ein eingetragenes Prüfungsergebnis, Zähler (z. B. abgeschlossene Sessions), dein Streak sowie
+              ein Zähler der analysierten Blöcke.
+            </p>
+            <p style={{ ...textStyle, marginTop: '10px' }}>
+              <strong style={{ color: 'var(--text-primary)' }}>Nicht</strong> auf den Server gelangen der Text
+              oder die Datei, die du hochgeladen hast, und die Antworten und Erklärungen, die du selbst
+              eingibst. Die gehen nur für die KI-Auswertung an Anthropic (siehe Abschnitt 4). Da die
+              KI-Kurzfassungen und -Hinweise Inhalte deines Materials und deiner Erklärungen wiedergeben
+              können, kann der gespeicherte Lernstand Personenbezug enthalten.
             </p>
 
             <h4 style={subHeadingStyle}>3. Cookie — lumo_uid</h4>
@@ -255,10 +270,11 @@ export default function LegalScreen({ onBack }) {
               {[
                 ['Name', 'lumo_uid'],
                 ['Zweck', 'Anonyme Nutzeridentifikation für Server-Synchronisation'],
-                ['Inhalt', 'UUID (zufällig generierter Code, keine personenbezogenen Daten)'],
+                ['Inhalt', 'Zufälliger Code (64 Zeichen), keine personenbezogenen Daten; der Server speichert davon nur einen Hash'],
                 ['Gültigkeit', '1 Jahr'],
-                ['Anbieter', 'lumo-app.de (First-Party)'],
-                ['Übertragung', 'Nur an unseren Server (render.com)'],
+                ['Anbieter', 'Dieser Dienst (First-Party-Cookie)'],
+                ['Übertragung', 'Nur an diesen Dienst (Hosting bei Render, vorgeschaltet Cloudflare)'],
+                ['Eigenschaften', 'HttpOnly, Secure und SameSite=Strict (in der Produktivumgebung)'],
               ].map(([k, v]) => (
                 <div key={k} style={{ display: 'flex', gap: '12px', borderBottom: '1px solid var(--border)', padding: '6px 0' }}>
                   <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-primary)', minWidth: '80px', flexShrink: 0 }}>{k}</span>
@@ -267,15 +283,16 @@ export default function LegalScreen({ onBack }) {
               ))}
             </div>
             <p style={{ ...textStyle, marginTop: '10px' }}>
-              Du kannst die Synchronisation jederzeit in den Einstellungen deaktivieren und
-              gespeicherte Server-Daten löschen.
+              Du kannst deine Zustimmung jederzeit zurücknehmen: Einstellungen → „Serverdaten löschen"
+              entfernt deinen gespeicherten Lernstand auf dem Server und den Cookie und setzt deine
+              Entscheidung zurück. Deine lokalen Daten bleiben dabei erhalten.
             </p>
 
             <h4 style={subHeadingStyle}>4. Werden Daten an externe Dienste gesendet?</h4>
             <p style={textStyle}>
-              Ja — beim Start einer Lernsession sendet Lumo deinen Lerninhalt an die API von
-              Anthropic (anthropic.com), um KI-gestützte Lernmaterialien zu generieren.
-              Die Verarbeitung erfolgt gemäß der Datenschutzrichtlinie von Anthropic:{' '}
+              Ja. Für die KI-Funktionen sendet unser Server Inhalte an die API von Anthropic (anthropic.com):
+              das Lernmaterial, das du eingibst oder hochlädst, sowie deine Antworten, Erklärungen und
+              Nachfragen im Chat. Die Verarbeitung erfolgt gemäß der Datenschutzrichtlinie von Anthropic:{' '}
               <a
                 href="https://www.anthropic.com/privacy"
                 target="_blank"
@@ -286,27 +303,49 @@ export default function LegalScreen({ onBack }) {
               </a>
             </p>
             <p style={{ ...textStyle, marginTop: '8px' }}>
-              Wir senden keine personenbezogenen Daten wie Namen, E-Mail-Adressen oder Standort an Anthropic.
-              Nur der Lerninhalt, den du explizit eingibst, wird übertragen.
+              Lumo sendet keine Namen, E-Mail-Adressen oder deinen Standort mit. Was du selbst in Texte
+              schreibst, wird so übertragen, wie du es schreibst. Bitte gib nichts ein, was du nicht
+              übertragen möchtest.
             </p>
-
+            <p style={{ ...textStyle, marginTop: '10px' }}>
+              <strong style={{ color: 'var(--text-primary)' }}>Cloudflare:</strong> Vor unserem Server ist
+              Cloudflare geschaltet. Deine Aufrufe von Lumo laufen dadurch über Cloudflare-Server, wobei
+              technisch bedingt auch deine IP-Adresse verarbeitet wird.
+            </p>
+            <p style={{ ...textStyle, marginTop: '10px' }}>
+              <strong style={{ color: 'var(--text-primary)' }}>YouTube (Google):</strong> Wenn du dir zu einem
+              Konzept ein Erklärvideo vorschlagen lässt, fragt unser Server bei YouTube nach passenden Videos
+              (den Suchbegriff erstellt zuvor die KI bei Anthropic aus Konzept und Blocktitel). Die Vorschaubilder lädt dein Browser von der Adresse,
+              die YouTube dafür liefert; dabei erhält der Anbieter deine IP-Adresse. Ein Video wird erst
+              eingebunden, wenn du es antippst, und zwar über die datensparsamere Adresse
+              youtube-nocookie.com.
+            </p>
+            <h4 style={subHeadingStyle}>Spracheingabe (optional)</h4>
+            <p style={textStyle}>
+              In manchen Bereichen kannst du deine Antwort einsprechen. Das passiert nur, wenn du selbst auf
+              den Mikrofon-Knopf tippst. Die Umwandlung von Sprache in Text übernimmt dein Browser, nicht
+              Lumo. Dafür kann dein Browser den Ton an seinen Anbieter übertragen, der ihn verarbeitet.
+              Welche Daten das sind, regelt die Datenschutzerklärung deines Browser-Anbieters. Lumo erhält nur
+              den erkannten Text. Wenn du das nicht möchtest, tippe deine Antwort einfach.
+            </p>
             <h4 style={subHeadingStyle}>5. Schriftarten</h4>
             <p style={textStyle}>
               Die Schriftarten von Lumo werden von unserem eigenen Server ausgeliefert. Beim Laden der Seite
               wird dafür keine Verbindung zu Google oder anderen Schriftanbietern aufgebaut.
             </p>
 
-            <h4 style={subHeadingStyle}>6. Server-Logs</h4>
+            <h4 style={subHeadingStyle}>6. Hosting und Zugriffsdaten</h4>
             <p style={textStyle}>
-              Unser Server (gehostet bei Render, render.com) speichert automatisch technische Zugriffsdaten
-              (IP-Adresse, Zeitstempel, aufgerufene URL) für max. 7 Tage. Diese Daten dienen ausschließlich
-              der technischen Fehleranalyse und werden nicht ausgewertet oder weitergegeben.
+              Unser Server wird bei Render (render.com) betrieben, davor ist Cloudflare geschaltet. Beim Aufruf
+              von Lumo fallen technisch bedingt Zugriffsdaten an, zum Beispiel IP-Adresse, Zeitstempel und
+              aufgerufene Adresse.
             </p>
 
             <h4 style={subHeadingStyle}>7. Deine Rechte (DSGVO)</h4>
             <p style={textStyle}>
               Du hast das Recht auf Auskunft, Berichtigung, Löschung und Einschränkung der Verarbeitung
-              deiner Daten (Art. 15–18 DSGVO).
+              deiner Daten (Art. 15–18 DSGVO), auf Datenübertragbarkeit (Art. 20 DSGVO) und das Recht,
+              der Verarbeitung zu widersprechen (Art. 21 DSGVO).
             </p>
             <p style={{ ...textStyle, marginTop: '8px' }}>
               <strong style={{ color: 'var(--text-primary)' }}>Lokale Daten löschen:</strong> Einstellungen → Backup → Daten zurücksetzen,
@@ -316,13 +355,26 @@ export default function LegalScreen({ onBack }) {
               <strong style={{ color: 'var(--text-primary)' }}>Server-Daten löschen:</strong> Einstellungen → „Serverdaten löschen".
             </p>
             <p style={{ ...textStyle, marginTop: '8px' }}>
+              <strong style={{ color: 'var(--text-primary)' }}>Daten mitnehmen:</strong> Einstellungen → „Backup exportieren"
+              speichert deine Daten als Sicherungsdatei (JSON).
+            </p>
+            <p style={{ ...textStyle, marginTop: '8px' }}>
+              <strong style={{ color: 'var(--text-primary)' }}>Einwilligung widerrufen:</strong> Eine erteilte Zustimmung
+              kannst du jederzeit mit Wirkung für die Zukunft widerrufen. Für die Server-Synchronisation geht das über
+              Einstellungen → „Serverdaten löschen".
+            </p>
+            <p style={{ ...textStyle, marginTop: '8px' }}>
+              <strong style={{ color: 'var(--text-primary)' }}>Beschwerde:</strong> Du hast das Recht, dich bei einer
+              Datenschutz-Aufsichtsbehörde zu beschweren (Art. 77 DSGVO).
+            </p>
+            <p style={{ ...textStyle, marginTop: '8px' }}>
               Bei weiteren Fragen zum Datenschutz: heidenjoel@web.de
             </p>
 
             <h4 style={subHeadingStyle}>8. Änderungen dieser Erklärung</h4>
             <p style={textStyle}>
               Diese Datenschutzerklärung kann sich ändern. Die aktuelle Version ist immer in der App abrufbar.
-              Stand: Oktober 2026.
+              Stand: November 2026.
             </p>
           </section>
         )}
