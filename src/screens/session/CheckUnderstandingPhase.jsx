@@ -78,7 +78,7 @@ export default function CheckUnderstandingPhase({ block, onDone, onExit }) {
       <div className="screen" key="check-result">
         <div className="screen-content">
           <LumoMascot state={result.status === 'sicher' ? 'cheer' : 'learning'} />
-          <p className="feedback-text">{result.summaryText}</p>
+          <p className="feedback-text" role="heading" aria-level={1}>{result.summaryText}</p>
 
           {result.goodPoints.length > 0 && (
             <div style={{

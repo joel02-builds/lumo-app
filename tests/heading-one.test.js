@@ -46,3 +46,7 @@ it('H1-03 kein h2 ohne aria-level in den ehemals h1-losen Screens', () => {
     assert.equal(bad.length, 0, f);
   }
 });
+
+it('H1-04 Check-Ergebnis: summaryText ist die Level-1-Überschrift', () => {
+  assert.match(read('src/screens/session/CheckUnderstandingPhase.jsx'), /<p className="feedback-text" role="heading" aria-level=\{1\}>\{result\.summaryText\}<\/p>/);
+});
