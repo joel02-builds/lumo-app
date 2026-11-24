@@ -2,6 +2,7 @@ import { useState } from 'react';
 import LumoMascot from '../components/LumoMascot.jsx';
 import { getBlockColor } from '../utils/subjectColors.js';
 import Icon from '../components/Icon.jsx';
+import { getBlockProgress } from '../utils/masteryProgress.js';
 
 // uncertainPoints stammt aus der freien Lücken-Einschätzung der KI (Gesamtblock-
 // Recall) und cards aus der separaten Konzept-Liste – beide Listen sind nicht
@@ -50,20 +51,15 @@ export default function WeakSpotsScreen({ blocks, flashcards, onBack, onStartBlo
   const [activeTab, setActiveTab] = useState('overview');
   const safeBlocks = (blocks || []).filter(Boolean);
 
-  const completedBlocks = safeBlocks.filter(b => b.status === 'completed');
   const weakBlocks = safeBlocks.filter(b =>
     b.status === 'completed' && (b.confidence === 'unsicher' || b.confidence === 'grosse_luecken')
   );
   const strongBlocks = safeBlocks.filter(b => b.status === 'completed' && b.confidence === 'sicher');
   const notStarted = safeBlocks.filter(b => b.status !== 'completed');
 
-  const totalConcepts = safeBlocks.reduce((sum, b) => sum + (b.cards?.length || 0), 0);
-  const weakConcepts = safeBlocks.reduce((sum, b) => sum + (b.uncertainPoints?.length || 0), 0);
-  const masteryPercent = totalConcepts > 0
-    ? clampPercent(Math.round(((totalConcepts - weakConcepts) / totalConcepts) * 100))
-    : completedBlocks.length > 0
-    ? clampPercent(Math.round((strongBlocks.length / completedBlocks.length) * 100))
-    : 0;
+  // Anteil aller Blöcke („1 von 6 Blöcken verstanden"), keine Wertung per Überschrift.
+  const progress = getBlockProgress(safeBlocks);
+  const masteryPercent = progress.percent;
 
   const pendingFlashcards = (flashcards || []).filter(c => c.status !== 'mastered').length;
 
@@ -105,7 +101,7 @@ export default function WeakSpotsScreen({ blocks, flashcards, onBack, onStartBlo
           />
           <div style={{ flex: 1 }}>
             <p style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)', margin: '0 0 4px' }}>
-              {masteryPercent >= 80 ? 'Starker Lernstand.' : masteryPercent >= 50 ? 'Auf gutem Weg.' : 'Noch viel zu tun.'}
+              {progress.label}
             </p>
             <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '13px', color: 'var(--green)' }}>
