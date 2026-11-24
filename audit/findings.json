@@ -44,7 +44,8 @@
     "reproduktion": "YoutubePanel.jsx öffnen, Video-Button klicken — iframe mit youtube.com/embed lädt.",
     "fix": "URL auf https://www.youtube-nocookie.com/embed/${selectedVideo}?autoplay=1 ändern. YouTube-Datenweitergabe in Datenschutzerklärung ergänzen.",
     "konfidenz": "hoch",
-    "status": "CONFIRMED"
+    "status": "FIXED",
+    "fix_nachweis": "ef046e1 (PR #23): YouTube-Embed über youtube-nocookie.com, CSP frame-src enger."
   },
   {
     "id": "F005",
@@ -55,7 +56,8 @@
     "reproduktion": "index.html öffnen — Google Fonts laden ohne Cookie-Consent.",
     "fix": "Fonts selbst hosten: `npx fontsource-cli install nunito instrument-serif` und lokalen Import verwenden. Oder: Einwilligung vor Fonts-Laden einholen. Drittland-Passus in Datenschutzerklärung ergänzen.",
     "konfidenz": "hoch",
-    "status": "CONFIRMED"
+    "status": "FIXED",
+    "fix_nachweis": "ecf6e31 (PR #24): Schriften selbst gehostet (public/fonts), keine Verbindung zu Google Fonts."
   },
   {
     "id": "F006",
@@ -88,7 +90,8 @@
     "reproduktion": "node server/index.js ausführen oder den Server importieren — 'API KEY vorhanden: true' erscheint in stdout.",
     "fix": "Zeile 94 entfernen. Alle sensiblen Startup-Logs in den isMain-Block oder auf debug-Level beschränken. Der isMain-Block (Zeile 1098+) hat bereits bessere Logging-Praxis.",
     "konfidenz": "hoch",
-    "status": "CONFIRMED"
+    "status": "FIXED",
+    "fix_nachweis": "cded6e2 (PR #25): keine Logzeile über die Existenz des API-Keys in Produktion."
   },
   {
     "id": "F009",
@@ -99,7 +102,8 @@
     "reproduktion": "1. Gerät A schließt Block ab → server state = high_progress. 2. Gerät B war bereits offen mit old_state → Nutzer macht dort eine Aktion, die scheduleSyncToServer auslöst → server state = old_state (überschrieben). 3. Gerät A öffnet App neu → GET /api/state → mergeStates(localState_A_high, old_state) → localState_A_high gewinnt → wird mit POST zurückgeschrieben. Recovery passiert erst beim nächsten GET von Gerät A.",
     "fix": "Server-seitiger Merge in POST /api/state: bestehenden State lesen, mergeStates ausführen, Ergebnis speichern. Alternativ: Optimistic Locking mit Version-Token.",
     "konfidenz": "mittel",
-    "status": "PLAUSIBLE"
+    "status": "PLAUSIBLE",
+    "fix_nachweis": "Stufe 1 nur Client: c16ad69 (PR #32), Mehr-Tab-Schutz. Server-seitiger Merge in POST /api/state nicht gebaut, Status bleibt PLAUSIBLE."
   },
   {
     "id": "F010",
@@ -110,7 +114,8 @@
     "reproduktion": "Manifest in Chrome DevTools PWA-Tab öffnen → Icon-Prüfung zeigt kein dediziertes Maskable-Icon. maskable.app/editor prüft Safe Zone.",
     "fix": "Separates maskable-icon-512.png mit 10% Safe Zone auf allen Seiten erstellen (Motiv auf ca. 410x410 px innerhalb eines 512x512 Kreises halten). maskable.app/editor zur Erstellung verwenden.",
     "konfidenz": "hoch",
-    "status": "CONFIRMED"
+    "status": "FIXED",
+    "fix_nachweis": "7405dfd (PR #37): dediziertes Maskable-Icon mit Safe Zone, tests/maskable-icon.test.js."
   },
   {
     "id": "F011",
@@ -158,7 +163,8 @@
     "fix": "vite auf neueste Version updaten (prüfen ob esbuild-Fix enthalten), oder npm audit fix --force ausführen und Build testen.",
     "konfidenz": "hoch",
     "status": "ACCEPTED",
-    "akzeptiert": "dev-only, akzeptiert (2026-11-21). Stand heute: esbuild ist nicht mehr vorhanden (Vite 8 nutzt es nicht, `npm ls esbuild` leer). Die vier moderaten Meldungen betreffen glob, minimatch, workbox-build und vite-plugin-pwa – nur Build-Werkzeuge (Service-Worker-Generierung). `npm audit --omit=dev` = 0 Schwachstellen. Behebung nur mit Major-Sprüngen (glob >=14.0.2, minimatch >=11.0.1, per overrides gegen die Bereiche von workbox-build 7.4.1) bzw. einem Downgrade auf vite-plugin-pwa 1.1.0; vite-plugin-pwa 2.0.0 und workbox-build 7.4.1 sind die neuesten Versionen. Wiedervorlage: bei neuer workbox-build-Version mit glob >=14.0.2 oder wenn die Meldungen auf eine Produktionsabhängigkeit übergreifen."
+    "akzeptiert": "dev-only, akzeptiert (2026-11-21). Stand heute: esbuild ist nicht mehr vorhanden (Vite 8 nutzt es nicht, `npm ls esbuild` leer). Die vier moderaten Meldungen betreffen glob, minimatch, workbox-build und vite-plugin-pwa – nur Build-Werkzeuge (Service-Worker-Generierung). `npm audit --omit=dev` = 0 Schwachstellen. Behebung nur mit Major-Sprüngen (glob >=14.0.2, minimatch >=11.0.1, per overrides gegen die Bereiche von workbox-build 7.4.1) bzw. einem Downgrade auf vite-plugin-pwa 1.1.0; vite-plugin-pwa 2.0.0 und workbox-build 7.4.1 sind die neuesten Versionen. Wiedervorlage: bei neuer workbox-build-Version mit glob >=14.0.2 oder wenn die Meldungen auf eine Produktionsabhängigkeit übergreifen.",
+    "fix_nachweis": "e45b069 (PR #39): nur Dev-Abhängigkeit, esbuild nicht mehr vorhanden, npm audit --omit=dev = 0."
   },
   {
     "id": "F015",
@@ -180,7 +186,8 @@
     "reproduktion": "package.json dependencies/devDependencies durchsuchen — kein Error-Tracking-Tool.",
     "fix": "Sentry Free Tier (5k Events/Monat) integrieren: `npm install @sentry/react`, Sentry.init() in main.jsx, ErrorBoundary in App.jsx. Besonders wichtig: AI-Route-Fehler und State-Sync-Fehler capturen.",
     "konfidenz": "hoch",
-    "status": "CONFIRMED"
+    "status": "FIXED",
+    "fix_nachweis": "341cf3f (PR #33): eigenes Client-Fehler-Log (POST /api/client-error) statt Sentry, ohne neue Abhängigkeit."
   },
   {
     "id": "F017",
@@ -191,7 +198,8 @@
     "reproduktion": "App.jsx Zeile 447 öffnen → kein <main>, keine role='main', kein <header>, kein <nav> auf Top-Level.",
     "fix": "App.jsx: Haupt-Inhaltsbereich in <main id='main-content'> wrappen. Optional: <header> für Wordmark-Bereich. Skip-to-content-Link als erstes Element für Tastatur-Nutzer hinzufügen (<a href='#main-content' className='skip-link'>Zum Inhalt springen</a>).",
     "konfidenz": "hoch",
-    "status": "CONFIRMED"
+    "status": "FIXED",
+    "fix_nachweis": "62a4312 (PR #26): Landmarks main und nav, Skip-Link."
   },
   {
     "id": "F018",
@@ -202,7 +210,8 @@
     "reproduktion": "dist/mascot/ öffnen — 5 PNG-Dateien vorhanden. src/-Code nach '.png' für Maskottchen durchsuchen — keine Treffer.",
     "fix": "PNG-Dateien aus public/mascot/ entfernen, nur WebP behalten. Browser-Support für WebP: Chrome 32+, Firefox 65+, Safari 14+ — deckend für Zielgruppe. Fallback für ältere Safari-Versionen (<14) via <picture>-Element mit WebP + PNG-Fallback wenn nötig.",
     "konfidenz": "hoch",
-    "status": "CONFIRMED"
+    "status": "FIXED",
+    "fix_nachweis": "e38e8dc (PR #27): unreferenzierte PNGs entfernt; PR #50: WebP auf Anzeigegröße (160/320 px); PR #51: Design-Rohdatei aus public/ nach design-src/."
   },
   {
     "id": "F019",
@@ -213,7 +222,8 @@
     "reproduktion": "curl -sI http://localhost:3001/ | grep -i permissions — kein Treffer.",
     "fix": "In Helmet-Konfiguration ergänzen: permissionsPolicy({ features: { camera: [], microphone: ['self'], geolocation: [], payment: [] } }). Features auf das nötige Minimum beschränken.",
     "konfidenz": "hoch",
-    "status": "CONFIRMED"
+    "status": "FIXED",
+    "fix_nachweis": "a96c8bb (PR #28): Permissions-Policy-Header im Code. Live-Server sendet ihn noch nicht (curl 2026-11-22, Live-Stand älter als main)."
   },
   {
     "id": "F020",
@@ -236,7 +246,8 @@
     "reproduktion": "Lighthouse mobile-Audit gegen localhost:3001 ausführen (simulate throttling). Kategorie Performance.",
     "fix": "Code-Splitting optimieren: Dynamic import() für alle nicht-initialen Screens (FlashcardScreen, ExamResultScreen, SettingsScreen, ProjectsScreen etc.). Ziel: Initial-Bundle < 50 KiB. Vite manualChunks in vite.config.js verwenden um screen-spezifische Chunks zu erzwingen.",
     "konfidenz": "mittel",
-    "status": "CONFIRMED"
+    "status": "FIXED",
+    "fix_nachweis": "ad952c4 (PR #34): SessionScreen per lazy() als eigener Chunk, Vorladen im Leerlauf."
   },
   {
     "id": "F022",
@@ -247,7 +258,8 @@
     "reproduktion": "curl -s http://localhost:3001/robots.txt | head -3 → zeigt HTML. Lighthouse SEO-Audit → meta-description und robots-txt failed.",
     "fix": "(1) index.html: <meta name='description' content='Lumo – KI-gestütztes Lernbegleiter-System für strukturiertes und effektives Lernen'> ergänzen. (2) public/robots.txt erstellen: 'User-agent: *\\nAllow: /\\nSitemap: https://lumo-app.up.railway.app/sitemap.xml'. Vite kopiert Dateien aus public/ automatisch in dist/.",
     "konfidenz": "hoch",
-    "status": "CONFIRMED"
+    "status": "FIXED",
+    "fix_nachweis": "92e18ce (PR #29): meta-description und robots.txt; Lighthouse SEO 100."
   },
   {
     "id": "F023",
@@ -259,7 +271,8 @@
     "fix": "Render-Redeploy auf aktuellen Stand (origin/main HEAD = 395d3e0 oder später). Damit wird Helmet 8.3.0 aktiviert und alle konfigurierten Security-Header werden gesetzt. Zusätzlich empfohlen: render.yaml um einen Health-Check und einen Deploy-Hook mit Header-Verifikation erweitern.",
     "stand": "Live-Stand",
     "konfidenz": "hoch",
-    "status": "CONFIRMED"
+    "status": "FIXED",
+    "fix_nachweis": "Live per curl 2026-11-22: CSP, HSTS, X-Frame-Options, nosniff, Referrer-Policy vorhanden. Live-Stand älter als main (kein Permissions-Policy, font-src noch mit fonts.gstatic.com)."
   },
   {
     "id": "F024",
@@ -384,7 +397,7 @@
     "fix": "Beide Variablen in render.yaml (sync: false) und README-Abschnitt Deployment (Render). Die Persistenz selbst ist NICHT gelöst – Entscheidung des Eigentümers.",
     "konfidenz": "hoch",
     "status": "CONFIRMED",
-    "fix_nachweis": "Dokumentation ergänzt am 2026-11-16; Datenverlust bei Deploy bleibt bis zur Persistenz-Entscheidung bestehen."
+    "fix_nachweis": "Dokumentation ergänzt am 2026-11-16; Datenverlust bei Deploy bleibt bis zur Persistenz-Entscheidung bestehen. Teil erledigt: e246fb7 (PR #40): DB_PATH-Warnung, Persist-Anfrage, Disk-Vorlage. Entscheidung Disk/Datenbank offen."
   },
   {
     "id": "F034",
@@ -396,7 +409,8 @@
     "fix": "Dateien und Exporte entfernen (eigener PR, Phase 3.9).",
     "konfidenz": "hoch",
     "status": "CONFIRMED",
-    "teilfix": "2026-11-21 (PR F034): belegt toter Code entfernt – OnboardingScreen2.jsx, apiCostEstimate.js, LumoMascot.css, PRETEST_SYSTEM/pretestSchema, Reducer-Aktionen GO_TO_STEP2/BACK_TO_STEP1. Bewusst NICHT entfernt (FSRS, Sync, Datenbank): SM-2-Funktionen in sm2.js, getUpcomingCards, getLastSyncedAt, getOrCreateUser. Status bleibt CONFIRMED, bis diese Reste entschieden sind."
+    "teilfix": "2026-11-21 (PR F034): belegt toter Code entfernt – OnboardingScreen2.jsx, apiCostEstimate.js, LumoMascot.css, PRETEST_SYSTEM/pretestSchema, Reducer-Aktionen GO_TO_STEP2/BACK_TO_STEP1. Bewusst NICHT entfernt (FSRS, Sync, Datenbank): SM-2-Funktionen in sm2.js, getUpcomingCards, getLastSyncedAt, getOrCreateUser. Status bleibt CONFIRMED, bis diese Reste entschieden sind.",
+    "fix_nachweis": "Teil erledigt: d6b173f (PR #38): belegt toten Code entfernt (3 Dateien, PRETEST-Prompt, 2 Reducer-Cases). Reste (FSRS, Sync, Datenbank) bewusst behalten, siehe teilfix."
   },
   {
     "id": "F035",
